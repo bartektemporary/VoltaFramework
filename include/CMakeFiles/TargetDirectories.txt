@@ -1,0 +1,10 @@
+C:/Users/barte/Desktop/VoltaRewritten/include/CMakeFiles/RUN_TESTS.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/CMakeFiles/INSTALL.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/CMakeFiles/ALL_BUILD.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/CMakeFiles/ZERO_CHECK.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/CMakeFiles/lua_shared.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/CMakeFiles/lua_static.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/CMakeFiles/lua.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/CMakeFiles/luac.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/CMakeFiles/RUN_TESTS.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/CMakeFiles/INSTALL.dir

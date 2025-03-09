@@ -1,0 +1,11 @@
+C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/build/cmake/build/CMakeFiles/glew.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/build/cmake/build/CMakeFiles/glew_s.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/build/cmake/build/CMakeFiles/glewinfo.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/build/cmake/build/CMakeFiles/visualinfo.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/build/cmake/build/CMakeFiles/uninstall.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/build/cmake/build/CMakeFiles/edit_cache.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/build/cmake/build/CMakeFiles/rebuild_cache.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/build/cmake/build/CMakeFiles/list_install_components.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/build/cmake/build/CMakeFiles/install.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/build/cmake/build/CMakeFiles/install/local.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/build/cmake/build/CMakeFiles/install/strip.dir

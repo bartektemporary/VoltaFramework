@@ -1,0 +1,2 @@
+C:\MinGW\bin\ar.exe qc lib\libglew32.a "CMakeFiles/glew_s.dir/C_/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/src/glew.c.obj" "CMakeFiles/glew_s.dir/C_/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/build/glew.rc.obj"
+C:\MinGW\bin\ranlib.exe lib\libglew32.a

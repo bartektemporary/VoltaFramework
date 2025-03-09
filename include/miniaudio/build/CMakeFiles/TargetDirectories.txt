@@ -1,0 +1,8 @@
+C:/Users/barte/Desktop/VoltaRewritten/include/miniaudio/build/CMakeFiles/miniaudio.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/miniaudio/build/CMakeFiles/miniaudio_channel_combiner_node.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/miniaudio/build/CMakeFiles/miniaudio_channel_separator_node.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/miniaudio/build/CMakeFiles/miniaudio_ltrim_node.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/miniaudio/build/CMakeFiles/miniaudio_reverb_node.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/miniaudio/build/CMakeFiles/miniaudio_vocoder_node.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/miniaudio/build/CMakeFiles/edit_cache.dir
+C:/Users/barte/Desktop/VoltaRewritten/include/miniaudio/build/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,130 @@
+#include "VoltaFramework.hpp"
+#include <cmath>
+
+int l_math_clamp(lua_State* L) {
+    double n {luaL_checknumber(L, 1)};
+    double minValue {luaL_checknumber(L, 2)};
+    double maxValue {luaL_checknumber(L, 3)};
+    double result {fmin(fmax(n, minValue), maxValue)};
+    lua_pushnumber(L, result);
+    return 1;
+}
+
+int l_math_round(lua_State* L) {
+    double n {luaL_checknumber(L, 1)};
+    lua_Integer i {luaL_optinteger(L, 2, 0)};
+    double m {pow(10.0, static_cast<double>(i))};
+    double result {floor(n * m + 0.5) / m};
+    lua_pushnumber(L, result);
+    return 1;
+}
+
+static float fade(float t) {
+    return t * t * t * (t * (t * 6 - 15) + 10);
+}
+
+static float lerp(float a, float b, float t) {
+    return a + t * (b - a);
+}
+
+static float grad(int hash, float x, float y, float z) {
+    int h {hash & 15};
+    float u {h < 8 ? x : y};
+    float v {h < 4 ? y : h == 12 || h == 14 ? x : z};
+    return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+}
+
+static const unsigned char p[] {
+    151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,
+    8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,
+    35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,
+    134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,
+    55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,
+    18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,
+    250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,
+    189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,
+    172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,
+    228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,
+    107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,
+    138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180
+};
+
+int l_math_lerp(lua_State* L) {
+    lua_Number a {luaL_checknumber(L, 1)};
+    lua_Number b {luaL_checknumber(L, 2)};
+    lua_Number t {luaL_checknumber(L, 3)};
+    lua_pushnumber(L, lerp(static_cast<float>(a), static_cast<float>(b), static_cast<float>(t)));
+    return 1;
+}
+
+int l_math_noise1d(lua_State* L) {
+    lua_Number x {luaL_checknumber(L, 1)};
+    int X {static_cast<int>(floor(x)) & 255};
+    x -= floor(x);
+    float u {fade(static_cast<float>(x))};
+    int a {p[X]};
+    int b {p[(X + 1) & 255]};
+    float result {lerp(grad(a, static_cast<float>(x), 0, 0), grad(b, static_cast<float>(x - 1), 0, 0), u)};
+    lua_pushnumber(L, result * 0.5 + 0.5);
+    return 1;
+}
+
+int l_math_noise2d(lua_State* L) {
+    lua_Number x {luaL_checknumber(L, 1)};
+    lua_Number y {luaL_checknumber(L, 2)};
+    int X {static_cast<int>(floor(x)) & 255};
+    int Y {static_cast<int>(floor(y)) & 255};
+    x -= floor(x);
+    y -= floor(y);
+    float u {fade(static_cast<float>(x))};
+    float v {fade(static_cast<float>(y))};
+    int A {p[X] + Y};
+    int AA {p[A & 255]};
+    int AB {p[(A + 1) & 255]};
+    int B {p[(X + 1) & 255] + Y};
+    int BA {p[B & 255]};
+    int BB {p[(B + 1) & 255]};
+    float result {lerp(
+        lerp(grad(AA, static_cast<float>(x), static_cast<float>(y), 0), grad(BA, static_cast<float>(x - 1), static_cast<float>(y), 0), u),
+        lerp(grad(AB, static_cast<float>(x), static_cast<float>(y - 1), 0), grad(BB, static_cast<float>(x - 1), static_cast<float>(y - 1), 0), u),
+        v
+    )};
+    lua_pushnumber(L, result * 0.5 + 0.5);
+    return 1;
+}
+
+int l_math_noise3d(lua_State* L) {
+    lua_Number x {luaL_checknumber(L, 1)};
+    lua_Number y {luaL_checknumber(L, 2)};
+    lua_Number z {luaL_checknumber(L, 3)};
+    int X {static_cast<int>(floor(x)) & 255};
+    int Y {static_cast<int>(floor(y)) & 255};
+    int Z {static_cast<int>(floor(z)) & 255};
+    x -= floor(x);
+    y -= floor(y);
+    z -= floor(z);
+    float u {fade(static_cast<float>(x))};
+    float v {fade(static_cast<float>(y))};
+    float w {fade(static_cast<float>(z))};
+    int A {p[X] + Y};
+    int AA {p[A & 255] + Z};
+    int AB {p[(A + 1) & 255] + Z};
+    int B {p[(X + 1) & 255] + Y};
+    int BA {p[B & 255] + Z};
+    int BB {p[(B + 1) & 255] + Z};
+    float result {lerp(
+        lerp(
+            lerp(grad(p[AA & 255], static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)), grad(p[BA & 255], static_cast<float>(x - 1), static_cast<float>(y), static_cast<float>(z)), u),
+            lerp(grad(p[AB & 255], static_cast<float>(x), static_cast<float>(y - 1), static_cast<float>(z)), grad(p[BB & 255], static_cast<float>(x - 1), static_cast<float>(y - 1), static_cast<float>(z)), u),
+            v
+        ),
+        lerp(
+            lerp(grad(p[(AA + 1) & 255], static_cast<float>(x), static_cast<float>(y), static_cast<float>(z - 1)), grad(p[(BA + 1) & 255], static_cast<float>(x - 1), static_cast<float>(y), static_cast<float>(z - 1)), u),
+            lerp(grad(p[(AB + 1) & 255], static_cast<float>(x), static_cast<float>(y - 1), static_cast<float>(z - 1)), grad(p[(BB + 1) & 255], static_cast<float>(x - 1), static_cast<float>(y - 1), static_cast<float>(z - 1)), u),
+            v
+        ),
+        w
+    )};
+    lua_pushnumber(L, result * 0.5 + 0.5);
+    return 1;
+}

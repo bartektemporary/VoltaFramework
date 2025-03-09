@@ -1,0 +1,3 @@
+"C:\Program Files\CMake\bin\cmake.exe" -E rm -f CMakeFiles\lua.dir/objects.a
+C:\MinGW\bin\ar.exe qc CMakeFiles\lua.dir/objects.a @CMakeFiles\lua.dir\objects1.rsp
+C:\MinGW\bin\gcc.exe -Wl,--whole-archive CMakeFiles\lua.dir/objects.a -Wl,--no-whole-archive -o ..\lua.exe -Wl,--out-implib,liblua.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\lua.dir\linkLibs.rsp

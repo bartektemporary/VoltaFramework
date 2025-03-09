@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.lua": "lua",
+        "unordered_map": "cpp",
+        "iostream": "cpp"
+    }
+}
