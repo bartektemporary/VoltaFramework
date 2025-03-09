@@ -3,19 +3,18 @@
 
 CMakeFiles/game.dir/src/Audio.cpp.obj
  C:/Users/barte/Desktop/VoltaFramework/src/Audio.cpp
- C:/Users/barte/Desktop/VoltaRewritten/include/FreeImage/Dist/FreeImage.h
- C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/include/GL/glew.h
- C:/Users/barte/Desktop/VoltaRewritten/include/glfw-3.4/include/GLFW/glfw3.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lauxlib.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lua.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lua.hpp
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/luaconf.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lualib.h
- C:/Users/barte/Desktop/VoltaRewritten/include/miniaudio/miniaudio.h
- C:/Users/barte/Desktop/VoltaRewritten/src/Audio.cpp
- C:/Users/barte/Desktop/VoltaRewritten/src/Buffer.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/VoltaFramework.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/json.hpp
+ C:/Users/barte/Desktop/VoltaFramework/include/FreeImage/Dist/FreeImage.h
+ C:/Users/barte/Desktop/VoltaFramework/include/glew-2.1.0/include/GL/glew.h
+ C:/Users/barte/Desktop/VoltaFramework/include/glfw-3.4/include/GLFW/glfw3.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lauxlib.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.hpp
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/luaconf.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lualib.h
+ C:/Users/barte/Desktop/VoltaFramework/include/miniaudio/miniaudio.h
+ C:/Users/barte/Desktop/VoltaFramework/src/Buffer.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/VoltaFramework.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/Json.hpp
  C:/MinGW/include/_mingw.h
  C:/MinGW/include/_winsock.h
  C:/MinGW/include/assert.h
@@ -222,19 +221,18 @@ CMakeFiles/game.dir/src/Audio.cpp.obj
 
 CMakeFiles/game.dir/src/Buffer.cpp.obj
  C:/Users/barte/Desktop/VoltaFramework/src/Buffer.cpp
- C:/Users/barte/Desktop/VoltaRewritten/include/FreeImage/Dist/FreeImage.h
- C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/include/GL/glew.h
- C:/Users/barte/Desktop/VoltaRewritten/include/glfw-3.4/include/GLFW/glfw3.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lauxlib.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lua.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lua.hpp
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/luaconf.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lualib.h
- C:/Users/barte/Desktop/VoltaRewritten/include/miniaudio/miniaudio.h
- C:/Users/barte/Desktop/VoltaRewritten/src/Buffer.cpp
- C:/Users/barte/Desktop/VoltaRewritten/src/Buffer.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/VoltaFramework.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/json.hpp
+ C:/Users/barte/Desktop/VoltaFramework/include/FreeImage/Dist/FreeImage.h
+ C:/Users/barte/Desktop/VoltaFramework/include/glew-2.1.0/include/GL/glew.h
+ C:/Users/barte/Desktop/VoltaFramework/include/glfw-3.4/include/GLFW/glfw3.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lauxlib.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.hpp
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/luaconf.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lualib.h
+ C:/Users/barte/Desktop/VoltaFramework/include/miniaudio/miniaudio.h
+ C:/Users/barte/Desktop/VoltaFramework/src/Buffer.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/VoltaFramework.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/Json.hpp
  C:/MinGW/include/_mingw.h
  C:/MinGW/include/ctype.h
  C:/MinGW/include/direct.h
@@ -382,19 +380,18 @@ CMakeFiles/game.dir/src/Buffer.cpp.obj
 
 CMakeFiles/game.dir/src/Graphics.cpp.obj
  C:/Users/barte/Desktop/VoltaFramework/src/Graphics.cpp
- C:/Users/barte/Desktop/VoltaRewritten/include/FreeImage/Dist/FreeImage.h
- C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/include/GL/glew.h
- C:/Users/barte/Desktop/VoltaRewritten/include/glfw-3.4/include/GLFW/glfw3.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lauxlib.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lua.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lua.hpp
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/luaconf.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lualib.h
- C:/Users/barte/Desktop/VoltaRewritten/include/miniaudio/miniaudio.h
- C:/Users/barte/Desktop/VoltaRewritten/src/Buffer.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/Graphics.cpp
- C:/Users/barte/Desktop/VoltaRewritten/src/VoltaFramework.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/json.hpp
+ C:/Users/barte/Desktop/VoltaFramework/include/FreeImage/Dist/FreeImage.h
+ C:/Users/barte/Desktop/VoltaFramework/include/glew-2.1.0/include/GL/glew.h
+ C:/Users/barte/Desktop/VoltaFramework/include/glfw-3.4/include/GLFW/glfw3.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lauxlib.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.hpp
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/luaconf.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lualib.h
+ C:/Users/barte/Desktop/VoltaFramework/include/miniaudio/miniaudio.h
+ C:/Users/barte/Desktop/VoltaFramework/src/Buffer.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/VoltaFramework.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/Json.hpp
  C:/MinGW/include/_mingw.h
  C:/MinGW/include/ctype.h
  C:/MinGW/include/direct.h
@@ -542,20 +539,19 @@ CMakeFiles/game.dir/src/Graphics.cpp.obj
 
 CMakeFiles/game.dir/src/Input.cpp.obj
  C:/Users/barte/Desktop/VoltaFramework/src/Input.cpp
- C:/Users/barte/Desktop/VoltaRewritten/include/FreeImage/Dist/FreeImage.h
- C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/include/GL/glew.h
- C:/Users/barte/Desktop/VoltaRewritten/include/glfw-3.4/include/GLFW/glfw3.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lauxlib.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lua.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lua.hpp
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/luaconf.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lualib.h
- C:/Users/barte/Desktop/VoltaRewritten/include/miniaudio/miniaudio.h
- C:/Users/barte/Desktop/VoltaRewritten/src/Buffer.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/Input.cpp
- C:/Users/barte/Desktop/VoltaRewritten/src/Maps.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/VoltaFramework.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/json.hpp
+ C:/Users/barte/Desktop/VoltaFramework/include/FreeImage/Dist/FreeImage.h
+ C:/Users/barte/Desktop/VoltaFramework/include/glew-2.1.0/include/GL/glew.h
+ C:/Users/barte/Desktop/VoltaFramework/include/glfw-3.4/include/GLFW/glfw3.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lauxlib.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.hpp
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/luaconf.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lualib.h
+ C:/Users/barte/Desktop/VoltaFramework/include/miniaudio/miniaudio.h
+ C:/Users/barte/Desktop/VoltaFramework/src/Buffer.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/Maps.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/VoltaFramework.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/Json.hpp
  C:/MinGW/include/_mingw.h
  C:/MinGW/include/ctype.h
  C:/MinGW/include/direct.h
@@ -700,19 +696,18 @@ CMakeFiles/game.dir/src/Input.cpp.obj
 
 CMakeFiles/game.dir/src/Json.cpp.obj
  C:/Users/barte/Desktop/VoltaFramework/src/Json.cpp
- C:/Users/barte/Desktop/VoltaRewritten/include/FreeImage/Dist/FreeImage.h
- C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/include/GL/glew.h
- C:/Users/barte/Desktop/VoltaRewritten/include/glfw-3.4/include/GLFW/glfw3.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lauxlib.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lua.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lua.hpp
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/luaconf.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lualib.h
- C:/Users/barte/Desktop/VoltaRewritten/include/miniaudio/miniaudio.h
- C:/Users/barte/Desktop/VoltaRewritten/src/Buffer.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/Json.cpp
- C:/Users/barte/Desktop/VoltaRewritten/src/VoltaFramework.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/json.hpp
+ C:/Users/barte/Desktop/VoltaFramework/include/FreeImage/Dist/FreeImage.h
+ C:/Users/barte/Desktop/VoltaFramework/include/glew-2.1.0/include/GL/glew.h
+ C:/Users/barte/Desktop/VoltaFramework/include/glfw-3.4/include/GLFW/glfw3.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lauxlib.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.hpp
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/luaconf.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lualib.h
+ C:/Users/barte/Desktop/VoltaFramework/include/miniaudio/miniaudio.h
+ C:/Users/barte/Desktop/VoltaFramework/src/Buffer.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/VoltaFramework.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/Json.hpp
  C:/MinGW/include/_mingw.h
  C:/MinGW/include/ctype.h
  C:/MinGW/include/direct.h
@@ -857,19 +852,18 @@ CMakeFiles/game.dir/src/Json.cpp.obj
 
 CMakeFiles/game.dir/src/MathUtils.cpp.obj
  C:/Users/barte/Desktop/VoltaFramework/src/MathUtils.cpp
- C:/Users/barte/Desktop/VoltaRewritten/include/FreeImage/Dist/FreeImage.h
- C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/include/GL/glew.h
- C:/Users/barte/Desktop/VoltaRewritten/include/glfw-3.4/include/GLFW/glfw3.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lauxlib.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lua.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lua.hpp
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/luaconf.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lualib.h
- C:/Users/barte/Desktop/VoltaRewritten/include/miniaudio/miniaudio.h
- C:/Users/barte/Desktop/VoltaRewritten/src/Buffer.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/MathUtils.cpp
- C:/Users/barte/Desktop/VoltaRewritten/src/VoltaFramework.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/json.hpp
+ C:/Users/barte/Desktop/VoltaFramework/include/FreeImage/Dist/FreeImage.h
+ C:/Users/barte/Desktop/VoltaFramework/include/glew-2.1.0/include/GL/glew.h
+ C:/Users/barte/Desktop/VoltaFramework/include/glfw-3.4/include/GLFW/glfw3.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lauxlib.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.hpp
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/luaconf.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lualib.h
+ C:/Users/barte/Desktop/VoltaFramework/include/miniaudio/miniaudio.h
+ C:/Users/barte/Desktop/VoltaFramework/src/Buffer.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/VoltaFramework.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/Json.hpp
  C:/MinGW/include/_mingw.h
  C:/MinGW/include/ctype.h
  C:/MinGW/include/direct.h
@@ -1014,19 +1008,18 @@ CMakeFiles/game.dir/src/MathUtils.cpp.obj
 
 CMakeFiles/game.dir/src/TableUtils.cpp.obj
  C:/Users/barte/Desktop/VoltaFramework/src/TableUtils.cpp
- C:/Users/barte/Desktop/VoltaRewritten/include/FreeImage/Dist/FreeImage.h
- C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/include/GL/glew.h
- C:/Users/barte/Desktop/VoltaRewritten/include/glfw-3.4/include/GLFW/glfw3.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lauxlib.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lua.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lua.hpp
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/luaconf.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lualib.h
- C:/Users/barte/Desktop/VoltaRewritten/include/miniaudio/miniaudio.h
- C:/Users/barte/Desktop/VoltaRewritten/src/Buffer.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/TableUtils.cpp
- C:/Users/barte/Desktop/VoltaRewritten/src/VoltaFramework.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/json.hpp
+ C:/Users/barte/Desktop/VoltaFramework/include/FreeImage/Dist/FreeImage.h
+ C:/Users/barte/Desktop/VoltaFramework/include/glew-2.1.0/include/GL/glew.h
+ C:/Users/barte/Desktop/VoltaFramework/include/glfw-3.4/include/GLFW/glfw3.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lauxlib.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.hpp
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/luaconf.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lualib.h
+ C:/Users/barte/Desktop/VoltaFramework/include/miniaudio/miniaudio.h
+ C:/Users/barte/Desktop/VoltaFramework/src/Buffer.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/VoltaFramework.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/Json.hpp
  C:/MinGW/include/_mingw.h
  C:/MinGW/include/ctype.h
  C:/MinGW/include/direct.h
@@ -1171,20 +1164,19 @@ CMakeFiles/game.dir/src/TableUtils.cpp.obj
 
 CMakeFiles/game.dir/src/VoltaFramework.cpp.obj
  C:/Users/barte/Desktop/VoltaFramework/src/VoltaFramework.cpp
- C:/Users/barte/Desktop/VoltaRewritten/include/FreeImage/Dist/FreeImage.h
- C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/include/GL/glew.h
- C:/Users/barte/Desktop/VoltaRewritten/include/glfw-3.4/include/GLFW/glfw3.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lauxlib.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lua.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lua.hpp
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/luaconf.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lualib.h
- C:/Users/barte/Desktop/VoltaRewritten/include/miniaudio/miniaudio.h
- C:/Users/barte/Desktop/VoltaRewritten/src/Buffer.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/Maps.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/VoltaFramework.cpp
- C:/Users/barte/Desktop/VoltaRewritten/src/VoltaFramework.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/json.hpp
+ C:/Users/barte/Desktop/VoltaFramework/include/FreeImage/Dist/FreeImage.h
+ C:/Users/barte/Desktop/VoltaFramework/include/glew-2.1.0/include/GL/glew.h
+ C:/Users/barte/Desktop/VoltaFramework/include/glfw-3.4/include/GLFW/glfw3.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lauxlib.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.hpp
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/luaconf.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lualib.h
+ C:/Users/barte/Desktop/VoltaFramework/include/miniaudio/miniaudio.h
+ C:/Users/barte/Desktop/VoltaFramework/src/Buffer.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/Maps.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/VoltaFramework.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/Json.hpp
  C:/MinGW/include/_mingw.h
  C:/MinGW/include/ctype.h
  C:/MinGW/include/direct.h
@@ -1332,19 +1324,18 @@ CMakeFiles/game.dir/src/VoltaFramework.cpp.obj
 
 CMakeFiles/game.dir/src/Window.cpp.obj
  C:/Users/barte/Desktop/VoltaFramework/src/Window.cpp
- C:/Users/barte/Desktop/VoltaRewritten/include/FreeImage/Dist/FreeImage.h
- C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/include/GL/glew.h
- C:/Users/barte/Desktop/VoltaRewritten/include/glfw-3.4/include/GLFW/glfw3.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lauxlib.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lua.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lua.hpp
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/luaconf.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lualib.h
- C:/Users/barte/Desktop/VoltaRewritten/include/miniaudio/miniaudio.h
- C:/Users/barte/Desktop/VoltaRewritten/src/Buffer.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/VoltaFramework.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/Window.cpp
- C:/Users/barte/Desktop/VoltaRewritten/src/json.hpp
+ C:/Users/barte/Desktop/VoltaFramework/include/FreeImage/Dist/FreeImage.h
+ C:/Users/barte/Desktop/VoltaFramework/include/glew-2.1.0/include/GL/glew.h
+ C:/Users/barte/Desktop/VoltaFramework/include/glfw-3.4/include/GLFW/glfw3.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lauxlib.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.hpp
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/luaconf.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lualib.h
+ C:/Users/barte/Desktop/VoltaFramework/include/miniaudio/miniaudio.h
+ C:/Users/barte/Desktop/VoltaFramework/src/Buffer.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/VoltaFramework.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/Json.hpp
  C:/MinGW/include/_mingw.h
  C:/MinGW/include/ctype.h
  C:/MinGW/include/direct.h
@@ -1489,19 +1480,18 @@ CMakeFiles/game.dir/src/Window.cpp.obj
 
 CMakeFiles/game.dir/src/main.cpp.obj
  C:/Users/barte/Desktop/VoltaFramework/src/main.cpp
- C:/Users/barte/Desktop/VoltaRewritten/include/FreeImage/Dist/FreeImage.h
- C:/Users/barte/Desktop/VoltaRewritten/include/glew-2.1.0/include/GL/glew.h
- C:/Users/barte/Desktop/VoltaRewritten/include/glfw-3.4/include/GLFW/glfw3.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lauxlib.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lua.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lua.hpp
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/luaconf.h
- C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/lualib.h
- C:/Users/barte/Desktop/VoltaRewritten/include/miniaudio/miniaudio.h
- C:/Users/barte/Desktop/VoltaRewritten/src/Buffer.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/VoltaFramework.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/json.hpp
- C:/Users/barte/Desktop/VoltaRewritten/src/main.cpp
+ C:/Users/barte/Desktop/VoltaFramework/include/FreeImage/Dist/FreeImage.h
+ C:/Users/barte/Desktop/VoltaFramework/include/glew-2.1.0/include/GL/glew.h
+ C:/Users/barte/Desktop/VoltaFramework/include/glfw-3.4/include/GLFW/glfw3.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lauxlib.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.hpp
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/luaconf.h
+ C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lualib.h
+ C:/Users/barte/Desktop/VoltaFramework/include/miniaudio/miniaudio.h
+ C:/Users/barte/Desktop/VoltaFramework/src/Buffer.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/VoltaFramework.hpp
+ C:/Users/barte/Desktop/VoltaFramework/src/Json.hpp
  C:/MinGW/include/_mingw.h
  C:/MinGW/include/ctype.h
  C:/MinGW/include/direct.h

@@ -2,6 +2,8 @@
     "files.associations": {
         "*.lua": "lua",
         "unordered_map": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "vector": "cpp",
+        "stdexcept": "cpp"
     }
 }

@@ -119,22 +119,26 @@ std::string Buffer::readString(size_t offset, size_t length) const {
 
 // Lua functions
 int l_buffer_alloc(lua_State* L) {
-    size_t size{static_cast<size_t>(luaL_checkinteger(L, 1))};
+    size_t size = static_cast<size_t>(luaL_checkinteger(L, 1));
     if (size <= 0) {
         luaL_error(L, "Buffer size must be positive");
         return 0;
     }
+    if (size > Buffer::MAX_SIZE) {
+        luaL_error(L, "Buffer size exceeds maximum of 1 GiB");
+        return 0;
+    }
 
-    VoltaFramework* framework{getFramework(L)};
+    VoltaFramework* framework = getFramework(L);
     if (!framework) {
         luaL_error(L, "Framework instance not found");
         return 0;
     }
 
-    Buffer* buffer{new Buffer(size)};
+    Buffer* buffer = new Buffer(size);
     framework->bufferCache[buffer] = std::unique_ptr<Buffer>{buffer};
 
-    Buffer** ud{static_cast<Buffer**>(lua_newuserdata(L, sizeof(Buffer*)))};
+    Buffer** ud = static_cast<Buffer**>(lua_newuserdata(L, sizeof(Buffer*)));
     *ud = buffer;
     luaL_getmetatable(L, "Buffer");
     lua_setmetatable(L, -2);
@@ -331,6 +335,41 @@ int l_buffer_readString(lua_State* L) {
     }
 
     std::string result{buffer->readString(offset, length)};
+    lua_pushstring(L, result.c_str());
+    return 1;
+}
+
+int l_buffer_fromString(lua_State* L) {
+    const char* str = luaL_checkstring(L, 1);
+    size_t len = std::strlen(str);
+    
+    if (len > Buffer::MAX_SIZE) {
+        luaL_error(L, "String size exceeds maximum buffer size of 1 GiB");
+        return 0;
+    }
+
+    VoltaFramework* framework = getFramework(L);
+    if (!framework) {
+        luaL_error(L, "Framework instance not found");
+        return 0;
+    }
+
+    Buffer* buffer = new Buffer(Buffer::fromString(str));
+    framework->bufferCache[buffer] = std::unique_ptr<Buffer>{buffer};
+
+    Buffer** ud = static_cast<Buffer**>(lua_newuserdata(L, sizeof(Buffer*)));
+    *ud = buffer;
+    luaL_getmetatable(L, "Buffer");
+    lua_setmetatable(L, -2);
+
+    return 1;
+}
+
+int l_buffer_toString(lua_State* L) {
+    Buffer** ud = static_cast<Buffer**>(luaL_checkudata(L, 1, "Buffer"));
+    Buffer* buffer = *ud;
+    
+    std::string result = buffer->toString();
     lua_pushstring(L, result.c_str());
     return 1;
 }

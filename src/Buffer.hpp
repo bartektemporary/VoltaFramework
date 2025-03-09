@@ -4,14 +4,41 @@
 #include <vector>
 #include <cstdint>
 #include <string>
+#include <stdexcept>
 #include <lua.hpp>
 
 class Buffer {
 public:
-    Buffer(size_t size) : data{std::vector<uint8_t>(size, 0)} {}
+    static constexpr size_t MAX_SIZE = 1'073'741'824; // 1 GiB in bytes
+    Buffer(size_t size) {
+        if (size > MAX_SIZE) {
+            throw std::length_error("Buffer size exceeds maximum of 1 GiB");
+        }
+        data = std::vector<uint8_t>(size, 0);
+    }
+    
     uint8_t* getData() { return data.data(); }
     size_t getSize() const { return data.size(); }
-    void resize(size_t newSize) { data.resize(newSize, 0); }
+    
+    void resize(size_t newSize) {
+        if (newSize > MAX_SIZE) {
+            throw std::length_error("Buffer size exceeds maximum of 1 GiB");
+        }
+        data.resize(newSize, 0);
+    }
+
+    static Buffer fromString(const std::string& str) {
+        if (str.size() > MAX_SIZE) {
+            throw std::length_error("String size exceeds maximum buffer size of 1 GiB");
+        }
+        Buffer buffer{str.size()};
+        buffer.writeString(str, 0);
+        return buffer;
+    }
+
+    std::string toString() const {
+        return readString(0, data.size());
+    }
 
     // Write functions
     void writeUInt8(uint8_t value, size_t offset);
@@ -59,6 +86,8 @@ int l_buffer_writeInt64(lua_State* L);
 int l_buffer_readInt64(lua_State* L);
 int l_buffer_writeString(lua_State* L);
 int l_buffer_readString(lua_State* L);
+int l_buffer_fromString(lua_State* L);
+int l_buffer_toString(lua_State* L);
 int l_buffer_size(lua_State* L);
 
 #endif // BUFFER_H

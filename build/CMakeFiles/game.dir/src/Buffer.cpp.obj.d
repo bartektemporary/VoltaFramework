@@ -85,6 +85,7 @@ CMakeFiles/game.dir/src/Buffer.cpp.obj: \
  c:\mingw\include\stdio.h \
  c:\mingw\lib\gcc\mingw32\6.3.0\include\c++\cerrno \
  c:\mingw\lib\gcc\mingw32\6.3.0\include\c++\bits\basic_string.tcc \
+ c:\mingw\lib\gcc\mingw32\6.3.0\include\c++\stdexcept \
  C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.hpp \
  C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lua.h \
  C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/luaconf.h \
@@ -100,7 +101,6 @@ CMakeFiles/game.dir/src/Buffer.cpp.obj: \
  c:\mingw\lib\gcc\mingw32\6.3.0\include\c++\bits\locale_classes.tcc \
  c:\mingw\lib\gcc\mingw32\6.3.0\include\c++\system_error \
  c:\mingw\lib\gcc\mingw32\6.3.0\include\c++\mingw32\bits\error_constants.h \
- c:\mingw\lib\gcc\mingw32\6.3.0\include\c++\stdexcept \
  c:\mingw\lib\gcc\mingw32\6.3.0\include\c++\streambuf \
  c:\mingw\lib\gcc\mingw32\6.3.0\include\c++\bits\streambuf.tcc \
  c:\mingw\lib\gcc\mingw32\6.3.0\include\c++\bits\basic_ios.h \
