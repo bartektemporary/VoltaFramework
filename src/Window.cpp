@@ -300,3 +300,30 @@ int l_window_setVsync(lua_State* L) {
     lua_pushboolean(L, true);
     return 1;
 }
+
+void VoltaFramework::windowSizeCallback(GLFWwindow* window, int newWidth, int newHeight) {
+    if (g_frameworkInstance && g_frameworkInstance->getWindow() == window) {
+        g_frameworkInstance->width = newWidth;
+        g_frameworkInstance->height = newHeight;
+        glViewport(0, 0, newWidth, newHeight);
+    }
+}
+
+void VoltaFramework::windowPosCallback(GLFWwindow* window, int xpos, int ypos) {
+    if (g_frameworkInstance && g_frameworkInstance->getWindow() == window) {
+        g_frameworkInstance->x = xpos;
+        g_frameworkInstance->y = ypos;
+    }
+}
+
+void VoltaFramework::windowMaximizeCallback(GLFWwindow* window, int maximized) {
+    if (g_frameworkInstance && g_frameworkInstance->getWindow() == window) {
+        if (maximized) {
+            g_frameworkInstance->state = 2; // Maximized
+        } else if (glfwGetWindowAttrib(window, GLFW_ICONIFIED)) {
+            g_frameworkInstance->state = 1; // Minimized (check if iconified)
+        } else {
+            g_frameworkInstance->state = 0; // Normal
+        }
+    }
+}

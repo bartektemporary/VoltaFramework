@@ -1,14 +1,12 @@
-local x, y = 400, 300
-local rectangleX = x
-local rectangleY = y
+local vector2 = volta.vector2
 
---circle movement
+-- Initialize position as a Vector2
+local defaultPosition = vector2.new(400, 300)
+
+-- Circle movement
 local speed<const> = 200
-local starting<const> = x
-local destination<const> = x + 400
 
 local t = 0
-
 local sound
 
 local fpsCounter = 0
@@ -26,20 +24,6 @@ function init()
         sound:setLooped(true)
         sound:play()
     end
-
-    local buf = volta.buffer.alloc(16) -- 16 bytes
-
-    buf:writeUInt8(255, 0)
-    print(buf:readUInt8(0, 0)) -- 255
-
-    buf:writeInt16(-12345, 2)
-    print(buf:readInt16(0, 2)) -- -12345
-
-    buf:writeUInt32(4294967295, 4) -- Max uint32
-    print(buf:readUInt32(0, 2)) -- 4294967295
-
-    buf:writeInt64(-9223372036854775808, 8) -- Min int64
-    print(buf:readInt64(0, 8)) -- -9223372036854775808
 end
 
 function update(dt)
@@ -52,30 +36,30 @@ function update(dt)
         print("FPS: " .. currentFps)
     end
 
+    local newX = defaultPosition.x
+    local newY = defaultPosition.y
+
     if volta.input.isKeyDown("w") then
-        rectangleY = rectangleY - speed * dt
+        newY = newY - speed * dt
     end
     if volta.input.isKeyDown("s") then
-        rectangleY = rectangleY + speed * dt
+        newY = newY + speed * dt
     end
     if volta.input.isKeyDown("a") then
-        rectangleX = rectangleX - speed * dt
+        newX = newX - speed * dt
     end
     if volta.input.isKeyDown("d") then
-        rectangleX = rectangleX + speed * dt
+        newX = newX + speed * dt
     end
 
-    if t <= 1 then
-        x = math.lerp(starting, destination, t)
-        t = t + 0.01
-    end
+    defaultPosition = vector2.new(newX, newY)
 
-    volta.graphics.drawImage("tree.png", 100, 100, 200, 200)
+    volta.graphics.drawImage("tree.png", vector2.new(100, 100), vector2.new(200, 200))
 
-    volta.graphics.setColor(1, 0, 0)
-    volta.graphics.circle(true, x, y, 50)
     volta.graphics.setColor(0.5, 1, 0)
-    volta.graphics.rectangle(true, rectangleX, rectangleY, 50, 50)
+    volta.graphics.rectangle(true, defaultPosition, vector2.new(50, 50))
+
+    volta.graphics.drawLine(vector2.new(100, 100), vector2.new(500, 500), 10)
 end
 
 volta.input.keyPressed("up", function()
@@ -84,6 +68,10 @@ end)
 
 volta.input.keyPressed("down", function()
     volta.audio.setGlobalVolume(volta.audio.getGlobalVolume() - 0.1)
+end)
+
+volta.input.keyPressed("i", function()
+    print(volta.getRunningTime())
 end)
 
 

@@ -16,11 +16,17 @@
 #include "miniaudio.h"
 #include <FreeImage.h>
 
+struct Vector2 {
+    float x;
+    float y;
+};
+
 class VoltaFramework {
 public:
     VoltaFramework();
     ~VoltaFramework();
     void run();
+    double startTime;
     GLFWwindow* getWindow() const { return window; }
 
     int getWidth() const { return width; }
@@ -98,6 +104,7 @@ int l_window_setVsync(lua_State* L);
 
 int l_rectangle(lua_State* L);
 int l_circle(lua_State* L);
+int l_drawLine(lua_State* L);
 int l_setColor(lua_State* L);
 int l_drawImage(lua_State* L);
 int l_setFilter(lua_State* L);
@@ -139,6 +146,21 @@ int l_buffer_writeInt64(lua_State* L);
 int l_buffer_readInt64(lua_State* L);
 int l_buffer_size(lua_State* L);
 
+int l_vector2_new(lua_State* L);
+int l_vector2_add(lua_State* L);
+int l_vector2_subtract(lua_State* L);
+int l_vector2_multiply(lua_State* L);
+int l_vector2_divide(lua_State* L);
+int l_vector2_magnitude(lua_State* L);
+int l_vector2_normalize(lua_State* L);
+int l_vector2_dot(lua_State* L);
+int l_vector2_lerp(lua_State* L);
+int l_vector2_distance(lua_State* L);
+int l_vector2_angle(lua_State* L);
+int l_vector2_tostring(lua_State* L);
+
+Vector2* checkVector2(lua_State* L, int index);
+
 int l_math_clamp(lua_State* L);
 int l_math_round(lua_State* L);
 int l_math_lerp(lua_State* L);
@@ -147,5 +169,7 @@ int l_math_noise2d(lua_State* L);
 int l_math_noise3d(lua_State* L);
 
 int l_table_shallowCopy(lua_State* L);
+
+int l_getRunningTime(lua_State* L);
 
 #endif // VOLTA_FRAMEWORK_H

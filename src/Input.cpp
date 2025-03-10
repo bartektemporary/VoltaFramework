@@ -106,3 +106,72 @@ int l_input_mouseButtonPressed(lua_State* L) {
     }
     return 0;
 }
+
+void VoltaFramework::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    VoltaFramework* framework {g_frameworkInstance};
+    if (!framework || action != GLFW_PRESS) return;
+
+    auto it {framework->keyPressCallbackRefs.find(key)};
+    if (it != framework->keyPressCallbackRefs.end()) {
+        for (int ref : it->second) {
+            lua_rawgeti(framework->L, LUA_REGISTRYINDEX, ref);
+            if (lua_isfunction(framework->L, -1)) {
+                if (lua_pcall(framework->L, 0, 0, 0) != LUA_OK) {
+                    std::cerr << "Key press callback error for key " << key << ": " << lua_tostring(framework->L, -1) << ", stack top: " << lua_gettop(framework->L) << std::endl;
+                    lua_pop(framework->L, 1); // Clean up error message
+                }
+            } else {
+                std::cerr << "Invalid callback for key " << key << ", stack top: " << lua_gettop(framework->L) << std::endl;
+            }
+            lua_settop(framework->L, 0); // Reset stack to avoid corruption
+        }
+    }
+}
+
+void VoltaFramework::registerKeyPressCallback(const std::string& key, int ref) {
+    auto it {keyMap.find(key)};
+    if (it != keyMap.end()) {
+        keyPressCallbackRefs[it->second].push_back(ref);
+    } else {
+        std::cerr << "Unknown key: " << key << std::endl;
+    }
+}
+
+void VoltaFramework::registerMouseButtonPressCallback(const std::string& button, int ref) {
+    int buttonCode {GLFW_MOUSE_BUTTON_LEFT};
+    if (button == "left") {
+        buttonCode = GLFW_MOUSE_BUTTON_LEFT;
+    } else if (button == "right") {
+        buttonCode = GLFW_MOUSE_BUTTON_RIGHT;
+    } else if (button == "middle") {
+        buttonCode = GLFW_MOUSE_BUTTON_MIDDLE;
+    } else {
+        std::cerr << "Unknown mouse button: " << button << std::endl;
+        luaL_unref(L, LUA_REGISTRYINDEX, ref);
+        return;
+    }
+    mouseButtonCallbackRefs[buttonCode].push_back(ref);
+}
+
+void VoltaFramework::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    VoltaFramework* framework {g_frameworkInstance};
+    if (!framework || action != GLFW_PRESS || !framework->L) return;
+
+    auto it {framework->mouseButtonCallbackRefs.find(button)};
+    if (it != framework->mouseButtonCallbackRefs.end()) {
+        for (int ref : it->second) {
+            lua_rawgeti(framework->L, LUA_REGISTRYINDEX, ref);
+            if (lua_isfunction(framework->L, -1)) {
+                if (lua_pcall(framework->L, 0, 0, 0) != LUA_OK) {
+                    std::cerr << "Mouse button callback error for button " << button 
+                              << ": " << lua_tostring(framework->L, -1) << std::endl;
+                    lua_pop(framework->L, 1);
+                }
+            } else {
+                std::cerr << "Invalid callback reference for button " << button << std::endl;
+                lua_pop(framework->L, 1);
+            }
+        }
+        lua_settop(framework->L, 0); // Clear stack after all callbacks
+    }
+}

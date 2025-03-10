@@ -13,6 +13,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/game.dir/src/MathUtils.cpp.obj.d"
   "CMakeFiles/game.dir/src/TableUtils.cpp.obj"
   "CMakeFiles/game.dir/src/TableUtils.cpp.obj.d"
+  "CMakeFiles/game.dir/src/Vector2.cpp.obj"
+  "CMakeFiles/game.dir/src/Vector2.cpp.obj.d"
   "CMakeFiles/game.dir/src/VoltaFramework.cpp.obj"
   "CMakeFiles/game.dir/src/VoltaFramework.cpp.obj.d"
   "CMakeFiles/game.dir/src/Window.cpp.obj"

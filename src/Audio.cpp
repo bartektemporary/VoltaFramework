@@ -128,3 +128,43 @@ int l_audio_getGlobalVolume(lua_State* L) {
     lua_pushnumber(L, framework->getGlobalVolume());
     return 1;
 }
+
+ma_sound* VoltaFramework::loadAudio(const std::string& filename) {
+    if (audioCache.find(filename) != audioCache.end()) {
+        return &audioCache[filename];
+    }
+
+    std::string fullPath {std::string("assets/") + filename};
+    ma_sound* sound {&audioCache[filename]};
+    ma_result result {ma_sound_init_from_file(&engine, fullPath.c_str(), 0, NULL, NULL, sound)};
+    if (result != MA_SUCCESS) {
+        std::cerr << "Failed to load audio file: " << fullPath << " (Error: " << result << ")" << std::endl;
+        audioCache.erase(filename);
+        return nullptr;
+    }
+    // Apply initial global volume
+    ma_sound_set_volume(sound, ma_sound_get_volume(sound) * globalVolume);
+    return sound;
+}
+
+void VoltaFramework::setGlobalVolume(float volume) {
+    if (volume < 0.0f) volume = 0.0f;
+    if (volume > 1.0f) volume = 1.0f;
+    
+    // If current volume is 0, reset individual sound volumes instead of scaling
+    if (globalVolume == 0.0f) {
+        for (auto& pair : audioCache) {
+            ma_sound* sound {&pair.second};
+            ma_sound_set_volume(sound, volume);
+        }
+    } else {
+        float scaleFactor {volume / globalVolume};
+        for (auto& pair : audioCache) {
+            ma_sound* sound {&pair.second};
+            float currentVolume {ma_sound_get_volume(sound)};
+            ma_sound_set_volume(sound, currentVolume * scaleFactor);
+        }
+    }
+    
+    globalVolume = volume;
+}

@@ -146,4 +146,7 @@ CMakeFiles/game.dir/src/main.cpp.obj: \
  c:\mingw\include\gl\gl.h \
  C:/Users/barte/Desktop/VoltaFramework/include/glfw-3.4/include/GLFW/glfw3.h \
  C:/Users/barte/Desktop/VoltaFramework/include/miniaudio/miniaudio.h \
- C:/Users/barte/Desktop/VoltaFramework/include/FreeImage/Dist/FreeImage.h
+ C:/Users/barte/Desktop/VoltaFramework/include/FreeImage/Dist/FreeImage.h \
+ c:\mingw\lib\gcc\mingw32\6.3.0\include\c++\cstring \
+ c:\mingw\include\string.h c:\mingw\include\strings.h \
+ c:\mingw\include\wchar.h

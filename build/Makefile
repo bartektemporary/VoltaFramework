@@ -296,6 +296,30 @@ src/TableUtils.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\game.dir\build.make CMakeFiles/game.dir/src/TableUtils.cpp.s
 .PHONY : src/TableUtils.cpp.s
 
+src/Vector2.obj: src/Vector2.cpp.obj
+.PHONY : src/Vector2.obj
+
+# target to build an object file
+src/Vector2.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\game.dir\build.make CMakeFiles/game.dir/src/Vector2.cpp.obj
+.PHONY : src/Vector2.cpp.obj
+
+src/Vector2.i: src/Vector2.cpp.i
+.PHONY : src/Vector2.i
+
+# target to preprocess a source file
+src/Vector2.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\game.dir\build.make CMakeFiles/game.dir/src/Vector2.cpp.i
+.PHONY : src/Vector2.cpp.i
+
+src/Vector2.s: src/Vector2.cpp.s
+.PHONY : src/Vector2.s
+
+# target to generate assembly for a file
+src/Vector2.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\game.dir\build.make CMakeFiles/game.dir/src/Vector2.cpp.s
+.PHONY : src/Vector2.cpp.s
+
 src/VoltaFramework.obj: src/VoltaFramework.cpp.obj
 .PHONY : src/VoltaFramework.obj
 
@@ -398,6 +422,9 @@ help:
 	@echo ... src/TableUtils.obj
 	@echo ... src/TableUtils.i
 	@echo ... src/TableUtils.s
+	@echo ... src/Vector2.obj
+	@echo ... src/Vector2.i
+	@echo ... src/Vector2.s
 	@echo ... src/VoltaFramework.obj
 	@echo ... src/VoltaFramework.i
 	@echo ... src/VoltaFramework.s
