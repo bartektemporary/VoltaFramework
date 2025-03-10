@@ -57,6 +57,19 @@ public:
 
     std::unordered_map<Buffer*, std::unique_ptr<Buffer>> bufferCache;
 
+    // Modern OpenGL initialization and cleanup
+    void initOpenGL();
+
+    // Modern OpenGL variables (public for direct access from graphics functions)
+    GLuint shaderProgram;
+    GLuint shapeVAO, shapeVBO, shapeEBO;
+    GLuint textureVAO, textureVBO;
+    GLint colorUniform, useTextureUniform, textureUniform;
+    float currentColor[3];
+        
+    // Helper function to convert window coordinates to OpenGL coordinates
+    void windowToGLCoords(float winX, float winY, float* glX, float* glY);
+
 private:
     lua_State* L;
     GLFWwindow* window;
@@ -84,6 +97,8 @@ private:
     static void windowSizeCallback(GLFWwindow* window, int newWidth, int newHeight);
     static void windowPosCallback(GLFWwindow* window, int xpos, int ypos);
     static void windowMaximizeCallback(GLFWwindow* window, int maximized);
+
+    void cleanupOpenGL();
 };
 
 extern VoltaFramework* g_frameworkInstance;

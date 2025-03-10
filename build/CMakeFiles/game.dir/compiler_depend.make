@@ -505,6 +505,7 @@ CMakeFiles/game.dir/src/Graphics.cpp.obj: C:/Users/barte/Desktop/VoltaFramework/
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/iosfwd \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/iostream \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/istream \
+  C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/math.h \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/memory \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/mingw32/bits/atomic_word.h \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/mingw32/bits/c++allocator.h \

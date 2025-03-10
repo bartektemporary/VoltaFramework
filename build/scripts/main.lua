@@ -26,58 +26,6 @@ function init()
     end
 end
 
-function drawRotatedRectangle(centerX, centerY, width, height, angle, fill)
-    -- Create the center position as a Vector2
-    local center = volta.vector2.new(centerX, centerY)
-
-    -- Calculate the four corners of the rectangle (before rotation)
-    -- Corners are relative to the center
-    local halfWidth = width / 2
-    local halfHeight = height / 2
-
-    -- Define the corners relative to (0,0) before translation to center
-    local corners = {
-        volta.vector2.new(-halfWidth, -halfHeight), -- Bottom-left
-        volta.vector2.new(halfWidth, -halfHeight),  -- Bottom-right
-        volta.vector2.new(halfWidth, halfHeight),   -- Top-right
-        volta.vector2.new(-halfWidth, halfHeight)   -- Top-left
-    }
-
-    -- Rotate each corner around (0,0) and then translate to the center
-    local rotatedCorners = {}
-    for i, corner in ipairs(corners) do
-        -- Rotate the corner around (0,0)
-        local rotated = corner:rotate(angle)
-        -- Translate to the center position
-        rotatedCorners[i] = volta.vector2.new(
-            center.x + rotated.x,
-            center.y + rotated.y
-        )
-    end
-
-    if fill then
-        -- For a filled rectangle, we can approximate by drawing triangles
-        -- Use two triangles to form the quad (since l_rectangle doesn't support rotation)
-        -- However, since volta.graphics doesn't have a triangle function,
-        -- we'll simulate with lines for now or assume a future C++ extension
-        -- For simplicity, we'll draw as lines and suggest a C++ helper below
-        drawRotatedOutline(rotatedCorners)
-    else
-        -- Draw the outline by connecting the rotated corners with lines
-        drawRotatedOutline(rotatedCorners)
-    end
-end
-
--- Helper function to draw the outline of the rotated rectangle
-function drawRotatedOutline(corners)
-    -- Draw lines between consecutive corners (and close the loop)
-    for i = 1, #corners do
-        local start = corners[i]
-        local next = corners[i % #corners + 1] -- Wrap around to the first corner
-        volta.graphics.drawLine(start, next)
-    end
-end
-
 function update(dt)
     fpsCounter = fpsCounter + 1
     fpsTimer = fpsTimer + dt
@@ -112,18 +60,6 @@ function update(dt)
     volta.graphics.rectangle(true, defaultPosition, vector2.new(50, 50))
 
     volta.graphics.drawLine(vector2.new(100, 100), vector2.new(500, 500), 10)
-
-        -- Set the color (e.g., red)
-        volta.graphics.setColor(1, 0, 0)
-
-        -- Draw a rotated rectangle
-        -- Center at (200, 200), size 100x50, rotated 45 degrees, not filled
-        drawRotatedRectangle(200, 200, 100, 50, 45, false)
-    
-        -- Draw another rotated rectangle
-        -- Center at (300, 300), size 80x120, rotated 30 degrees, filled (approximated as outline for now)
-        volta.graphics.setColor(0, 1, 0)
-        drawRotatedRectangle(300, 300, 80, 120, 30, true)
 end
 
 volta.input.keyPressed("up", function()

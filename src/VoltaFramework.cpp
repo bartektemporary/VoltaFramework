@@ -30,6 +30,8 @@ VoltaFramework::VoltaFramework() : L{luaL_newstate()}, width{800}, height{600}, 
         exit(1);
     }
 
+    initOpenGL();
+
     glViewport(0, 0, width, height);
     glfwSetWindowPos(window, x, y); // Set initial position
 
@@ -62,9 +64,6 @@ VoltaFramework::VoltaFramework() : L{luaL_newstate()}, width{800}, height{600}, 
 
 VoltaFramework::~VoltaFramework() {
     g_frameworkInstance = nullptr;
-    for (auto& pair : audioCache) {
-        ma_sound_uninit(&pair.second);
-    }
     audioCache.clear();
     for (auto& pair : keyPressCallbackRefs) {
         for (int ref : pair.second) {
@@ -78,6 +77,15 @@ VoltaFramework::~VoltaFramework() {
         }
     }
     mouseButtonCallbackRefs.clear();
+    for (auto& pair : textureCache) {
+        glDeleteTextures(1, &pair.second);
+    }
+    textureCache.clear();
+    FreeImage_DeInitialise();
+    cleanupOpenGL();
+    for (auto& pair : audioCache) {
+        ma_sound_uninit(&pair.second);
+    }
     ma_engine_uninit(&engine);
     glfwDestroyWindow(window);
     glfwTerminate();
@@ -119,7 +127,10 @@ void VoltaFramework::loadLuaScript(const std::string& filename) {
 
 void VoltaFramework::update(float dt) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glColor3f(1.0f, 1.0f, 1.0f);
+
+    currentColor[0] = 1.0f;
+    currentColor[1] = 1.0f;
+    currentColor[2] = 1.0f;
 
     lua_getglobal(L, "update");
     if (lua_isfunction(L, -1)) {
