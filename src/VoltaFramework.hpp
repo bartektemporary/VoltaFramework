@@ -57,18 +57,19 @@ public:
 
     std::unordered_map<Buffer*, std::unique_ptr<Buffer>> bufferCache;
 
-    // Modern OpenGL initialization and cleanup
-    void initOpenGL();
-
-    // Modern OpenGL variables (public for direct access from graphics functions)
     GLuint shaderProgram;
     GLuint shapeVAO, shapeVBO, shapeEBO;
     GLuint textureVAO, textureVBO;
     GLint colorUniform, useTextureUniform, textureUniform;
     float currentColor[3];
-        
-    // Helper function to convert window coordinates to OpenGL coordinates
+
+    void initOpenGL();
+    void cleanupOpenGL();
+
     void windowToGLCoords(float winX, float winY, float* glX, float* glY);
+
+    void registerCustomEventCallback(const std::string& eventName, int ref);
+    void triggerCustomEvent(const std::string& eventName, lua_State* L, int nargs);
 
 private:
     lua_State* L;
@@ -98,7 +99,7 @@ private:
     static void windowPosCallback(GLFWwindow* window, int xpos, int ypos);
     static void windowMaximizeCallback(GLFWwindow* window, int maximized);
 
-    void cleanupOpenGL();
+    std::unordered_map<std::string, std::vector<int>> customEventCallbackRefs {};
 };
 
 extern VoltaFramework* g_frameworkInstance;
@@ -176,6 +177,9 @@ int l_vector2_tostring(lua_State* L);
 
 Vector2* checkVector2(lua_State* L, int index);
 
+int l_onCustomEvent(lua_State* L);
+int l_triggerCustomEvent(lua_State* L);
+
 int l_math_clamp(lua_State* L);
 int l_math_round(lua_State* L);
 int l_math_lerp(lua_State* L);
@@ -186,5 +190,4 @@ int l_math_noise3d(lua_State* L);
 int l_table_shallowCopy(lua_State* L);
 
 int l_getRunningTime(lua_State* L);
-
 #endif // VOLTA_FRAMEWORK_H

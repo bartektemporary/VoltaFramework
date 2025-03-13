@@ -173,6 +173,10 @@ void VoltaFramework::registerLuaAPI() {
     // Register volta.getRunningTime
     lua_pushcfunction(L, l_getRunningTime);
     lua_setfield(L, -2, "getRunningTime");
+    lua_pushcfunction(L, l_onCustomEvent);
+    lua_setfield(L, -2, "onEvent");
+    lua_pushcfunction(L, l_triggerCustomEvent);
+    lua_setfield(L, -2, "triggerEvent");
 
     // Set the table as global 'volta'
     lua_setglobal(L, "volta");

@@ -206,11 +206,26 @@ CMakeFiles/game.dir/src/Vector2.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/game.dir/src/Vector2.cpp.s"
 	C:\MinGW\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\barte\Desktop\VoltaFramework\src\Vector2.cpp -o CMakeFiles\game.dir\src\Vector2.cpp.s
 
+CMakeFiles/game.dir/src/Event.cpp.obj: CMakeFiles/game.dir/flags.make
+CMakeFiles/game.dir/src/Event.cpp.obj: CMakeFiles/game.dir/includes_CXX.rsp
+CMakeFiles/game.dir/src/Event.cpp.obj: C:/Users/barte/Desktop/VoltaFramework/src/Event.cpp
+CMakeFiles/game.dir/src/Event.cpp.obj: CMakeFiles/game.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\barte\Desktop\VoltaFramework\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/game.dir/src/Event.cpp.obj"
+	C:\MinGW\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/game.dir/src/Event.cpp.obj -MF CMakeFiles\game.dir\src\Event.cpp.obj.d -o CMakeFiles\game.dir\src\Event.cpp.obj -c C:\Users\barte\Desktop\VoltaFramework\src\Event.cpp
+
+CMakeFiles/game.dir/src/Event.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/game.dir/src/Event.cpp.i"
+	C:\MinGW\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E C:\Users\barte\Desktop\VoltaFramework\src\Event.cpp > CMakeFiles\game.dir\src\Event.cpp.i
+
+CMakeFiles/game.dir/src/Event.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/game.dir/src/Event.cpp.s"
+	C:\MinGW\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\barte\Desktop\VoltaFramework\src\Event.cpp -o CMakeFiles\game.dir\src\Event.cpp.s
+
 CMakeFiles/game.dir/src/Json.cpp.obj: CMakeFiles/game.dir/flags.make
 CMakeFiles/game.dir/src/Json.cpp.obj: CMakeFiles/game.dir/includes_CXX.rsp
 CMakeFiles/game.dir/src/Json.cpp.obj: C:/Users/barte/Desktop/VoltaFramework/src/Json.cpp
 CMakeFiles/game.dir/src/Json.cpp.obj: CMakeFiles/game.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\barte\Desktop\VoltaFramework\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/game.dir/src/Json.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\barte\Desktop\VoltaFramework\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/game.dir/src/Json.cpp.obj"
 	C:\MinGW\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/game.dir/src/Json.cpp.obj -MF CMakeFiles\game.dir\src\Json.cpp.obj.d -o CMakeFiles\game.dir\src\Json.cpp.obj -c C:\Users\barte\Desktop\VoltaFramework\src\Json.cpp
 
 CMakeFiles/game.dir/src/Json.cpp.i: cmake_force
@@ -225,7 +240,7 @@ CMakeFiles/game.dir/src/main.cpp.obj: CMakeFiles/game.dir/flags.make
 CMakeFiles/game.dir/src/main.cpp.obj: CMakeFiles/game.dir/includes_CXX.rsp
 CMakeFiles/game.dir/src/main.cpp.obj: C:/Users/barte/Desktop/VoltaFramework/src/main.cpp
 CMakeFiles/game.dir/src/main.cpp.obj: CMakeFiles/game.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\barte\Desktop\VoltaFramework\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/game.dir/src/main.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\barte\Desktop\VoltaFramework\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/game.dir/src/main.cpp.obj"
 	C:\MinGW\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/game.dir/src/main.cpp.obj -MF CMakeFiles\game.dir\src\main.cpp.obj.d -o CMakeFiles\game.dir\src\main.cpp.obj -c C:\Users\barte\Desktop\VoltaFramework\src\main.cpp
 
 CMakeFiles/game.dir/src/main.cpp.i: cmake_force
@@ -247,6 +262,7 @@ game_OBJECTS = \
 "CMakeFiles/game.dir/src/TableUtils.cpp.obj" \
 "CMakeFiles/game.dir/src/Buffer.cpp.obj" \
 "CMakeFiles/game.dir/src/Vector2.cpp.obj" \
+"CMakeFiles/game.dir/src/Event.cpp.obj" \
 "CMakeFiles/game.dir/src/Json.cpp.obj" \
 "CMakeFiles/game.dir/src/main.cpp.obj"
 
@@ -262,6 +278,7 @@ game.exe: CMakeFiles/game.dir/src/MathUtils.cpp.obj
 game.exe: CMakeFiles/game.dir/src/TableUtils.cpp.obj
 game.exe: CMakeFiles/game.dir/src/Buffer.cpp.obj
 game.exe: CMakeFiles/game.dir/src/Vector2.cpp.obj
+game.exe: CMakeFiles/game.dir/src/Event.cpp.obj
 game.exe: CMakeFiles/game.dir/src/Json.cpp.obj
 game.exe: CMakeFiles/game.dir/src/main.cpp.obj
 game.exe: CMakeFiles/game.dir/build.make
@@ -274,7 +291,7 @@ game.exe: C:/Users/barte/Desktop/VoltaFramework/include/FreeImage/Dist/libfreeim
 game.exe: CMakeFiles/game.dir/linkLibs.rsp
 game.exe: CMakeFiles/game.dir/objects1.rsp
 game.exe: CMakeFiles/game.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=C:\Users\barte\Desktop\VoltaFramework\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Linking CXX executable game.exe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=C:\Users\barte\Desktop\VoltaFramework\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Linking CXX executable game.exe"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles\game.dir\link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

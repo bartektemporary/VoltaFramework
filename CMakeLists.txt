@@ -54,6 +54,7 @@ set(SOURCES
     ${SOURCE_DIR}/TableUtils.cpp
     ${SOURCE_DIR}/Buffer.cpp
     ${SOURCE_DIR}/Vector2.cpp
+    ${SOURCE_DIR}/Event.cpp
     ${SOURCE_DIR}/Json.cpp
     ${SOURCE_DIR}/main.cpp
 )

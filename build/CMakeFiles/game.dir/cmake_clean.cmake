@@ -3,6 +3,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/game.dir/src/Audio.cpp.obj.d"
   "CMakeFiles/game.dir/src/Buffer.cpp.obj"
   "CMakeFiles/game.dir/src/Buffer.cpp.obj.d"
+  "CMakeFiles/game.dir/src/Event.cpp.obj"
+  "CMakeFiles/game.dir/src/Event.cpp.obj.d"
   "CMakeFiles/game.dir/src/Graphics.cpp.obj"
   "CMakeFiles/game.dir/src/Graphics.cpp.obj.d"
   "CMakeFiles/game.dir/src/Input.cpp.obj"

@@ -83,6 +83,12 @@ VoltaFramework::~VoltaFramework() {
     textureCache.clear();
     FreeImage_DeInitialise();
     cleanupOpenGL();
+    for (auto& pair : customEventCallbackRefs) {
+        for (int ref : pair.second) {
+            luaL_unref(L, LUA_REGISTRYINDEX, ref);
+        }
+    }
+    customEventCallbackRefs.clear();
     for (auto& pair : audioCache) {
         ma_sound_uninit(&pair.second);
     }

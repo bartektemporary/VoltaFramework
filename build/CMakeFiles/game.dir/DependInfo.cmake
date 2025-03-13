@@ -10,6 +10,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "C:/Users/barte/Desktop/VoltaFramework/src/Audio.cpp" "CMakeFiles/game.dir/src/Audio.cpp.obj" "gcc" "CMakeFiles/game.dir/src/Audio.cpp.obj.d"
   "C:/Users/barte/Desktop/VoltaFramework/src/Buffer.cpp" "CMakeFiles/game.dir/src/Buffer.cpp.obj" "gcc" "CMakeFiles/game.dir/src/Buffer.cpp.obj.d"
+  "C:/Users/barte/Desktop/VoltaFramework/src/Event.cpp" "CMakeFiles/game.dir/src/Event.cpp.obj" "gcc" "CMakeFiles/game.dir/src/Event.cpp.obj.d"
   "C:/Users/barte/Desktop/VoltaFramework/src/Graphics.cpp" "CMakeFiles/game.dir/src/Graphics.cpp.obj" "gcc" "CMakeFiles/game.dir/src/Graphics.cpp.obj.d"
   "C:/Users/barte/Desktop/VoltaFramework/src/Input.cpp" "CMakeFiles/game.dir/src/Input.cpp.obj" "gcc" "CMakeFiles/game.dir/src/Input.cpp.obj.d"
   "C:/Users/barte/Desktop/VoltaFramework/src/Json.cpp" "CMakeFiles/game.dir/src/Json.cpp.obj" "gcc" "CMakeFiles/game.dir/src/Json.cpp.obj.d"

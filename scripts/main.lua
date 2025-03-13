@@ -24,6 +24,11 @@ function init()
         sound:setLooped(true)
         sound:play()
     end
+
+    -- Register a custom event handler
+    volta.onEvent("gameStart", function()
+        print("moved")
+    end)
 end
 
 function update(dt)
@@ -39,17 +44,26 @@ function update(dt)
     local newX = defaultPosition.x
     local newY = defaultPosition.y
 
+    local moved = false
     if volta.input.isKeyDown("w") then
         newY = newY - speed * dt
+        moved = true
     end
     if volta.input.isKeyDown("s") then
         newY = newY + speed * dt
+        moved = true
     end
     if volta.input.isKeyDown("a") then
         newX = newX - speed * dt
+        moved = true
     end
     if volta.input.isKeyDown("d") then
         newX = newX + speed * dt
+        moved = true
+    end
+
+    if moved then
+        volta.triggerEvent("gameStart")
     end
 
     defaultPosition = vector2.new(newX, newY)

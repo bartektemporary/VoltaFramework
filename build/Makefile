@@ -176,6 +176,30 @@ src/Buffer.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\game.dir\build.make CMakeFiles/game.dir/src/Buffer.cpp.s
 .PHONY : src/Buffer.cpp.s
 
+src/Event.obj: src/Event.cpp.obj
+.PHONY : src/Event.obj
+
+# target to build an object file
+src/Event.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\game.dir\build.make CMakeFiles/game.dir/src/Event.cpp.obj
+.PHONY : src/Event.cpp.obj
+
+src/Event.i: src/Event.cpp.i
+.PHONY : src/Event.i
+
+# target to preprocess a source file
+src/Event.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\game.dir\build.make CMakeFiles/game.dir/src/Event.cpp.i
+.PHONY : src/Event.cpp.i
+
+src/Event.s: src/Event.cpp.s
+.PHONY : src/Event.s
+
+# target to generate assembly for a file
+src/Event.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\game.dir\build.make CMakeFiles/game.dir/src/Event.cpp.s
+.PHONY : src/Event.cpp.s
+
 src/Graphics.obj: src/Graphics.cpp.obj
 .PHONY : src/Graphics.obj
 
@@ -407,6 +431,9 @@ help:
 	@echo ... src/Buffer.obj
 	@echo ... src/Buffer.i
 	@echo ... src/Buffer.s
+	@echo ... src/Event.obj
+	@echo ... src/Event.i
+	@echo ... src/Event.s
 	@echo ... src/Graphics.obj
 	@echo ... src/Graphics.i
 	@echo ... src/Graphics.s
