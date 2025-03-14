@@ -1,4 +1,5 @@
 #include "VoltaFramework.hpp"
+#include "Tweens.hpp"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -175,5 +176,53 @@ int l_vector2_tostring(lua_State* L) {
     char buffer[64];
     snprintf(buffer, sizeof(buffer), "Vector2(%.2f, %.2f)", vec->x, vec->y);
     lua_pushstring(L, buffer);
+    return 1;
+}
+
+int l_vector2_tween(lua_State* L) {
+    Vector2* self = checkVector2(L, 1);
+    Vector2* target = checkVector2(L, 2);
+    lua_Number t = luaL_checknumber(L, 3);
+    const char* direction = luaL_checkstring(L, 4);
+    const char* style = luaL_checkstring(L, 5);
+
+    t = fmin(fmax(t, 0.0), 1.0);
+
+    float eased = 0.0f;
+    if (strcmp(style, "linear") == 0) {
+        eased = easeLinear(static_cast<float>(t));
+    } else if (strcmp(style, "sine") == 0) {
+        eased = easeSine(static_cast<float>(t));
+    } else if (strcmp(style, "quad") == 0) {
+        eased = easeQuad(static_cast<float>(t));
+    } else if (strcmp(style, "cubic") == 0) {
+        eased = easeCubic(static_cast<float>(t));
+    } else if (strcmp(style, "quart") == 0) {
+        eased = easeQuart(static_cast<float>(t));
+    } else if (strcmp(style, "quint") == 0) {
+        eased = easeQuint(static_cast<float>(t));
+    } else if (strcmp(style, "exponential") == 0) {
+        eased = easeExponential(static_cast<float>(t));
+    } else if (strcmp(style, "circular") == 0) {
+        eased = easeCircular(static_cast<float>(t));
+    } else if (strcmp(style, "back") == 0) {
+        eased = easeBack(static_cast<float>(t));
+    } else if (strcmp(style, "bounce") == 0) {
+        eased = easeBounce(static_cast<float>(t));
+    } else if (strcmp(style, "elastic") == 0) {
+        eased = easeElastic(static_cast<float>(t));
+    } else {
+        luaL_error(L, "Invalid easing style: %s", style);
+        return 0;
+    }
+
+    eased = applyEasingDirection(static_cast<float>(t), eased, direction);
+
+    Vector2* result = static_cast<Vector2*>(lua_newuserdata(L, sizeof(Vector2)));
+    result->x = self->x + (target->x - self->x) * eased;
+    result->y = self->y + (target->y - self->y) * eased;
+    
+    luaL_getmetatable(L, "Vector2");
+    lua_setmetatable(L, -2);
     return 1;
 }

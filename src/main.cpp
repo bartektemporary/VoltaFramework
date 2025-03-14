@@ -39,6 +39,8 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "distance");
     lua_pushcfunction(L, l_vector2_angle);
     lua_setfield(L, -2, "angle");
+    lua_pushcfunction(L, l_vector2_tween);
+    lua_setfield(L, -2, "tween");
 
     // Store methods table in the registry
     // Store methods table in the registry
@@ -233,6 +235,8 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "round");
     lua_pushcfunction(L, l_math_lerp);
     lua_setfield(L, -2, "lerp");
+    lua_pushcfunction(L, l_math_tween);
+    lua_setfield(L, -2, "tween");
     lua_pushcfunction(L, l_math_noise1d);
     lua_setfield(L, -2, "noise1d");
     lua_pushcfunction(L, l_math_noise2d);

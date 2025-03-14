@@ -173,6 +173,7 @@ int l_vector2_dot(lua_State* L);
 int l_vector2_lerp(lua_State* L);
 int l_vector2_distance(lua_State* L);
 int l_vector2_angle(lua_State* L);
+int l_vector2_tween(lua_State* L);
 int l_vector2_tostring(lua_State* L);
 
 Vector2* checkVector2(lua_State* L, int index);
@@ -183,6 +184,7 @@ int l_triggerCustomEvent(lua_State* L);
 int l_math_clamp(lua_State* L);
 int l_math_round(lua_State* L);
 int l_math_lerp(lua_State* L);
+int l_math_tween(lua_State* L);
 int l_math_noise1d(lua_State* L);
 int l_math_noise2d(lua_State* L);
 int l_math_noise3d(lua_State* L);

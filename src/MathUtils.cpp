@@ -1,4 +1,7 @@
 #include "VoltaFramework.hpp"
+#include "Tweens.hpp"
+
+#define _USE_MATH_DEFINES
 #include <cmath>
 
 int l_math_clamp(lua_State* L) {
@@ -126,5 +129,49 @@ int l_math_noise3d(lua_State* L) {
         w
     )};
     lua_pushnumber(L, result * 0.5 + 0.5);
+    return 1;
+}
+
+int l_math_tween(lua_State* L) {
+    lua_Number start = luaL_checknumber(L, 1);
+    lua_Number end = luaL_checknumber(L, 2);
+    lua_Number t = luaL_checknumber(L, 3);
+    const char* direction = luaL_checkstring(L, 4);
+    const char* style = luaL_checkstring(L, 5);
+
+    t = fmin(fmax(t, 0.0), 1.0);
+
+    float eased = 0.0f;
+    if (strcmp(style, "linear") == 0) {
+        eased = easeLinear(static_cast<float>(t));
+    } else if (strcmp(style, "sine") == 0) {
+        eased = easeSine(static_cast<float>(t));
+    } else if (strcmp(style, "quad") == 0) {
+        eased = easeQuad(static_cast<float>(t));
+    } else if (strcmp(style, "cubic") == 0) {
+        eased = easeCubic(static_cast<float>(t));
+    } else if (strcmp(style, "quart") == 0) {
+        eased = easeQuart(static_cast<float>(t));
+    } else if (strcmp(style, "quint") == 0) {
+        eased = easeQuint(static_cast<float>(t));
+    } else if (strcmp(style, "exponential") == 0) {
+        eased = easeExponential(static_cast<float>(t));
+    } else if (strcmp(style, "circular") == 0) {
+        eased = easeCircular(static_cast<float>(t));
+    } else if (strcmp(style, "back") == 0) {
+        eased = easeBack(static_cast<float>(t));
+    } else if (strcmp(style, "bounce") == 0) {
+        eased = easeBounce(static_cast<float>(t));
+    } else if (strcmp(style, "elastic") == 0) {
+        eased = easeElastic(static_cast<float>(t));
+    } else {
+        luaL_error(L, "Invalid easing style: %s", style);
+        return 0;
+    }
+
+    eased = applyEasingDirection(static_cast<float>(t), eased, direction);
+
+    lua_Number result = start + (end - start) * static_cast<lua_Number>(eased);
+    lua_pushnumber(L, result);
     return 1;
 }

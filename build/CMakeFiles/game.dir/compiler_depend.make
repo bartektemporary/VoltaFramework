@@ -1012,6 +1012,7 @@ CMakeFiles/game.dir/src/MathUtils.cpp.obj: C:/Users/barte/Desktop/VoltaFramework
   C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lualib.h \
   C:/Users/barte/Desktop/VoltaFramework/include/miniaudio/miniaudio.h \
   C:/Users/barte/Desktop/VoltaFramework/src/Buffer.hpp \
+  C:/Users/barte/Desktop/VoltaFramework/src/Tweens.hpp \
   C:/Users/barte/Desktop/VoltaFramework/src/VoltaFramework.hpp \
   C:/Users/barte/Desktop/VoltaFramework/src/Json.hpp \
   C:/MinGW/include/_mingw.h \
@@ -1031,6 +1032,8 @@ CMakeFiles/game.dir/src/MathUtils.cpp.obj: C:/Users/barte/Desktop/VoltaFramework
   C:/MinGW/include/stdint.h \
   C:/MinGW/include/stdio.h \
   C:/MinGW/include/stdlib.h \
+  C:/MinGW/include/string.h \
+  C:/MinGW/include/strings.h \
   C:/MinGW/include/sys/stat.h \
   C:/MinGW/include/sys/types.h \
   C:/MinGW/include/sys/types.h \
@@ -1108,6 +1111,7 @@ CMakeFiles/game.dir/src/MathUtils.cpp.obj: C:/Users/barte/Desktop/VoltaFramework
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/cstdint \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/cstdio \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/cstdlib \
+  C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/cstring \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/cwchar \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/cwctype \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/debug/assertions.h \
@@ -1322,6 +1326,7 @@ CMakeFiles/game.dir/src/Vector2.cpp.obj: C:/Users/barte/Desktop/VoltaFramework/s
   C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/lualib.h \
   C:/Users/barte/Desktop/VoltaFramework/include/miniaudio/miniaudio.h \
   C:/Users/barte/Desktop/VoltaFramework/src/Buffer.hpp \
+  C:/Users/barte/Desktop/VoltaFramework/src/Tweens.hpp \
   C:/Users/barte/Desktop/VoltaFramework/src/VoltaFramework.hpp \
   C:/Users/barte/Desktop/VoltaFramework/src/Json.hpp \
   C:/MinGW/include/_mingw.h \
@@ -1341,6 +1346,8 @@ CMakeFiles/game.dir/src/Vector2.cpp.obj: C:/Users/barte/Desktop/VoltaFramework/s
   C:/MinGW/include/stdint.h \
   C:/MinGW/include/stdio.h \
   C:/MinGW/include/stdlib.h \
+  C:/MinGW/include/string.h \
+  C:/MinGW/include/strings.h \
   C:/MinGW/include/sys/stat.h \
   C:/MinGW/include/sys/types.h \
   C:/MinGW/include/sys/types.h \
@@ -1418,6 +1425,7 @@ CMakeFiles/game.dir/src/Vector2.cpp.obj: C:/Users/barte/Desktop/VoltaFramework/s
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/cstdint \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/cstdio \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/cstdlib \
+  C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/cstring \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/cwchar \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/cwctype \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/debug/assertions.h \
@@ -1989,6 +1997,8 @@ C:/MinGW/include/winspool.h:
 C:/MinGW/include/rpc.h:
 
 C:/MinGW/include/_mingw.h:
+
+C:/Users/barte/Desktop/VoltaFramework/src/Tweens.hpp:
 
 C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/memory:
 

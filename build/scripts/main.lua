@@ -1,12 +1,14 @@
 local vector2 = volta.vector2
 
--- Initialize position as a Vector2
 local defaultPosition = vector2.new(400, 300)
 
--- Circle movement
 local speed<const> = 200
 
 local t = 0
+local tweenDirection = 1
+local tweenSpeed = 0.5
+local leftBound = vector2.new(100, 100)
+local rightBound = vector2.new(700, 100)
 local sound
 
 local fpsCounter = 0
@@ -25,7 +27,6 @@ function init()
         sound:play()
     end
 
-    -- Register a custom event handler
     volta.onEvent("gameStart", function()
         print("moved")
     end)
@@ -68,7 +69,18 @@ function update(dt)
 
     defaultPosition = vector2.new(newX, newY)
 
-    volta.graphics.drawImage("tree.png", vector2.new(100, 100), vector2.new(200, 200))
+    t = t + dt * tweenSpeed * tweenDirection
+    if t >= 1 then
+        t = 1 - (t - 1)
+        tweenDirection = -1
+    elseif t <= 0 then
+        t = -t
+        tweenDirection = 1
+    end
+
+    local treePos = leftBound:tween(rightBound, t, "in", "back")
+
+    volta.graphics.drawImage("tree.png", treePos, vector2.new(200, 200))
 
     volta.graphics.setColor(0.5, 1, 0)
     volta.graphics.rectangle(true, defaultPosition, vector2.new(50, 50))
@@ -87,36 +99,3 @@ end)
 volta.input.keyPressed("i", function()
     print(volta.getRunningTime())
 end)
-
-
---[[local time = 0
-local fullscreen = false
-
-function init()
-    volta.window.setTitle("Test window title")
-    volta.window.setFullscreen(true)
-    fullscreen = true
-end
-
-function update(dt)
-    -- Increment time to animate noise
-    time = time + dt
-    
-    -- Exit on escape key
-    if volta.input.isKeyDown("escape") then
-        os.exit()
-    end
-
-    if volta.input.isKeyDown("f11") then
-        volta.window.setFullscreen(not fullscreen)
-        fullscreen = not fullscreen
-    end
-
-    for i = 0, 39 do
-        for j = 0, 29 do
-            local noise = math.noise2d(i * 0.1 + time, j * 0.1)
-            volta.graphics.setColor(noise, noise, noise)
-            volta.graphics.rectangle(true, i * 20, j * 20, 20, 20)
-        end
-    end
-end]]
