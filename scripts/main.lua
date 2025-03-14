@@ -15,6 +15,7 @@ local fpsTimer = 0
 local currentFps = 0
 
 local particleEmitter
+local lastVelocity = vector2.new(0, 0) -- Track last movement direction
 
 function init()
     volta.window.setState("borderlessMaximized")
@@ -28,7 +29,8 @@ function init()
         sound:play()
     end
 
-    particleEmitter = volta.particleEmitter.new(defaultPosition, 1, 150, 360)
+    -- Initialize particle emitter with a default direction (right) and smaller spread
+    particleEmitter = volta.particleEmitter.new(defaultPosition, 1, 150, 45, vector2.new(1, 0), "rectangle", 200, 100)
     
     volta.onEvent("gameStart", function()
         print("moved")
@@ -47,6 +49,7 @@ function update(dt)
 
     local newX = defaultPosition.x
     local newY = defaultPosition.y
+    local velocity = vector2.new(0, 0) -- Current frame's velocity
 
     local moved = false
     if volta.input.isKeyDown("w") then
@@ -71,6 +74,7 @@ function update(dt)
         particleEmitter:emit(3)
     end
 
+    -- Update emitter position
     defaultPosition = vector2.new(newX, newY)
 
     t = t + dt * tweenSpeed * tweenDirection
@@ -95,7 +99,6 @@ function update(dt)
 
     volta.graphics.drawLine(vector2.new(100, 100), vector2.new(500, 500), 10)
 
-    --works
     volta.graphics.setColor(1, 0, 0)
 end
 

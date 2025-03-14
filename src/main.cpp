@@ -234,6 +234,18 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "emit");
     lua_pushcfunction(L, l_particleEmitter_render);
     lua_setfield(L, -2, "render");
+    lua_pushcfunction(L, l_particleEmitter_setShape);
+    lua_setfield(L, -2, "setShape");
+    lua_pushcfunction(L, l_particleEmitter_getShape);
+    lua_setfield(L, -2, "getShape");
+    lua_pushcfunction(L, l_particleEmitter_setSize);
+    lua_setfield(L, -2, "setSize");
+    lua_pushcfunction(L, l_particleEmitter_getSize);
+    lua_setfield(L, -2, "getSize");
+    lua_pushcfunction(L, l_particleEmitter_setDirection);
+    lua_setfield(L, -2, "setDirection");
+    lua_pushcfunction(L, l_particleEmitter_getDirection);
+    lua_setfield(L, -2, "getDirection");
     lua_pushcfunction(L, l_particleEmitter_setLifetime);
     lua_setfield(L, -2, "setLifetime");
     lua_pushcfunction(L, l_particleEmitter_setSpeed);

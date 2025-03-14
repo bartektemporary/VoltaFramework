@@ -31,20 +31,39 @@ struct Particle {
 
 class VoltaFramework;
 
+enum class EmitterShape {
+    Circle,   // Omnidirectional emission (360°)
+    Cone,     // Directional emission with spread
+    Rectangle // Emit within a rectangular area
+};
+
+
 class ParticleEmitter {
 public:
-    ParticleEmitter(Vector2 position, float particleLife, float speed, float spread);
+    ParticleEmitter(Vector2 position, float particleLife, float speed, float spread, Vector2 direction = {1.0f, 0.0f}, EmitterShape shape = EmitterShape::Cone, float width = 100.0f, float height = 100.0f);
     void emit(int count);
     void update(float dt);
     void render(VoltaFramework* framework);
-
+    
+    void setPosition(Vector2 newPos) { position = newPos; }
+    Vector2 getPosition() const { return position; }
+    void setShape(EmitterShape newShape) { shape = newShape; }
+    EmitterShape getShape() const { return shape; }
+    void setSize(float newWidth, float newHeight) { width = newWidth; height = newHeight; }
+    float getWidth() const { return width; }
+    float getHeight() const { return height; }
+    
     float particleLife;
     float speed;
     float spread;
-            
+    Vector2 direction;
+    
 private:
     Vector2 position;
     std::vector<Particle> particles;
+    EmitterShape shape;
+    float width;  // Width of the rectangle shape
+    float height; // Height of the rectangle shape
 };
 
 // Define VoltaFramework class
@@ -211,6 +230,12 @@ int l_vector2_tostring(lua_State* L);
 int l_particleEmitter_new(lua_State* L);
 int l_particleEmitter_emit(lua_State* L);
 int l_particleEmitter_render(lua_State* L);
+int l_particleEmitter_setShape(lua_State* L);
+int l_particleEmitter_getShape(lua_State* L);
+int l_particleEmitter_setSize(lua_State* L);
+int l_particleEmitter_getSize(lua_State* L);
+int l_particleEmitter_setDirection(lua_State* L);
+int l_particleEmitter_getDirection(lua_State* L);
 int l_particleEmitter_setLifetime(lua_State* L);
 int l_particleEmitter_setSpeed(lua_State* L);
 int l_particleEmitter_setSpread(lua_State* L);
