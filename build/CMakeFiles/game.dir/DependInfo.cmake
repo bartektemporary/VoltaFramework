@@ -15,6 +15,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "C:/Users/barte/Desktop/VoltaFramework/src/Input.cpp" "CMakeFiles/game.dir/src/Input.cpp.obj" "gcc" "CMakeFiles/game.dir/src/Input.cpp.obj.d"
   "C:/Users/barte/Desktop/VoltaFramework/src/Json.cpp" "CMakeFiles/game.dir/src/Json.cpp.obj" "gcc" "CMakeFiles/game.dir/src/Json.cpp.obj.d"
   "C:/Users/barte/Desktop/VoltaFramework/src/MathUtils.cpp" "CMakeFiles/game.dir/src/MathUtils.cpp.obj" "gcc" "CMakeFiles/game.dir/src/MathUtils.cpp.obj.d"
+  "C:/Users/barte/Desktop/VoltaFramework/src/ParticleEmitter.cpp" "CMakeFiles/game.dir/src/ParticleEmitter.cpp.obj" "gcc" "CMakeFiles/game.dir/src/ParticleEmitter.cpp.obj.d"
   "C:/Users/barte/Desktop/VoltaFramework/src/TableUtils.cpp" "CMakeFiles/game.dir/src/TableUtils.cpp.obj" "gcc" "CMakeFiles/game.dir/src/TableUtils.cpp.obj.d"
   "C:/Users/barte/Desktop/VoltaFramework/src/Vector2.cpp" "CMakeFiles/game.dir/src/Vector2.cpp.obj" "gcc" "CMakeFiles/game.dir/src/Vector2.cpp.obj.d"
   "C:/Users/barte/Desktop/VoltaFramework/src/VoltaFramework.cpp" "CMakeFiles/game.dir/src/VoltaFramework.cpp.obj" "gcc" "CMakeFiles/game.dir/src/VoltaFramework.cpp.obj.d"

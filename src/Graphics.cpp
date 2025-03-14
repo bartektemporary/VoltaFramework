@@ -1,4 +1,5 @@
 #include "VoltaFramework.hpp"
+#include "Vector2.hpp"
 #include <cmath>
 #define _USE_MATH_DEFINES
 #include <math.h>

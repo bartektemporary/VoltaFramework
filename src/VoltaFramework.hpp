@@ -21,6 +21,33 @@ struct Vector2 {
     float y;
 };
 
+struct Particle {
+    Vector2 position;
+    Vector2 velocity;
+    float life;
+    float maxLife;
+    float size;
+};
+
+class VoltaFramework;
+
+class ParticleEmitter {
+public:
+    ParticleEmitter(Vector2 position, float particleLife, float speed, float spread);
+    void emit(int count);
+    void update(float dt);
+    void render(VoltaFramework* framework);
+
+    float particleLife;
+    float speed;
+    float spread;
+            
+private:
+    Vector2 position;
+    std::vector<Particle> particles;
+};
+
+// Define VoltaFramework class
 class VoltaFramework {
 public:
     VoltaFramework();
@@ -71,6 +98,9 @@ public:
     void registerCustomEventCallback(const std::string& eventName, int ref);
     void triggerCustomEvent(const std::string& eventName, lua_State* L, int nargs);
 
+    void renderParticles(float dt);
+    std::vector<ParticleEmitter> particleEmitters;
+
 private:
     lua_State* L;
     GLFWwindow* window;
@@ -102,9 +132,11 @@ private:
     std::unordered_map<std::string, std::vector<int>> customEventCallbackRefs {};
 };
 
+// External declarations and function prototypes
 extern VoltaFramework* g_frameworkInstance;
 VoltaFramework* getFramework(lua_State* L);
 
+// Function declarations (unchanged)
 int l_window_setTitle(lua_State* L);
 int l_window_getTitle(lua_State* L);
 int l_window_setSize(lua_State* L);
@@ -176,7 +208,15 @@ int l_vector2_angle(lua_State* L);
 int l_vector2_tween(lua_State* L);
 int l_vector2_tostring(lua_State* L);
 
-Vector2* checkVector2(lua_State* L, int index);
+int l_particleEmitter_new(lua_State* L);
+int l_particleEmitter_emit(lua_State* L);
+int l_particleEmitter_render(lua_State* L);
+int l_particleEmitter_setLifetime(lua_State* L);
+int l_particleEmitter_setSpeed(lua_State* L);
+int l_particleEmitter_setSpread(lua_State* L);
+int l_particleEmitter_getLifetime(lua_State* L);
+int l_particleEmitter_getSpeed(lua_State* L);
+int l_particleEmitter_getSpread(lua_State* L);
 
 int l_onCustomEvent(lua_State* L);
 int l_triggerCustomEvent(lua_State* L);
@@ -192,4 +232,5 @@ int l_math_noise3d(lua_State* L);
 int l_table_shallowCopy(lua_State* L);
 
 int l_getRunningTime(lua_State* L);
+
 #endif // VOLTA_FRAMEWORK_H

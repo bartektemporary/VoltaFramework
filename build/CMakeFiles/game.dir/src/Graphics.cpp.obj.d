@@ -147,7 +147,9 @@ CMakeFiles/game.dir/src/Graphics.cpp.obj: \
  C:/Users/barte/Desktop/VoltaFramework/include/glfw-3.4/include/GLFW/glfw3.h \
  C:/Users/barte/Desktop/VoltaFramework/include/miniaudio/miniaudio.h \
  C:/Users/barte/Desktop/VoltaFramework/include/FreeImage/Dist/FreeImage.h \
- c:\mingw\lib\gcc\mingw32\6.3.0\include\c++\math.h \
+ C:\Users\barte\Desktop\VoltaFramework\src\Vector2.hpp \
+ C:\Users\barte\Desktop\VoltaFramework\src\Tweens.hpp \
  c:\mingw\lib\gcc\mingw32\6.3.0\include\c++\cstring \
  c:\mingw\include\string.h c:\mingw\include\strings.h \
- c:\mingw\include\wchar.h
+ c:\mingw\include\wchar.h \
+ c:\mingw\lib\gcc\mingw32\6.3.0\include\c++\math.h

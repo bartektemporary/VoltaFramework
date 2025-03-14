@@ -1,5 +1,6 @@
 CMakeFiles/game.dir/src/Vector2.cpp.obj: \
  C:\Users\barte\Desktop\VoltaFramework\src\Vector2.cpp \
+ C:\Users\barte\Desktop\VoltaFramework\src\Vector2.hpp \
  C:\Users\barte\Desktop\VoltaFramework\src\VoltaFramework.hpp \
  c:\mingw\lib\gcc\mingw32\6.3.0\include\c++\iostream \
  c:\mingw\lib\gcc\mingw32\6.3.0\include\c++\mingw32\bits\c++config.h \

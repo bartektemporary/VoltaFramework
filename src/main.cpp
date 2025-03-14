@@ -172,6 +172,11 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "new");
     lua_setfield(L, -2, "vector2");
 
+    lua_newtable(L); // volta.particleEmitter
+    lua_pushcfunction(L, l_particleEmitter_new);
+    lua_setfield(L, -2, "new");
+    lua_setfield(L, -2, "particleEmitter");
+
     // Register volta.getRunningTime
     lua_pushcfunction(L, l_getRunningTime);
     lua_setfield(L, -2, "getRunningTime");
@@ -220,6 +225,27 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "readInt64");
     lua_pushcfunction(L, l_buffer_size);
     lua_setfield(L, -2, "size");
+    lua_setfield(L, -2, "__index");
+    lua_pop(L, 1);
+
+    luaL_newmetatable(L, "ParticleEmitter");
+    lua_newtable(L);
+    lua_pushcfunction(L, l_particleEmitter_emit);
+    lua_setfield(L, -2, "emit");
+    lua_pushcfunction(L, l_particleEmitter_render);
+    lua_setfield(L, -2, "render");
+    lua_pushcfunction(L, l_particleEmitter_setLifetime);
+    lua_setfield(L, -2, "setLifetime");
+    lua_pushcfunction(L, l_particleEmitter_setSpeed);
+    lua_setfield(L, -2, "setSpeed");
+    lua_pushcfunction(L, l_particleEmitter_setSpread);
+    lua_setfield(L, -2, "setSpread");
+    lua_pushcfunction(L, l_particleEmitter_getLifetime);
+    lua_setfield(L, -2, "getLifetime");
+    lua_pushcfunction(L, l_particleEmitter_getSpeed);
+    lua_setfield(L, -2, "getSpeed");
+    lua_pushcfunction(L, l_particleEmitter_getSpread);
+    lua_setfield(L, -2, "getSpread");
     lua_setfield(L, -2, "__index");
     lua_pop(L, 1);
 

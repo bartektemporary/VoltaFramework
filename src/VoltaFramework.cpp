@@ -148,6 +148,8 @@ void VoltaFramework::update(float dt) {
     } else {
         lua_pop(L, 1);
     }
+
+    renderParticles(dt);
 }
 
 int l_getRunningTime(lua_State* L) {

@@ -1,10 +1,6 @@
-#include "VoltaFramework.hpp"
-#include "Tweens.hpp"
+// Vector2.cpp
+#include "Vector2.hpp"
 
-#define _USE_MATH_DEFINES
-#include <math.h>
-
-// Helper function to check and get Vector2 from Lua
 Vector2* checkVector2(lua_State* L, int index) {
     return static_cast<Vector2*>(luaL_checkudata(L, index, "Vector2"));
 }

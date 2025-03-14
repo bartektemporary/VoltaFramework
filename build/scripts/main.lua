@@ -1,7 +1,6 @@
 local vector2 = volta.vector2
 
 local defaultPosition = vector2.new(400, 300)
-
 local speed<const> = 200
 
 local t = 0
@@ -15,6 +14,8 @@ local fpsCounter = 0
 local fpsTimer = 0
 local currentFps = 0
 
+local particleEmitter
+
 function init()
     volta.window.setState("borderlessMaximized")
     volta.graphics.setFilter("nearest")
@@ -27,6 +28,8 @@ function init()
         sound:play()
     end
 
+    particleEmitter = volta.particleEmitter.new(defaultPosition, 1, 150, 360)
+    
     volta.onEvent("gameStart", function()
         print("moved")
     end)
@@ -65,6 +68,7 @@ function update(dt)
 
     if moved then
         volta.triggerEvent("gameStart")
+        particleEmitter:emit(3)
     end
 
     defaultPosition = vector2.new(newX, newY)
@@ -80,12 +84,19 @@ function update(dt)
 
     local treePos = leftBound:tween(rightBound, t, "in", "back")
 
+    volta.graphics.setColor(1, 1, 1)
+    particleEmitter:render()
+
+    volta.graphics.setColor(1, 1, 1)
     volta.graphics.drawImage("tree.png", treePos, vector2.new(200, 200))
 
     volta.graphics.setColor(0.5, 1, 0)
     volta.graphics.rectangle(true, defaultPosition, vector2.new(50, 50))
 
     volta.graphics.drawLine(vector2.new(100, 100), vector2.new(500, 500), 10)
+
+    --works
+    volta.graphics.setColor(1, 0, 0)
 end
 
 volta.input.keyPressed("up", function()
@@ -98,4 +109,12 @@ end)
 
 volta.input.keyPressed("i", function()
     print(volta.getRunningTime())
+end)
+
+volta.input.keyPressed("k", function()
+    particleEmitter:setSpeed(particleEmitter:getSpeed() + 10)
+end)
+
+volta.input.keyPressed("l", function()
+    particleEmitter:setSpeed(particleEmitter:getSpeed() - 10)
 end)

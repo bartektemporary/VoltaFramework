@@ -296,6 +296,30 @@ src/MathUtils.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\game.dir\build.make CMakeFiles/game.dir/src/MathUtils.cpp.s
 .PHONY : src/MathUtils.cpp.s
 
+src/ParticleEmitter.obj: src/ParticleEmitter.cpp.obj
+.PHONY : src/ParticleEmitter.obj
+
+# target to build an object file
+src/ParticleEmitter.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\game.dir\build.make CMakeFiles/game.dir/src/ParticleEmitter.cpp.obj
+.PHONY : src/ParticleEmitter.cpp.obj
+
+src/ParticleEmitter.i: src/ParticleEmitter.cpp.i
+.PHONY : src/ParticleEmitter.i
+
+# target to preprocess a source file
+src/ParticleEmitter.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\game.dir\build.make CMakeFiles/game.dir/src/ParticleEmitter.cpp.i
+.PHONY : src/ParticleEmitter.cpp.i
+
+src/ParticleEmitter.s: src/ParticleEmitter.cpp.s
+.PHONY : src/ParticleEmitter.s
+
+# target to generate assembly for a file
+src/ParticleEmitter.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\game.dir\build.make CMakeFiles/game.dir/src/ParticleEmitter.cpp.s
+.PHONY : src/ParticleEmitter.cpp.s
+
 src/TableUtils.obj: src/TableUtils.cpp.obj
 .PHONY : src/TableUtils.obj
 
@@ -446,6 +470,9 @@ help:
 	@echo ... src/MathUtils.obj
 	@echo ... src/MathUtils.i
 	@echo ... src/MathUtils.s
+	@echo ... src/ParticleEmitter.obj
+	@echo ... src/ParticleEmitter.i
+	@echo ... src/ParticleEmitter.s
 	@echo ... src/TableUtils.obj
 	@echo ... src/TableUtils.i
 	@echo ... src/TableUtils.s
