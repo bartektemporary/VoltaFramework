@@ -6,6 +6,8 @@
 #include <vector>
 #include <sstream>
 #include <string>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 #include "json.hpp"
 #include "Buffer.hpp"
@@ -128,6 +130,13 @@ public:
     void renderParticles(float dt);
     std::vector<ParticleEmitter> particleEmitters;
 
+    bool isGamepadConnected(int gamepadId) const;
+    bool isGamepadButtonDown(int gamepadId, int button) const;
+
+    void registerGamepadConnectedCallback(int ref);
+    void registerGamepadDisconnectedCallback(int ref);
+    void registerGamepadButtonPressedCallback(int button, int ref);
+
 private:
     lua_State* L;
     GLFWwindow* window;
@@ -157,6 +166,14 @@ private:
     static void windowMaximizeCallback(GLFWwindow* window, int maximized);
 
     std::unordered_map<std::string, std::vector<int>> customEventCallbackRefs {};
+
+    std::unordered_map<int, bool> gamepadStates; // Tracks connected gamepads (joystick ID -> connected)
+    std::vector<int> gamepadConnectedCallbackRefs; // Lua refs for gamepad connected callbacks
+    std::vector<int> gamepadDisconnectedCallbackRefs; // Lua refs for gamepad disconnected callbacks
+    std::unordered_map<int, std::vector<int>> gamepadButtonPressedCallbackRefs; // Button -> Lua refs
+
+    // Static callback for GLFW joystick events
+    static void joystickCallback(int jid, int event);
 };
 
 // External declarations and function prototypes
@@ -186,9 +203,16 @@ int l_setFilter(lua_State* L);
 
 int l_isKeyDown(lua_State* L);
 int l_input_keyPressed(lua_State* L);
-int l_input_isMouseButtonDown(lua_State* L);
+int l_input_getPressedKeys(lua_State* L);
 int l_input_getMousePosition(lua_State* L);
+int l_input_isMouseButtonDown(lua_State* L);
 int l_input_mouseButtonPressed(lua_State* L);
+int l_input_getPressedMouseButtons(lua_State* L);
+int l_input_isGamepadConnected(lua_State* L);
+int l_input_isGamepadButtonDown(lua_State* L);
+int l_input_gamepadConnected(lua_State* L);
+int l_input_gamepadDisconnected(lua_State* L);
+int l_input_getGamepadButtonPressed(lua_State* L);
 
 int l_audio_loadAudio(lua_State* L);
 int l_audio_play(lua_State* L);
@@ -198,6 +222,15 @@ int l_audio_getVolume(lua_State* L);
 int l_audio_setLooped(lua_State* L);
 int l_audio_setGlobalVolume(lua_State* L);
 int l_audio_getGlobalVolume(lua_State* L);
+
+int l_filesystem_exists(lua_State* L);
+int l_filesystem_isDirectory(lua_State* L);
+int l_filesystem_createDirectory(lua_State* L);
+int l_filesystem_remove(lua_State* L);
+int l_filesystem_listDir(lua_State* L);
+int l_filesystem_getWorkingDir(lua_State* L);
+int l_filesystem_setWorkingDir(lua_State* L);
+int l_filesystem_getFileSize(lua_State* L);
 
 int l_json_decode(lua_State* L);
 int l_json_encode(lua_State* L);

@@ -57,6 +57,7 @@ set(SOURCES
     ${SOURCE_DIR}/Event.cpp
     ${SOURCE_DIR}/ParticleEmitter.cpp
     ${SOURCE_DIR}/Json.cpp
+    ${SOURCE_DIR}/Filesystem.cpp
     ${SOURCE_DIR}/main.cpp
 )
 
@@ -78,5 +79,7 @@ target_link_libraries(game
     opengl32
     ws2_32
 )
+target_compile_features(game PUBLIC cxx_std_17)
+
 
 file(COPY scripts assets DESTINATION ${CMAKE_BINARY_DIR})

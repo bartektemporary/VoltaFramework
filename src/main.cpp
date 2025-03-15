@@ -134,12 +134,26 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "isKeyDown");
     lua_pushcfunction(L, l_input_keyPressed);
     lua_setfield(L, -2, "keyPressed");
+    lua_pushcfunction(L, l_input_getPressedKeys);
+    lua_setfield(L, -2, "getPressedKeys");
     lua_pushcfunction(L, l_input_isMouseButtonDown);
     lua_setfield(L, -2, "isMouseButtonDown");
     lua_pushcfunction(L, l_input_getMousePosition);
     lua_setfield(L, -2, "getMousePosition");
     lua_pushcfunction(L, l_input_mouseButtonPressed);
     lua_setfield(L, -2, "mouseButtonPressed");
+    lua_pushcfunction(L, l_input_getPressedMouseButtons);
+    lua_setfield(L, -2, "getPressedMouseButtons");
+    lua_pushcfunction(L, l_input_isGamepadConnected);
+    lua_setfield(L, -2, "isGamepadConnected");
+    lua_pushcfunction(L, l_input_isGamepadButtonDown);
+    lua_setfield(L, -2, "isGamepadButtonDown");
+    lua_pushcfunction(L, l_input_gamepadConnected);
+    lua_setfield(L, -2, "gamepadConnected");
+    lua_pushcfunction(L, l_input_gamepadDisconnected);
+    lua_setfield(L, -2, "gamepadDisconnected");
+    lua_pushcfunction(L, l_input_getGamepadButtonPressed);
+    lua_setfield(L, -2, "getGamepadButtonPressed");
     lua_setfield(L, -2, "input");
 
     // Register volta.audio
@@ -151,6 +165,26 @@ void VoltaFramework::registerLuaAPI() {
     lua_pushcfunction(L, l_audio_getGlobalVolume);
     lua_setfield(L, -2, "getGlobalVolume");
     lua_setfield(L, -2, "audio");
+
+    // Register volta.filesystem
+    lua_newtable(L);
+    lua_pushcfunction(L, l_filesystem_exists);
+    lua_setfield(L, -2, "exists");
+    lua_pushcfunction(L, l_filesystem_isDirectory);
+    lua_setfield(L, -2, "isDirectory");
+    lua_pushcfunction(L, l_filesystem_createDirectory);
+    lua_setfield(L, -2, "createDirectory");
+    lua_pushcfunction(L, l_filesystem_remove);
+    lua_setfield(L, -2, "remove");
+    lua_pushcfunction(L, l_filesystem_listDir);
+    lua_setfield(L, -2, "listDir");
+    lua_pushcfunction(L, l_filesystem_getWorkingDir);
+    lua_setfield(L, -2, "getWorkingDir");
+    lua_pushcfunction(L, l_filesystem_setWorkingDir);
+    lua_setfield(L, -2, "setWorkingDir");
+    lua_pushcfunction(L, l_filesystem_getFileSize);
+    lua_setfield(L, -2, "getFileSize");
+    lua_setfield(L, -2, "filesystem");
 
     // Register volta.json
     lua_newtable(L);

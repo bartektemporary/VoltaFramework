@@ -67,6 +67,17 @@ function init()
         volta.vector2.new(0, -1),
         "circle"
     )
+
+    -- Check if a gamepad is connected
+    if volta.input.isGamepadConnected(0) then
+        print("Gamepad 0 is connected")
+    end
+
+    -- Check if a specific gamepad button is down
+    if volta.input.isGamepadButtonDown(0, 0) then
+        print("Button 0 is down on gamepad 0")
+    end
+
 end
 
 function update(dt)
@@ -177,4 +188,31 @@ end)
 
 volta.input.keyPressed("i", function()
     print(volta.getRunningTime())
+    local pressedKeys = volta.input.getPressedKeys()
+    for i = 1, #pressedKeys do
+        print("Pressed key:", pressedKeys[i])
+    end
+
+    -- Example usage in Lua for mouse buttons
+    local pressedButtons = volta.input.getPressedMouseButtons()
+    for i = 1, #pressedButtons do
+        print("Pressed mouse button:", pressedButtons[i])
+    end
 end)
+
+-- Register a callback for when a gamepad is connected
+volta.input.gamepadConnected(function(gamepadId)
+    print("Gamepad connected:", gamepadId)
+end)
+
+-- Register a callback for when a gamepad is disconnected
+volta.input.gamepadDisconnected(function(gamepadId)
+    print("Gamepad disconnected:", gamepadId)
+end)
+
+-- Register a callback for when a specific gamepad button is pressed
+-- Example: Button 0 (A button on Xbox controller)
+volta.input.getGamepadButtonPressed(0, 0, function(gamepadId, button)
+    print("Gamepad button pressed:", gamepadId, button)
+end)
+

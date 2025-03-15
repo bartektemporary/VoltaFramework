@@ -42,6 +42,16 @@ VoltaFramework::VoltaFramework() : L{luaL_newstate()}, width{800}, height{600}, 
     glfwSetWindowMaximizeCallback(window, windowMaximizeCallback);
     glfwSetKeyCallback(window, key_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
+
+    // Set up GLFW joystick callback
+    glfwSetJoystickCallback(joystickCallback);
+
+    // Check for already connected gamepads
+    for (int jid = GLFW_JOYSTICK_1; jid <= GLFW_JOYSTICK_LAST; jid++) {
+        if (glfwJoystickPresent(jid) && glfwJoystickIsGamepad(jid)) {
+            gamepadStates[jid] = true;
+        }
+    }
     
     lua_pushlightuserdata(L, this);
     lua_setfield(L, LUA_REGISTRYINDEX, "VoltaFrameworkInstance");
@@ -63,6 +73,7 @@ VoltaFramework::VoltaFramework() : L{luaL_newstate()}, width{800}, height{600}, 
 }
 
 VoltaFramework::~VoltaFramework() {
+    lua_close(L);
     g_frameworkInstance = nullptr;
     audioCache.clear();
     for (auto& pair : keyPressCallbackRefs) {
@@ -80,6 +91,21 @@ VoltaFramework::~VoltaFramework() {
     for (auto& pair : textureCache) {
         glDeleteTextures(1, &pair.second);
     }
+    for (int ref : gamepadConnectedCallbackRefs) {
+        luaL_unref(L, LUA_REGISTRYINDEX, ref);
+    }
+    for (int ref : gamepadDisconnectedCallbackRefs) {
+        luaL_unref(L, LUA_REGISTRYINDEX, ref);
+    }
+    for (auto& pair : gamepadButtonPressedCallbackRefs) {
+        for (int ref : pair.second) {
+            luaL_unref(L, LUA_REGISTRYINDEX, ref);
+        }
+    }
+    gamepadConnectedCallbackRefs.clear();
+    gamepadDisconnectedCallbackRefs.clear();
+    gamepadButtonPressedCallbackRefs.clear();
+    gamepadStates.clear();
     textureCache.clear();
     FreeImage_DeInitialise();
     cleanupOpenGL();
@@ -95,7 +121,6 @@ VoltaFramework::~VoltaFramework() {
     ma_engine_uninit(&engine);
     glfwDestroyWindow(window);
     glfwTerminate();
-    lua_close(L);
 }
 
 void VoltaFramework::run() {
