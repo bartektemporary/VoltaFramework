@@ -258,6 +258,12 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "getSpeed");
     lua_pushcfunction(L, l_particleEmitter_getSpread);
     lua_setfield(L, -2, "getSpread");
+    lua_pushcfunction(L, l_particleEmitter_setPosition);
+    lua_setfield(L, -2, "setPosition");
+    lua_pushcfunction(L, l_particleEmitter_getPosition);
+    lua_setfield(L, -2, "getPosition");
+    lua_pushcfunction(L, l_particleEmitter_setTexture);
+    lua_setfield(L, -2, "setTexture");
     lua_setfield(L, -2, "__index");
     lua_pop(L, 1);
 

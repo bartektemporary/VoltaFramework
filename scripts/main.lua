@@ -14,11 +14,11 @@ local fpsCounter = 0
 local fpsTimer = 0
 local currentFps = 0
 
-local particleEmitter
+local fire_emitter 
 local lastVelocity = vector2.new(0, 0) -- Track last movement direction
 
 function init()
-    volta.window.setState("borderlessMaximized")
+    volta.window.setState("maximized")
     volta.graphics.setFilter("nearest")
     volta.window.setIcon("tree.png")
 
@@ -29,12 +29,44 @@ function init()
         sound:play()
     end
 
-    -- Initialize particle emitter with a default direction (right) and smaller spread
-    particleEmitter = volta.particleEmitter.new(defaultPosition, 1, 150, 45, vector2.new(1, 0), "rectangle", 200, 100)
-    
-    volta.onEvent("gameStart", function()
-        print("moved")
-    end)
+    fire_base = volta.particleEmitter.new(
+        volta.vector2.new(400, 300),
+        1.0,                        -- lifetime
+        120,                        -- moderate speed
+        90,                         -- wide spread for base
+        volta.vector2.new(0, -1),   -- upward
+        "cone"
+    )
+
+    -- Core flame (narrow cone for bright center)
+    fire_core = volta.particleEmitter.new(
+        volta.vector2.new(400, 300),
+        0.7,                        -- shorter lifetime
+        180,                        -- faster speed
+        20,                         -- narrow spread
+        volta.vector2.new(0, -1),
+        "cone"
+    )
+
+    -- Flickering tips (circle for top wisps)
+    fire_tips = volta.particleEmitter.new(
+        volta.vector2.new(400, 250), -- higher position
+        0.5,                        -- short lifetime
+        100,                        -- moderate speed
+        360,                        -- full spread
+        volta.vector2.new(0, -1),
+        "circle"
+    )
+
+    -- Smoke/embers (sparse circle)
+    fire_embers = volta.particleEmitter.new(
+        volta.vector2.new(400, 200), -- even higher
+        1.5,                        -- longer lifetime
+        80,                         -- slower speed
+        360,                        -- full spread
+        volta.vector2.new(0, -1),
+        "circle"
+    )
 end
 
 function update(dt)
@@ -69,11 +101,6 @@ function update(dt)
         moved = true
     end
 
-    if moved then
-        volta.triggerEvent("gameStart")
-        particleEmitter:emit(3)
-    end
-
     -- Update emitter position
     defaultPosition = vector2.new(newX, newY)
 
@@ -89,7 +116,6 @@ function update(dt)
     local treePos = leftBound:tween(rightBound, t, "in", "back")
 
     volta.graphics.setColor(1, 1, 1)
-    particleEmitter:render()
 
     volta.graphics.setColor(1, 1, 1)
     volta.graphics.drawImage("tree.png", treePos, vector2.new(200, 200))
@@ -99,7 +125,46 @@ function update(dt)
 
     volta.graphics.drawLine(vector2.new(100, 100), vector2.new(500, 500), 10)
 
-    volta.graphics.setColor(1, 0, 0)
+    -- Dynamic sway based on time
+    local time = volta.getRunningTime()
+    local sway = math.sin(time * 2) * 10
+    local base_x = 400 + sway
+    local flicker = math.sin(time * 5) * 0.5 + 0.5 -- 0 to 1 range
+
+    -- Update positions with sway
+    fire_base:setPosition(volta.vector2.new(base_x, 300))
+    fire_core:setPosition(volta.vector2.new(base_x, 300))
+    fire_tips:setPosition(volta.vector2.new(base_x, 250 + sway * 0.5))
+    fire_embers:setPosition(volta.vector2.new(base_x, 200 + sway * 0.3))
+
+    -- Dynamic adjustments
+    fire_base:setSpeed(120 + flicker * 20)
+    fire_core:setSpeed(180 + flicker * 30)
+    fire_tips:setSpeed(100 + flicker * 20)
+    fire_base:setSpread(90 + flicker * 20)
+
+    -- Emit particles
+    fire_base:emit(6 + math.floor(flicker * 2))    -- 6-8 particles
+    fire_core:emit(3 + math.floor(flicker * 2))    -- 3-5 particles
+    fire_tips:emit(2 + math.floor(flicker * 1))    -- 2-3 particles
+    fire_embers:emit(1)                            -- sparse embers
+
+    -- Render layers (back to front)
+    -- Embers/Smoke (dark red/gray)
+    volta.graphics.setColor(0.5, 0.2, 0.1) -- Dark red-orange
+    fire_embers:render()
+
+    -- Base flame (orange-red)
+    volta.graphics.setColor(1.0, 0.4, 0.0) -- Orange-red
+    fire_base:render()
+
+    -- Flickering tips (yellow)
+    volta.graphics.setColor(1.0, 0.8, 0.0) -- Yellow
+    fire_tips:render()
+
+    -- Core (white-yellow)
+    volta.graphics.setColor(1.0, 1.0, 0.8) -- White-yellow
+    fire_core:render()
 end
 
 volta.input.keyPressed("up", function()
@@ -112,12 +177,4 @@ end)
 
 volta.input.keyPressed("i", function()
     print(volta.getRunningTime())
-end)
-
-volta.input.keyPressed("k", function()
-    particleEmitter:setSpeed(particleEmitter:getSpeed() + 10)
-end)
-
-volta.input.keyPressed("l", function()
-    particleEmitter:setSpeed(particleEmitter:getSpeed() - 10)
 end)

@@ -312,55 +312,51 @@ int l_setFilter(lua_State* L) {
 }
 
 GLuint VoltaFramework::loadTexture(const std::string& filename) {
-    if (textureCache.find(filename) != textureCache.end()) {
-        return textureCache[filename];
+    std::string fullPath;
+    
+    // Check if the filename already contains a path separator
+    if (strchr(filename.c_str(), '/') || strchr(filename.c_str(), '\\')) {
+        fullPath = filename;  // Use as-is if it has a path
+    } else {
+        fullPath = "assets/" + filename;  // Prepend "assets/" if no path
     }
 
-    FREE_IMAGE_FORMAT format {FreeImage_GetFileType(filename.c_str(), 0)};
+    auto it = textureCache.find(fullPath);
+    if (it != textureCache.end()) {
+        return it->second;
+    }
+
+    FREE_IMAGE_FORMAT format = FreeImage_GetFileType(fullPath.c_str(), 0);
     if (format == FIF_UNKNOWN) {
-        format = FreeImage_GetFIFFromFilename(filename.c_str());
+        format = FreeImage_GetFIFFromFilename(fullPath.c_str());
+        if (format == FIF_UNKNOWN) {
+            std::cerr << "Failed to load texture: " << fullPath << " - Unknown file format" << std::endl;
+            return 0;
+        }
     }
-    if (format == FIF_UNKNOWN || !FreeImage_FIFSupportsReading(format)) {
-        std::cerr << "Unsupported image format: " << filename << std::endl;
-        return 0;
-    }
-
-    FIBITMAP* bitmap {FreeImage_Load(format, filename.c_str())};
+    FIBITMAP* bitmap = FreeImage_Load(format, fullPath.c_str());
     if (!bitmap) {
-        std::cerr << "Failed to load image: " << filename << std::endl;
+        std::cerr << "Failed to load texture: " << fullPath << " - File not found or invalid" << std::endl;
         return 0;
     }
 
-    FIBITMAP* bitmap32 {FreeImage_ConvertTo32Bits(bitmap)};
+    FIBITMAP* converted = FreeImage_ConvertTo32Bits(bitmap);
     FreeImage_Unload(bitmap);
-    if (!bitmap32) {
-        std::cerr << "Failed to convert image to 32-bit: " << filename << std::endl;
-        return 0;
-    }
+    BYTE* pixels = FreeImage_GetBits(converted);
+    int width = FreeImage_GetWidth(converted);
+    int height = FreeImage_GetHeight(converted);
 
-    unsigned int width {FreeImage_GetWidth(bitmap32)};
-    unsigned int height {FreeImage_GetHeight(bitmap32)};
-    void* pixels {FreeImage_GetBits(bitmap32)};
-
-    GLuint textureID {};
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
-    
-    // Generate mipmaps
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    // Apply current filter mode
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filterMode);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filterMode);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glGenerateMipmap(GL_TEXTURE_2D);
 
-    FreeImage_Unload(bitmap32);
-
-    textureCache[filename] = textureID;
-    return textureID;
+    FreeImage_Unload(converted);
+    textureCache[fullPath] = texture;
+    return texture;
 }
 
 

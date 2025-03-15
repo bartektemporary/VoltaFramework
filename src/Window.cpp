@@ -31,7 +31,7 @@ int l_window_setSize(lua_State* L) {
     }
     lua_Integer width {luaL_checkinteger(L, 1)};
     lua_Integer height {luaL_checkinteger(L, 2)};
-    width = std::max(1LL, width);  // Use LL suffix for long long
+    width = std::max(1LL, width);
     height = std::max(1LL, height);
     glfwSetWindowSize(framework->getWindow(), static_cast<int>(width), static_cast<int>(height));
     glViewport(0, 0, static_cast<int>(width), static_cast<int>(height));
@@ -68,7 +68,7 @@ int l_window_setPosition(lua_State* L) {
     framework->setY(static_cast<int>(y));
     return 0;
 }
-   
+
 int l_window_getPosition(lua_State* L) {
     VoltaFramework* framework {getFramework(L)};
     if (!framework || !framework->getWindow()) {
@@ -88,22 +88,18 @@ int l_window_setResizable(lua_State* L) {
     VoltaFramework* framework {getFramework(L)};
     if (!framework || !framework->getWindow()) {
         std::cerr << "setResizable: Framework or window is null\n";
-        lua_pushboolean(L, false);
-        return 1;
+        return 0;
     }
     bool enable {lua_toboolean(L, 1) != 0};
     glfwSetWindowAttrib(framework->getWindow(), GLFW_RESIZABLE, enable ? GLFW_TRUE : GLFW_FALSE);
-    lua_pushboolean(L, true);
-    return 1;
+    return 0;
 }
-
 
 int l_window_setFullscreen(lua_State* L) {
     VoltaFramework* framework {getFramework(L)};
     if (!framework || !framework->getWindow()) {
         std::cerr << "setFullscreen: Framework or window is null\n";
-        lua_pushboolean(L, false);
-        return 1;
+        return 0;
     }
 
     bool enable {lua_toboolean(L, 1) != 0};
@@ -113,15 +109,13 @@ int l_window_setFullscreen(lua_State* L) {
         GLFWmonitor* monitor {glfwGetPrimaryMonitor()};
         if (!monitor) {
             std::cerr << "setFullscreen: Failed to get primary monitor\n";
-            lua_pushboolean(L, false);
-            return 1;
+            return 0;
         }
 
         const GLFWvidmode* mode {glfwGetVideoMode(monitor)};
         if (!mode) {
             std::cerr << "setFullscreen: Failed to get video mode\n";
-            lua_pushboolean(L, false);
-            return 1;
+            return 0;
         }
 
         glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
@@ -129,58 +123,53 @@ int l_window_setFullscreen(lua_State* L) {
         framework->setWidth(mode->width);
         framework->setHeight(mode->height);
     } else {
-        // Use stored x and y when exiting fullscreen
         glfwSetWindowMonitor(window, nullptr, framework->getX(), framework->getY(), 800, 600, 0);
         glViewport(0, 0, 800, 600);
         framework->setWidth(800);
         framework->setHeight(600);
     }
 
-    lua_pushboolean(L, true);
-    return 1;
+    return 0;
 }
 
 int l_window_setState(lua_State* L) {
     VoltaFramework* framework {getFramework(L)};
     if (!framework || !framework->getWindow()) {
         std::cerr << "setState: Framework or window is null\n";
-        lua_pushboolean(L, false);
-        return 1;
+        return 0;
     }
     const char* stateStr {luaL_checkstring(L, 1)};
     GLFWwindow* window {framework->getWindow()};
     std::string state {stateStr};
 
     if (state == "normal") {
-        glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE); // Ensure title bar is visible
+        glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
         glfwRestoreWindow(window);
         framework->setState(0);
     } else if (state == "minimized") {
-        glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE); // Ensure title bar for consistency
+        glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
         glfwIconifyWindow(window);
         framework->setState(1);
     } else if (state == "maximized") {
-        glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE); // Ensure title bar is visible
+        glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
         glfwMaximizeWindow(window);
         framework->setState(2);
     } else if (state == "borderlessMaximized") {
         GLFWmonitor* monitor {glfwGetPrimaryMonitor()};
         if (!monitor) {
             std::cerr << "setState: Failed to get primary monitor for borderlessMaximized state\n";
-            lua_pushboolean(L, false);
-            return 1;
+            return 0;
         }
         
         const GLFWvidmode* mode {glfwGetVideoMode(monitor)};
         if (!mode) {
             std::cerr << "setState: Failed to get video mode\n";
-            lua_pushboolean(L, false);
-            return 1;
+            return 0;
         }
 
-        glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_FALSE); // Remove title bar
-        glfwSetWindowPos(window, 0, 0); // Position at top-left corner
-        glfwSetWindowSize(window, mode->width, mode->height); // Use full screen size
+        glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_FALSE);
+        glfwSetWindowPos(window, 0, 0);
+        glfwSetWindowSize(window, mode->width, mode->height);
         framework->setX(0);
         framework->setY(0);
         framework->setWidth(mode->width);
@@ -189,12 +178,9 @@ int l_window_setState(lua_State* L) {
         glViewport(0, 0, mode->width, mode->height);
     } else {
         std::cerr << "setState: Invalid state '" << state << "' (use 'normal', 'minimized', 'maximized', 'borderlessMaximized')\n";
-        lua_pushboolean(L, false);
-        return 1;
     }
 
-    lua_pushboolean(L, true);
-    return 1;
+    return 0;
 }
 
 int l_window_getState(lua_State* L) {
@@ -211,7 +197,7 @@ int l_window_getState(lua_State* L) {
         case 1: stateStr = "minimized"; break;
         case 2: stateStr = "maximized"; break;
         case 3: stateStr = "borderlessMaximized"; break;
-        default: stateStr = "normal"; // Fallback
+        default: stateStr = "normal";
     }
     lua_pushstring(L, stateStr);
     return 1;
@@ -264,12 +250,10 @@ int l_window_setIcon(lua_State* L) {
     unsigned int height = FreeImage_GetHeight(flippedBitmap);
     unsigned char* pixels = FreeImage_GetBits(flippedBitmap);
 
-    // Swap B and R channels (assuming FreeImage gives BGRA, GLFW expects RGBA)
     for (unsigned int i = 0; i < width * height; i++) {
-        unsigned char temp = pixels[i * 4];     // B
-        pixels[i * 4] = pixels[i * 4 + 2];     // R to B
-        pixels[i * 4 + 2] = temp;              // B to R
-        // G (i * 4 + 1) and A (i * 4 + 3) remain unchanged
+        unsigned char temp = pixels[i * 4];
+        pixels[i * 4] = pixels[i * 4 + 2];
+        pixels[i * 4 + 2] = temp;
     }
 
     GLFWimage image = {static_cast<int>(width), static_cast<int>(height), pixels};
@@ -285,8 +269,7 @@ int l_window_setVsync(lua_State* L) {
     VoltaFramework* framework {getFramework(L)};
     if (!framework || !framework->getWindow()) {
         std::cerr << "setVsync: Framework or window is null\n";
-        lua_pushboolean(L, false);
-        return 1;
+        return 0;
     }
     
     if (!lua_isboolean(L, 1)) {
@@ -297,8 +280,7 @@ int l_window_setVsync(lua_State* L) {
     bool enable {lua_toboolean(L, 1) != 0};
     glfwSwapInterval(enable ? 1 : 0);
     
-    lua_pushboolean(L, true);
-    return 1;
+    return 0;
 }
 
 void VoltaFramework::windowSizeCallback(GLFWwindow* window, int newWidth, int newHeight) {
@@ -319,11 +301,11 @@ void VoltaFramework::windowPosCallback(GLFWwindow* window, int xpos, int ypos) {
 void VoltaFramework::windowMaximizeCallback(GLFWwindow* window, int maximized) {
     if (g_frameworkInstance && g_frameworkInstance->getWindow() == window) {
         if (maximized) {
-            g_frameworkInstance->state = 2; // Maximized
+            g_frameworkInstance->state = 2;
         } else if (glfwGetWindowAttrib(window, GLFW_ICONIFIED)) {
-            g_frameworkInstance->state = 1; // Minimized (check if iconified)
+            g_frameworkInstance->state = 1;
         } else {
-            g_frameworkInstance->state = 0; // Normal
+            g_frameworkInstance->state = 0;
         }
     }
 }

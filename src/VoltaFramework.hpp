@@ -27,20 +27,23 @@ struct Particle {
     float life;
     float maxLife;
     float size;
+    GLuint texture = 0;
 };
 
 class VoltaFramework;
 
 enum class EmitterShape {
     Circle,   // Omnidirectional emission (360°)
+    Rectangle,// Emit within a rectangular
     Cone,     // Directional emission with spread
-    Rectangle // Emit within a rectangular area
+    Line      // Emit along a line segment
 };
 
 
 class ParticleEmitter {
 public:
-    ParticleEmitter(Vector2 position, float particleLife, float speed, float spread, Vector2 direction = {1.0f, 0.0f}, EmitterShape shape = EmitterShape::Cone, float width = 100.0f, float height = 100.0f);
+    ParticleEmitter(Vector2 position, float particleLife, float speed, float spread, Vector2 direction = {1.0f, 0.0f}, 
+        EmitterShape shape = EmitterShape::Cone, float width = 100.0f, float height = 100.0f, GLuint texture = 0);
     void emit(int count);
     void update(float dt);
     void render(VoltaFramework* framework);
@@ -57,6 +60,9 @@ public:
     float speed;
     float spread;
     Vector2 direction;
+
+    void setParticleTexture(GLuint texture) { particleTexture = texture; }
+    GLuint getParticleTexture() const { return particleTexture; }
     
 private:
     Vector2 position;
@@ -64,6 +70,8 @@ private:
     EmitterShape shape;
     float width;  // Width of the rectangle shape
     float height; // Height of the rectangle shape
+
+    GLuint particleTexture;
 };
 
 // Define VoltaFramework class
@@ -242,6 +250,9 @@ int l_particleEmitter_setSpread(lua_State* L);
 int l_particleEmitter_getLifetime(lua_State* L);
 int l_particleEmitter_getSpeed(lua_State* L);
 int l_particleEmitter_getSpread(lua_State* L);
+int l_particleEmitter_setPosition(lua_State* L);
+int l_particleEmitter_getPosition(lua_State* L);
+int l_particleEmitter_setTexture(lua_State* L);
 
 int l_onCustomEvent(lua_State* L);
 int l_triggerCustomEvent(lua_State* L);

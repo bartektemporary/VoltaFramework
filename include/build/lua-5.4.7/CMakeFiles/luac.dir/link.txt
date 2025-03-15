@@ -1,0 +1,3 @@
+"C:\Program Files\CMake\bin\cmake.exe" -E rm -f CMakeFiles\luac.dir/objects.a
+C:\MinGW\bin\ar.exe qc CMakeFiles\luac.dir/objects.a @CMakeFiles\luac.dir\objects1.rsp
+C:\MinGW\bin\gcc.exe -Wl,--whole-archive CMakeFiles\luac.dir/objects.a -Wl,--no-whole-archive -o ..\luac.exe -Wl,--out-implib,libluac.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\luac.dir\linkLibs.rsp
