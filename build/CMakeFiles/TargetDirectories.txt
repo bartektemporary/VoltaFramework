@@ -1,3 +1,0 @@
-C:/Users/barte/Desktop/VoltaFramework/build/CMakeFiles/game.dir
-C:/Users/barte/Desktop/VoltaFramework/build/CMakeFiles/edit_cache.dir
-C:/Users/barte/Desktop/VoltaFramework/build/CMakeFiles/rebuild_cache.dir
