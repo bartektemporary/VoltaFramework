@@ -1,13 +1,27 @@
 lua-5.4.7/CMakeFiles/lua_shared.dir/src/linit.c.obj: \
- C:\Users\barte\Desktop\VoltaRewritten\include\lua-5.4.7\src\linit.c \
- C:\Users\barte\Desktop\VoltaRewritten\include\lua-5.4.7\src\lprefix.h \
- c:\mingw\lib\gcc\mingw32\6.3.0\include\stddef.h \
- C:\Users\barte\Desktop\VoltaRewritten\include\lua-5.4.7\src\lua.h \
- c:\mingw\lib\gcc\mingw32\6.3.0\include\stdarg.h \
- C:\Users\barte\Desktop\VoltaRewritten\include\lua-5.4.7\src\luaconf.h \
- c:\mingw\include\limits.h c:\mingw\include\_mingw.h \
- c:\mingw\include\msvcrtver.h c:\mingw\include\w32api.h \
- c:\mingw\include\sdkddkver.h \
- C:\Users\barte\Desktop\VoltaRewritten\include\lua-5.4.7\src\lualib.h \
- C:\Users\barte\Desktop\VoltaRewritten\include\lua-5.4.7\src\lauxlib.h \
- c:\mingw\include\stdio.h c:\mingw\include\sys/types.h
+ C:\Users\barte\Desktop\VoltaFramework\include\lua-5.4.7\src\linit.c \
+ C:\Users\barte\Desktop\VoltaFramework\include\lua-5.4.7\src\lprefix.h \
+ c:\mingw\lib\gcc\i686-w64-mingw32\11.2.0\include\stddef.h \
+ c:\mingw\i686-w64-mingw32\include\stddef.h \
+ c:\mingw\i686-w64-mingw32\include\crtdefs.h \
+ c:\mingw\i686-w64-mingw32\include\corecrt.h \
+ c:\mingw\i686-w64-mingw32\include\_mingw.h \
+ c:\mingw\i686-w64-mingw32\include\_mingw_mac.h \
+ c:\mingw\i686-w64-mingw32\include\_mingw_secapi.h \
+ c:\mingw\i686-w64-mingw32\include\vadefs.h \
+ c:\mingw\i686-w64-mingw32\include\sdks/_mingw_ddk.h \
+ C:\Users\barte\Desktop\VoltaFramework\include\lua-5.4.7\src\lua.h \
+ c:\mingw\lib\gcc\i686-w64-mingw32\11.2.0\include\stdarg.h \
+ c:\mingw\i686-w64-mingw32\include\stdarg.h \
+ c:\mingw\i686-w64-mingw32\include\_mingw_stdarg.h \
+ C:\Users\barte\Desktop\VoltaFramework\include\lua-5.4.7\src\luaconf.h \
+ c:\mingw\lib\gcc\i686-w64-mingw32\11.2.0\include-fixed\limits.h \
+ c:\mingw\lib\gcc\i686-w64-mingw32\11.2.0\include-fixed\syslimits.h \
+ c:\mingw\i686-w64-mingw32\include\limits.h \
+ C:\Users\barte\Desktop\VoltaFramework\include\lua-5.4.7\src\lualib.h \
+ C:\Users\barte\Desktop\VoltaFramework\include\lua-5.4.7\src\lauxlib.h \
+ c:\mingw\i686-w64-mingw32\include\stdio.h \
+ c:\mingw\i686-w64-mingw32\include\corecrt_stdio_config.h \
+ c:\mingw\i686-w64-mingw32\include\_mingw_off_t.h \
+ c:\mingw\i686-w64-mingw32\include\swprintf.inl \
+ c:\mingw\i686-w64-mingw32\include\sec_api\stdio_s.h

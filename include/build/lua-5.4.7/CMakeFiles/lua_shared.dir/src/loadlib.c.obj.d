@@ -1,44 +1,171 @@
 lua-5.4.7/CMakeFiles/lua_shared.dir/src/loadlib.c.obj: \
- C:\Users\barte\Desktop\VoltaRewritten\include\lua-5.4.7\src\loadlib.c \
- C:\Users\barte\Desktop\VoltaRewritten\include\lua-5.4.7\src\lprefix.h \
- c:\mingw\include\stdio.h c:\mingw\include\_mingw.h \
- c:\mingw\include\msvcrtver.h c:\mingw\include\w32api.h \
- c:\mingw\include\sdkddkver.h \
- c:\mingw\lib\gcc\mingw32\6.3.0\include\stddef.h \
- c:\mingw\include\sys/types.h \
- c:\mingw\lib\gcc\mingw32\6.3.0\include\stdarg.h \
- c:\mingw\include\stdlib.h c:\mingw\include\string.h \
- c:\mingw\include\strings.h c:\mingw\include\wchar.h \
- C:\Users\barte\Desktop\VoltaRewritten\include\lua-5.4.7\src\lua.h \
- C:\Users\barte\Desktop\VoltaRewritten\include\lua-5.4.7\src\luaconf.h \
- c:\mingw\include\limits.h \
- C:\Users\barte\Desktop\VoltaRewritten\include\lua-5.4.7\src\lauxlib.h \
- C:\Users\barte\Desktop\VoltaRewritten\include\lua-5.4.7\src\lualib.h \
- c:\mingw\include\windows.h c:\mingw\include\windef.h \
- c:\mingw\include\winnt.h c:\mingw\include\winerror.h \
- c:\mingw\include\basetsd.h c:\mingw\include\pshpack4.h \
- c:\mingw\include\poppack.h c:\mingw\include\wincon.h \
- c:\mingw\include\winbase.h c:\mingw\include\wingdi.h \
- c:\mingw\include\winuser.h c:\mingw\include\dbt.h \
- c:\mingw\include\winnls.h c:\mingw\include\winver.h \
- c:\mingw\include\winnetwk.h c:\mingw\include\winreg.h \
- c:\mingw\include\winsvc.h c:\mingw\include\cderr.h \
- c:\mingw\include\dde.h c:\mingw\include\ddeml.h c:\mingw\include\dlgs.h \
- c:\mingw\include\imm.h c:\mingw\include\lzexpand.h \
- c:\mingw\include\mmsystem.h c:\mingw\include\nb30.h \
- c:\mingw\include\rpc.h c:\mingw\include\rpcdce.h \
- c:\mingw\include\basetyps.h c:\mingw\include\rpcdcep.h \
- c:\mingw\include\rpcnsi.h c:\mingw\include\rpcnterr.h \
- c:\mingw\include\shellapi.h c:\mingw\include\pshpack2.h \
- c:\mingw\include\winperf.h c:\mingw\include\commdlg.h \
- c:\mingw\include\unknwn.h c:\mingw\include\objfwd.h \
- c:\mingw\include\wtypes.h c:\mingw\include\rpcndr.h \
- c:\mingw\include\rpcnsip.h c:\mingw\include\prsht.h \
- c:\mingw\include\winspool.h c:\mingw\include\_winsock.h \
- c:\mingw\include\winsock2.h c:\mingw\include\winsock.h \
- c:\mingw\include\sys\bsdtypes.h c:\mingw\include\sys\time.h \
- c:\mingw\include\nspapi.h c:\mingw\include\wtypes.h \
- c:\mingw\include\ole2.h c:\mingw\include\objbase.h \
- c:\mingw\include\objidl.h c:\mingw\include\cguid.h \
- c:\mingw\include\olectlid.h c:\mingw\include\oleauto.h \
- c:\mingw\include\oaidl.h c:\mingw\include\oleidl.h
+ C:\Users\barte\Desktop\VoltaFramework\include\lua-5.4.7\src\loadlib.c \
+ C:\Users\barte\Desktop\VoltaFramework\include\lua-5.4.7\src\lprefix.h \
+ c:\mingw\i686-w64-mingw32\include\stdio.h \
+ c:\mingw\i686-w64-mingw32\include\corecrt_stdio_config.h \
+ c:\mingw\i686-w64-mingw32\include\corecrt.h \
+ c:\mingw\i686-w64-mingw32\include\_mingw.h \
+ c:\mingw\i686-w64-mingw32\include\_mingw_mac.h \
+ c:\mingw\i686-w64-mingw32\include\_mingw_secapi.h \
+ c:\mingw\i686-w64-mingw32\include\vadefs.h \
+ c:\mingw\i686-w64-mingw32\include\sdks/_mingw_ddk.h \
+ c:\mingw\i686-w64-mingw32\include\_mingw_off_t.h \
+ c:\mingw\i686-w64-mingw32\include\swprintf.inl \
+ c:\mingw\i686-w64-mingw32\include\sec_api\stdio_s.h \
+ c:\mingw\i686-w64-mingw32\include\stdlib.h \
+ c:\mingw\i686-w64-mingw32\include\corecrt_wstdlib.h \
+ c:\mingw\lib\gcc\i686-w64-mingw32\11.2.0\include-fixed\limits.h \
+ c:\mingw\lib\gcc\i686-w64-mingw32\11.2.0\include-fixed\syslimits.h \
+ c:\mingw\i686-w64-mingw32\include\limits.h \
+ c:\mingw\i686-w64-mingw32\include\crtdefs.h \
+ c:\mingw\i686-w64-mingw32\include\sec_api\stdlib_s.h \
+ c:\mingw\i686-w64-mingw32\include\malloc.h \
+ c:\mingw\lib\gcc\i686-w64-mingw32\11.2.0\include\mm_malloc.h \
+ c:\mingw\i686-w64-mingw32\include\errno.h \
+ c:\mingw\i686-w64-mingw32\include\string.h \
+ c:\mingw\i686-w64-mingw32\include\sec_api\string_s.h \
+ C:\Users\barte\Desktop\VoltaFramework\include\lua-5.4.7\src\lua.h \
+ c:\mingw\lib\gcc\i686-w64-mingw32\11.2.0\include\stdarg.h \
+ c:\mingw\i686-w64-mingw32\include\stdarg.h \
+ c:\mingw\i686-w64-mingw32\include\_mingw_stdarg.h \
+ c:\mingw\lib\gcc\i686-w64-mingw32\11.2.0\include\stddef.h \
+ c:\mingw\i686-w64-mingw32\include\stddef.h \
+ C:\Users\barte\Desktop\VoltaFramework\include\lua-5.4.7\src\luaconf.h \
+ C:\Users\barte\Desktop\VoltaFramework\include\lua-5.4.7\src\lauxlib.h \
+ C:\Users\barte\Desktop\VoltaFramework\include\lua-5.4.7\src\lualib.h \
+ c:\mingw\i686-w64-mingw32\include\windows.h \
+ c:\mingw\i686-w64-mingw32\include\sdkddkver.h \
+ c:\mingw\i686-w64-mingw32\include\excpt.h \
+ c:\mingw\i686-w64-mingw32\include\windef.h \
+ c:\mingw\i686-w64-mingw32\include\winapifamily.h \
+ c:\mingw\i686-w64-mingw32\include\minwindef.h \
+ c:\mingw\i686-w64-mingw32\include\specstrings.h \
+ c:\mingw\i686-w64-mingw32\include\sal.h \
+ c:\mingw\i686-w64-mingw32\include\concurrencysal.h \
+ c:\mingw\i686-w64-mingw32\include\driverspecs.h \
+ c:\mingw\i686-w64-mingw32\include\winnt.h \
+ c:\mingw\i686-w64-mingw32\include\_mingw_unicode.h \
+ c:\mingw\i686-w64-mingw32\include\ctype.h \
+ c:\mingw\i686-w64-mingw32\include\apiset.h \
+ c:\mingw\i686-w64-mingw32\include\psdk_inc\intrin-impl.h \
+ c:\mingw\i686-w64-mingw32\include\basetsd.h \
+ c:\mingw\i686-w64-mingw32\include\guiddef.h \
+ c:\mingw\i686-w64-mingw32\include\pshpack4.h \
+ c:\mingw\i686-w64-mingw32\include\poppack.h \
+ c:\mingw\i686-w64-mingw32\include\pshpack4.h \
+ c:\mingw\i686-w64-mingw32\include\pshpack2.h \
+ c:\mingw\i686-w64-mingw32\include\poppack.h \
+ c:\mingw\i686-w64-mingw32\include\pshpack2.h \
+ c:\mingw\i686-w64-mingw32\include\pshpack8.h \
+ c:\mingw\i686-w64-mingw32\include\pshpack8.h \
+ c:\mingw\i686-w64-mingw32\include\ktmtypes.h \
+ c:\mingw\i686-w64-mingw32\include\winbase.h \
+ c:\mingw\i686-w64-mingw32\include\apisetcconv.h \
+ c:\mingw\i686-w64-mingw32\include\minwinbase.h \
+ c:\mingw\i686-w64-mingw32\include\bemapiset.h \
+ c:\mingw\i686-w64-mingw32\include\debugapi.h \
+ c:\mingw\i686-w64-mingw32\include\errhandlingapi.h \
+ c:\mingw\i686-w64-mingw32\include\fibersapi.h \
+ c:\mingw\i686-w64-mingw32\include\fileapi.h \
+ c:\mingw\i686-w64-mingw32\include\handleapi.h \
+ c:\mingw\i686-w64-mingw32\include\heapapi.h \
+ c:\mingw\i686-w64-mingw32\include\ioapiset.h \
+ c:\mingw\i686-w64-mingw32\include\interlockedapi.h \
+ c:\mingw\i686-w64-mingw32\include\jobapi.h \
+ c:\mingw\i686-w64-mingw32\include\libloaderapi.h \
+ c:\mingw\i686-w64-mingw32\include\memoryapi.h \
+ c:\mingw\i686-w64-mingw32\include\namedpipeapi.h \
+ c:\mingw\i686-w64-mingw32\include\namespaceapi.h \
+ c:\mingw\i686-w64-mingw32\include\processenv.h \
+ c:\mingw\i686-w64-mingw32\include\processthreadsapi.h \
+ c:\mingw\i686-w64-mingw32\include\processtopologyapi.h \
+ c:\mingw\i686-w64-mingw32\include\profileapi.h \
+ c:\mingw\i686-w64-mingw32\include\realtimeapiset.h \
+ c:\mingw\i686-w64-mingw32\include\securityappcontainer.h \
+ c:\mingw\i686-w64-mingw32\include\securitybaseapi.h \
+ c:\mingw\i686-w64-mingw32\include\synchapi.h \
+ c:\mingw\i686-w64-mingw32\include\sysinfoapi.h \
+ c:\mingw\i686-w64-mingw32\include\systemtopologyapi.h \
+ c:\mingw\i686-w64-mingw32\include\threadpoolapiset.h \
+ c:\mingw\i686-w64-mingw32\include\threadpoollegacyapiset.h \
+ c:\mingw\i686-w64-mingw32\include\utilapiset.h \
+ c:\mingw\i686-w64-mingw32\include\wow64apiset.h \
+ c:\mingw\i686-w64-mingw32\include\winerror.h \
+ c:\mingw\i686-w64-mingw32\include\fltwinerror.h \
+ c:\mingw\i686-w64-mingw32\include\timezoneapi.h \
+ c:\mingw\i686-w64-mingw32\include\wingdi.h \
+ c:\mingw\i686-w64-mingw32\include\pshpack1.h \
+ c:\mingw\i686-w64-mingw32\include\winuser.h \
+ c:\mingw\i686-w64-mingw32\include\tvout.h \
+ c:\mingw\i686-w64-mingw32\include\winnls.h \
+ c:\mingw\i686-w64-mingw32\include\datetimeapi.h \
+ c:\mingw\i686-w64-mingw32\include\stringapiset.h \
+ c:\mingw\i686-w64-mingw32\include\wincon.h \
+ c:\mingw\i686-w64-mingw32\include\winver.h \
+ c:\mingw\i686-w64-mingw32\include\winreg.h \
+ c:\mingw\i686-w64-mingw32\include\reason.h \
+ c:\mingw\i686-w64-mingw32\include\winnetwk.h \
+ c:\mingw\i686-w64-mingw32\include\wnnc.h \
+ c:\mingw\i686-w64-mingw32\include\virtdisk.h \
+ c:\mingw\i686-w64-mingw32\include\cderr.h \
+ c:\mingw\i686-w64-mingw32\include\dde.h \
+ c:\mingw\i686-w64-mingw32\include\ddeml.h \
+ c:\mingw\i686-w64-mingw32\include\dlgs.h \
+ c:\mingw\i686-w64-mingw32\include\lzexpand.h \
+ c:\mingw\i686-w64-mingw32\include\mmsystem.h \
+ c:\mingw\i686-w64-mingw32\include\nb30.h \
+ c:\mingw\i686-w64-mingw32\include\rpc.h \
+ c:\mingw\i686-w64-mingw32\include\rpcdce.h \
+ c:\mingw\i686-w64-mingw32\include\rpcdcep.h \
+ c:\mingw\i686-w64-mingw32\include\rpcnsi.h \
+ c:\mingw\i686-w64-mingw32\include\rpcnterr.h \
+ c:\mingw\i686-w64-mingw32\include\rpcasync.h \
+ c:\mingw\i686-w64-mingw32\include\shellapi.h \
+ c:\mingw\i686-w64-mingw32\include\winperf.h \
+ c:\mingw\i686-w64-mingw32\include\winsock.h \
+ c:\mingw\i686-w64-mingw32\include\_timeval.h \
+ c:\mingw\i686-w64-mingw32\include\_bsd_types.h \
+ c:\mingw\i686-w64-mingw32\include\inaddr.h \
+ c:\mingw\i686-w64-mingw32\include\psdk_inc\_socket_types.h \
+ c:\mingw\i686-w64-mingw32\include\psdk_inc\_fd_types.h \
+ c:\mingw\i686-w64-mingw32\include\psdk_inc\_ip_types.h \
+ c:\mingw\i686-w64-mingw32\include\psdk_inc\_ip_mreq1.h \
+ c:\mingw\i686-w64-mingw32\include\psdk_inc\_wsadata.h \
+ c:\mingw\i686-w64-mingw32\include\psdk_inc\_xmitfile.h \
+ c:\mingw\i686-w64-mingw32\include\psdk_inc\_wsa_errnos.h \
+ c:\mingw\i686-w64-mingw32\include\wincrypt.h \
+ c:\mingw\i686-w64-mingw32\include\bcrypt.h \
+ c:\mingw\i686-w64-mingw32\include\ncrypt.h \
+ c:\mingw\i686-w64-mingw32\include\dpapi.h \
+ c:\mingw\i686-w64-mingw32\include\winefs.h \
+ c:\mingw\i686-w64-mingw32\include\winscard.h \
+ c:\mingw\i686-w64-mingw32\include\wtypes.h \
+ c:\mingw\i686-w64-mingw32\include\rpcndr.h \
+ c:\mingw\i686-w64-mingw32\include\rpcnsip.h \
+ c:\mingw\i686-w64-mingw32\include\rpcsal.h \
+ c:\mingw\i686-w64-mingw32\include\ole2.h \
+ c:\mingw\i686-w64-mingw32\include\objbase.h \
+ c:\mingw\i686-w64-mingw32\include\combaseapi.h \
+ c:\mingw\i686-w64-mingw32\include\wtypesbase.h \
+ c:\mingw\i686-w64-mingw32\include\unknwnbase.h \
+ c:\mingw\i686-w64-mingw32\include\objidlbase.h \
+ c:\mingw\i686-w64-mingw32\include\cguid.h \
+ c:\mingw\i686-w64-mingw32\include\objidl.h \
+ c:\mingw\i686-w64-mingw32\include\unknwn.h \
+ c:\mingw\i686-w64-mingw32\include\urlmon.h \
+ c:\mingw\i686-w64-mingw32\include\oleidl.h \
+ c:\mingw\i686-w64-mingw32\include\servprov.h \
+ c:\mingw\i686-w64-mingw32\include\msxml.h \
+ c:\mingw\i686-w64-mingw32\include\oaidl.h \
+ c:\mingw\i686-w64-mingw32\include\propidl.h \
+ c:\mingw\i686-w64-mingw32\include\oleauto.h \
+ c:\mingw\i686-w64-mingw32\include\winioctl.h \
+ c:\mingw\i686-w64-mingw32\include\winsmcrd.h \
+ c:\mingw\i686-w64-mingw32\include\winspool.h \
+ c:\mingw\i686-w64-mingw32\include\prsht.h \
+ c:\mingw\i686-w64-mingw32\include\commdlg.h \
+ c:\mingw\i686-w64-mingw32\include\stralign.h \
+ c:\mingw\i686-w64-mingw32\include\sec_api\stralign_s.h \
+ c:\mingw\i686-w64-mingw32\include\winsvc.h \
+ c:\mingw\i686-w64-mingw32\include\mcx.h \
+ c:\mingw\i686-w64-mingw32\include\imm.h

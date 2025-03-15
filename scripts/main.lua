@@ -78,6 +78,8 @@ function init()
         print("Button 0 is down on gamepad 0")
     end
 
+    print(volta.filesystem.getUserDirectory())
+
 end
 
 function update(dt)

@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "C:/Users/barte/Desktop/VoltaRewritten/include/lua-5.4.7/src/luac.c" "lua-5.4.7/CMakeFiles/luac.dir/src/luac.c.obj" "gcc" "lua-5.4.7/CMakeFiles/luac.dir/src/luac.c.obj.d"
+  "C:/Users/barte/Desktop/VoltaFramework/include/lua-5.4.7/src/luac.c" "lua-5.4.7/CMakeFiles/luac.dir/src/luac.c.obj" "gcc" "lua-5.4.7/CMakeFiles/luac.dir/src/luac.c.obj.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

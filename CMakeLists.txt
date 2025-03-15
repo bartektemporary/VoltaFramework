@@ -21,15 +21,21 @@ set(GLEW_INCLUDE_DIR "${GLEW_ROOT}/include")
 set(GLEW_LIBRARY "${GLEW_ROOT}/build/cmake/build/lib/libglew32.a")
 include_directories(${GLEW_INCLUDE_DIR})
 
-# FreeImage
 set(FREEIMAGE_ROOT "C:/Users/barte/Desktop/VoltaFramework/include/FreeImage")
-set(FREEIMAGE_INCLUDE_DIR "${FREEIMAGE_ROOT}/Dist")
-set(FREEIMAGE_LIBRARY "${FREEIMAGE_ROOT}/Dist/libfreeimage.a")
+set(FREEIMAGE_INCLUDE_DIR "${FREEIMAGE_ROOT}/Dist/x32")
+set(FREEIMAGE_LIBRARY "${FREEIMAGE_ROOT}/Dist/x32/FreeImage.lib") # Import library
+set(FREEIMAGE_DLL "${FREEIMAGE_ROOT}/Dist/x32/FreeImage.dll")    # Runtime DLL
 include_directories(${FREEIMAGE_INCLUDE_DIR})
+
+# Check if the import library exists
 if(NOT EXISTS "${FREEIMAGE_LIBRARY}")
-    message(FATAL_ERROR "FreeImage static library not found at ${FREEIMAGE_LIBRARY}")
+    message(FATAL_ERROR "FreeImage import library not found at ${FREEIMAGE_LIBRARY}")
 endif()
-add_definitions(-DFREEIMAGE_LIB) # Define for static linking
+
+# Check if the .dll exists (optional, for validation)
+if(NOT EXISTS "${FREEIMAGE_DLL}")
+    message(WARNING "FreeImage DLL not found at ${FREEIMAGE_DLL}. Ensure it’s available at runtime.")
+endif()
 
 # miniaudio
 set(MINIAUDIO_ROOT "C:/Users/barte/Desktop/VoltaFramework/include/miniaudio")
@@ -81,5 +87,11 @@ target_link_libraries(game
 )
 target_compile_features(game PUBLIC cxx_std_17)
 
+add_custom_command(TARGET game POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${FREEIMAGE_DLL}"
+    $<TARGET_FILE_DIR:game>
+    COMMENT "Copying FreeImage DLL to output directory"
+)
 
 file(COPY scripts assets DESTINATION ${CMAKE_BINARY_DIR})

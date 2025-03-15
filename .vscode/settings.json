@@ -62,6 +62,7 @@
         "xutility": "cpp",
         "random": "cpp",
         "chrono": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "freeimage.h": "c"
     }
 }
