@@ -27,6 +27,9 @@ lua-5.4.7/CMakeFiles/lua_shared.dir/src/ltablib.c.obj: \
  c:\mingw\i686-w64-mingw32\include\swprintf.inl \
  c:\mingw\i686-w64-mingw32\include\sec_api\stdio_s.h \
  C:\Users\barte\Desktop\VoltaFramework\include\lua-5.4.7\src\lualib.h \
+ C:\Users\barte\Desktop\VoltaFramework\include\lua-5.4.7\src\ltable.h \
+ C:\Users\barte\Desktop\VoltaFramework\include\lua-5.4.7\src\lobject.h \
+ C:\Users\barte\Desktop\VoltaFramework\include\lua-5.4.7\src\llimits.h \
  c:\mingw\i686-w64-mingw32\include\time.h \
  c:\mingw\i686-w64-mingw32\include\_timeval.h \
  c:\mingw\i686-w64-mingw32\include\sys\timeb.h \

@@ -556,34 +556,33 @@ void luaH_resize (lua_State *L, Table *t, unsigned int newasize,
   Table newt;  /* to keep the new hash part */
   unsigned int oldasize = setlimittosize(t);
   TValue *newarray;
-  /* create new hash part with appropriate size into 'newt' */
   setnodevector(L, &newt, nhsize);
-  if (newasize < oldasize) {  /* will array shrink? */
-    t->alimit = newasize;  /* pretend array has new size... */
-    exchangehashpart(t, &newt);  /* and new hash */
-    /* re-insert into the new hash the elements from vanishing slice */
+  if (newasize < oldasize) {
+    t->alimit = newasize;
+    exchangehashpart(t, &newt);
     for (i = newasize; i < oldasize; i++) {
       if (!isempty(&t->array[i]))
         luaH_setint(L, t, i + 1, &t->array[i]);
     }
-    t->alimit = oldasize;  /* restore current size... */
-    exchangehashpart(t, &newt);  /* and hash (in case of errors) */
+    t->alimit = oldasize;
+    exchangehashpart(t, &newt);
   }
-  /* allocate new array */
   newarray = luaM_reallocvector(L, t->array, oldasize, newasize, TValue);
-  if (l_unlikely(newarray == NULL && newasize > 0)) {  /* allocation failed? */
-    freehash(L, &newt);  /* release new hash part */
-    luaM_error(L);  /* raise error (with array unchanged) */
+  if (l_unlikely(newarray == NULL && newasize > 0)) {
+    freehash(L, &newt);
+    luaM_error(L);
   }
-  /* allocation ok; initialize new part of the array */
-  exchangehashpart(t, &newt);  /* 't' has the new hash ('newt' has the old) */
-  t->array = newarray;  /* set new array part */
+  exchangehashpart(t, &newt);
+  t->array = newarray;
   t->alimit = newasize;
-  for (i = oldasize; i < newasize; i++)  /* clear new slice of the array */
+  for (i = oldasize; i < newasize; i++)
      setempty(&t->array[i]);
-  /* re-insert elements from old hash part into new parts */
-  reinsert(L, &newt, t);  /* 'newt' now has the old hash */
-  freehash(L, &newt);  /* free old hash part */
+  reinsert(L, &newt, t);
+  freehash(L, &newt);
+  /* Reset cached metadata */
+  t->last_accessed_node = NULL;  /* Invalidate last accessed node */
+  t->array_size_eff = newasize;  /* Update effective array size */
+  /* is_array_like will be updated in rehash if called */
 }
 
 
@@ -612,6 +611,9 @@ static void rehash (lua_State *L, Table *t, const TValue *ek) {
   totaluse++;
   /* compute new size for array part */
   asize = computesizes(nums, &na);
+  /* Update metadata */
+  t->array_size_eff = asize;
+  t->is_array_like = (na > totaluse / 2);  /* Set if more than half the keys are array-like */
   /* resize the table to new computed sizes */
   luaH_resize(L, t, asize, totaluse - na);
 }
@@ -631,6 +633,9 @@ Table *luaH_new (lua_State *L) {
   t->array = NULL;
   t->alimit = 0;
   setnodevector(L, t, 0);
+  t->array_size_eff = 0;
+  t->is_array_like = 0;
+  t->last_accessed_node = NULL;
   return t;
 }
 
@@ -744,26 +749,37 @@ static void luaH_newkey (lua_State *L, Table *t, const TValue *key,
 */
 const TValue *luaH_getint (Table *t, lua_Integer key) {
   lua_Unsigned alimit = t->alimit;
-  if (l_castS2U(key) - 1u < alimit)  /* 'key' in [1, t->alimit]? */
-    return &t->array[key - 1];
-  else if (!isrealasize(t) &&  /* key still may be in the array part? */
-           (((l_castS2U(key) - 1u) & ~(alimit - 1u)) < alimit)) {
-    t->alimit = cast_uint(key);  /* probably '#t' is here now */
-    return &t->array[key - 1];
+  lua_Unsigned key_u = l_castS2U(key);
+
+  /* Quick check for array-like access */
+  if (key_u > 0 && key_u <= alimit) {  /* Direct array access */
+    t->is_array_like = 1;  /* Mark as array-like */
+    return &t->array[key_u - 1];
   }
-  else {  /* key is not in the array part; check the hash */
-    Node *n = hashint(t, key);
-    for (;;) {  /* check whether 'key' is somewhere in the chain */
-      if (keyisinteger(n) && keyival(n) == key)
-        return gval(n);  /* that's it */
-      else {
-        int nx = gnext(n);
-        if (nx == 0) break;
-        n += nx;
-      }
+
+  /* Check if key might still be in array part (using the "Xmilia trick") */
+  if (!isrealasize(t) && key_u > 0 && (((key_u - 1u) & ~(alimit - 1u)) < alimit)) {
+    t->alimit = cast_uint(key_u);  /* Update alimit */
+    t->is_array_like = 1;  /* Mark as array-like */
+    return &t->array[key_u - 1];
+  }
+
+  /* Fallback to hash part */
+  Node *n = hashint(t, key);
+  if (t->last_accessed_node && keyisinteger(t->last_accessed_node) && keyival(t->last_accessed_node) == key) {
+    return gval(t->last_accessed_node);  /* Use cached node */
+  }
+
+  for (;;) {
+    if (keyisinteger(n) && keyival(n) == key) {
+      t->last_accessed_node = n;  /* Cache this node */
+      return gval(n);  /* Found in hash part */
     }
-    return &absentkey;
+    int nx = gnext(n);
+    if (nx == 0) break;
+    n += nx;
   }
+  return &absentkey;  /* Not found */
 }
 
 
@@ -801,6 +817,13 @@ const TValue *luaH_getstr (Table *t, TString *key) {
 ** main search function
 */
 const TValue *luaH_get (Table *t, const TValue *key) {
+  if (t->is_array_like && ttisinteger(key)) {
+    lua_Unsigned key_u = l_castS2U(ivalue(key));
+    if (key_u > 0 && key_u <= t->array_size_eff) {
+      return &t->array[key_u - 1];  /* Direct array access */
+    }
+  }
+
   switch (ttypetag(key)) {
     case LUA_VSHRSTR: return luaH_getshortstr(t, tsvalue(key));
     case LUA_VNUMINT: return luaH_getint(t, ivalue(key));

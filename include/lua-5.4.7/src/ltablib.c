@@ -18,6 +18,7 @@
 
 #include "lauxlib.h"
 #include "lualib.h"
+#include "ltable.h"
 
 
 /*
@@ -60,6 +61,7 @@ static void checktab (lua_State *L, int arg, int what) {
 
 static int tinsert (lua_State *L) {
   lua_Integer pos;  /* where to insert new element */
+  luaL_checktype(L, 1, LUA_TTABLE);  /* Ensure first argument is a table */
   lua_Integer e = aux_getn(L, 1, TAB_RW);
   e = luaL_intop(+, e, 1);  /* first empty element */
   switch (lua_gettop(L)) {
@@ -70,7 +72,6 @@ static int tinsert (lua_State *L) {
     case 3: {
       lua_Integer i;
       pos = luaL_checkinteger(L, 2);  /* 2nd argument is the position */
-      /* check whether 'pos' is in [1, e] */
       luaL_argcheck(L, (lua_Unsigned)pos - 1u < (lua_Unsigned)e, 2,
                        "position out of bounds");
       for (i = e; i > pos; i--) {  /* move up elements */
@@ -86,7 +87,6 @@ static int tinsert (lua_State *L) {
   lua_seti(L, 1, pos);  /* t[pos] = v */
   return 0;
 }
-
 
 static int tremove (lua_State *L) {
   lua_Integer size = aux_getn(L, 1, TAB_RW);

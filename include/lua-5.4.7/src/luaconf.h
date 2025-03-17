@@ -746,7 +746,7 @@
 ** (It must fit into max(size_t)/32 and max(int)/2.)
 */
 #if LUAI_IS32INT
-#define LUAI_MAXSTACK		1000000
+#define LUAI_MAXSTACK		1100000
 #else
 #define LUAI_MAXSTACK		15000
 #endif
@@ -772,7 +772,7 @@
 @@ LUAL_BUFFERSIZE is the initial buffer size used by the lauxlib
 ** buffer system.
 */
-#define LUAL_BUFFERSIZE   ((int)(16 * sizeof(void*) * sizeof(lua_Number)))
+#define LUAL_BUFFERSIZE   ((int)(16 * sizeof(void*) * (sizeof(lua_Number) * 2)))
 
 
 /*

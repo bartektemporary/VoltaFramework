@@ -35,12 +35,11 @@ struct Particle {
 class VoltaFramework;
 
 enum class EmitterShape {
-    Circle,   // Omnidirectional emission (360°)
-    Rectangle,// Emit within a rectangular
-    Cone,     // Directional emission with spread
-    Line      // Emit along a line segment
+    Circle,
+    Rectangle,
+    Cone,
+    Line
 };
-
 
 class ParticleEmitter {
 public:
@@ -70,13 +69,12 @@ private:
     Vector2 position;
     std::vector<Particle> particles;
     EmitterShape shape;
-    float width;  // Width of the rectangle shape
-    float height; // Height of the rectangle shape
+    float width;
+    float height;
 
     GLuint particleTexture;
 };
 
-// Define VoltaFramework class
 class VoltaFramework {
 public:
     VoltaFramework();
@@ -137,6 +135,24 @@ public:
     void registerGamepadDisconnectedCallback(int ref);
     void registerGamepadButtonPressedCallback(int button, int ref);
 
+    // Custom shader management
+    bool setCustomShader(const std::string& vertexSource, const std::string& fragmentSource);
+    bool setCustomShaderFromFiles(const std::string& vertexFile, const std::string& fragmentFile);
+    void useCustomShader(bool use);
+    void clearCustomShader();
+
+    // Custom shader members
+    GLuint customShaderProgram;
+    bool usingCustomShader;
+    GLint customColorUniform;
+    GLint customUseTextureUniform;
+    GLint customTextureUniform;
+
+    GLuint compileShader(GLenum type, const char* source);
+    GLuint createShaderProgram(const char* vertexSource, const char* fragmentSource);
+    void setShaderUniform(const std::string& name, float value);
+    void setShaderUniform(const std::string& name, const Vector2& value);
+    
 private:
     lua_State* L;
     GLFWwindow* window;
@@ -167,20 +183,17 @@ private:
 
     std::unordered_map<std::string, std::vector<int>> customEventCallbackRefs {};
 
-    std::unordered_map<int, bool> gamepadStates; // Tracks connected gamepads (joystick ID -> connected)
-    std::vector<int> gamepadConnectedCallbackRefs; // Lua refs for gamepad connected callbacks
-    std::vector<int> gamepadDisconnectedCallbackRefs; // Lua refs for gamepad disconnected callbacks
-    std::unordered_map<int, std::vector<int>> gamepadButtonPressedCallbackRefs; // Button -> Lua refs
+    std::unordered_map<int, bool> gamepadStates;
+    std::vector<int> gamepadConnectedCallbackRefs;
+    std::vector<int> gamepadDisconnectedCallbackRefs;
+    std::unordered_map<int, std::vector<int>> gamepadButtonPressedCallbackRefs;
 
-    // Static callback for GLFW joystick events
     static void joystickCallback(int jid, int event);
 };
 
-// External declarations and function prototypes
 extern VoltaFramework* g_frameworkInstance;
 VoltaFramework* getFramework(lua_State* L);
 
-// Function declarations (unchanged)
 int l_window_setTitle(lua_State* L);
 int l_window_getTitle(lua_State* L);
 int l_window_setSize(lua_State* L);
@@ -200,6 +213,10 @@ int l_drawLine(lua_State* L);
 int l_setColor(lua_State* L);
 int l_drawImage(lua_State* L);
 int l_setFilter(lua_State* L);
+int l_setCustomShader(lua_State* L);
+int l_useCustomShader(lua_State* L);
+int l_clearCustomShader(lua_State* L);
+int l_setCustomShaderUniform(lua_State* L);
 
 int l_isKeyDown(lua_State* L);
 int l_input_keyPressed(lua_State* L);

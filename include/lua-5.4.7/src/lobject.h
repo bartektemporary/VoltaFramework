@@ -740,10 +740,13 @@ typedef struct Table {
   lu_byte lsizenode;  /* log2 of size of 'node' array */
   unsigned int alimit;  /* "limit" of 'array' array */
   TValue *array;  /* array part */
-  Node *node;
-  Node *lastfree;  /* any free position is before this position */
+  Node *node;  /* hash part */
+  Node *lastfree;  /* last free position in hash part */
   struct Table *metatable;
   GCObject *gclist;
+  unsigned int array_size_eff;  /* Effective array size (cached) */
+  lu_byte is_array_like;  /* Flag: 1 if table is primarily array-like */
+  Node *last_accessed_node;  /* Cache last accessed node in hash part */
 } Table;
 
 

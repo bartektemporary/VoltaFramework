@@ -2,10 +2,8 @@
 #include <cstring>
 
 void VoltaFramework::registerLuaAPI() {
-    // Register Vector2 metatable
     luaL_newmetatable(L, "Vector2");
 
-    // Set arithmetic metamethods
     lua_pushcfunction(L, l_vector2_add);
     lua_setfield(L, -2, "__add");
     lua_pushcfunction(L, l_vector2_subtract);
@@ -17,7 +15,6 @@ void VoltaFramework::registerLuaAPI() {
     lua_pushcfunction(L, l_vector2_tostring);
     lua_setfield(L, -2, "__tostring");
 
-    // Create methods table
     lua_newtable(L);
     lua_pushcfunction(L, l_vector2_add);
     lua_setfield(L, -2, "add");
@@ -42,12 +39,9 @@ void VoltaFramework::registerLuaAPI() {
     lua_pushcfunction(L, l_vector2_tween);
     lua_setfield(L, -2, "tween");
 
-    // Store methods table in the registry
-    // Store methods table in the registry
     lua_pushvalue(L, -1);
     lua_setfield(L, LUA_REGISTRYINDEX, "Vector2Methods");
 
-    // Set __index on the Vector2 metatable
     lua_pushcfunction(L, [](lua_State* L) {
         Vector2* vec = static_cast<Vector2*>(luaL_checkudata(L, 1, "Vector2"));
         const char* key = luaL_checkstring(L, 2);
@@ -63,12 +57,11 @@ void VoltaFramework::registerLuaAPI() {
 
         lua_getfield(L, LUA_REGISTRYINDEX, "Vector2Methods");
         lua_getfield(L, -1, key);
-        lua_remove(L, -2); // Remove the methods table, leaving the value
+        lua_remove(L, -2);
         return 1;
     });
     lua_setfield(L, -3, "__index");
 
-    // Set __newindex on the Vector2 metatable to make fields read-only
     lua_pushcfunction(L, [](lua_State* L) {
         const char* key = luaL_checkstring(L, 2);
         luaL_error(L, "Cannot modify Vector2: field '%s' is read-only", key);
@@ -76,14 +69,11 @@ void VoltaFramework::registerLuaAPI() {
     });
     lua_setfield(L, -3, "__newindex");
 
-    // Clean up: pop the methods table and Vector2 metatable
-    lua_pop(L, 1); // Pop the methods table
-    lua_pop(L, 1); // Pop the Vector2 metatable
+    lua_pop(L, 1);
+    lua_pop(L, 1);
 
-    // Create the global 'volta' table
     lua_newtable(L);
 
-    // Register volta.window
     lua_newtable(L);
     lua_pushcfunction(L, l_window_getTitle);
     lua_setfield(L, -2, "getTitle");
@@ -111,7 +101,6 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "setVsync");
     lua_setfield(L, -2, "window");
 
-    // Register volta.graphics
     lua_newtable(L);
     lua_pushcfunction(L, l_rectangle);
     lua_setfield(L, -2, "rectangle");
@@ -125,9 +114,16 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "drawImage");
     lua_pushcfunction(L, l_setFilter);
     lua_setfield(L, -2, "setFilter");
+    lua_pushcfunction(L, l_setCustomShader);
+    lua_setfield(L, -2, "setCustomShader");
+    lua_pushcfunction(L, l_useCustomShader);
+    lua_setfield(L, -2, "setUseCustomShader");
+    lua_pushcfunction(L, l_clearCustomShader);
+    lua_setfield(L, -2, "clearCustomShader");
+    lua_pushcfunction(L, l_setCustomShaderUniform);
+    lua_setfield(L, -2, "setCustomShaderUniform");
     lua_setfield(L, -2, "graphics");
 
-    // Register volta.input
     lua_newtable(L);
     lua_pushlightuserdata(L, window);
     lua_pushcclosure(L, l_isKeyDown, 1);
@@ -156,7 +152,6 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "getGamepadButtonPressed");
     lua_setfield(L, -2, "input");
 
-    // Register volta.audio
     lua_newtable(L);
     lua_pushcfunction(L, l_audio_loadAudio);
     lua_setfield(L, -2, "loadAudio");
@@ -166,7 +161,6 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "getGlobalVolume");
     lua_setfield(L, -2, "audio");
 
-    // Register volta.filesystem
     lua_newtable(L);
     lua_pushcfunction(L, l_filesystem_exists);
     lua_setfield(L, -2, "exists");
@@ -222,7 +216,6 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "getUserDirectory");
     lua_setfield(L, -2, "filesystem");
 
-    // Register volta.json
     lua_newtable(L);
     lua_pushcfunction(L, l_json_decode);
     lua_setfield(L, -2, "decode");
@@ -230,24 +223,21 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "encode");
     lua_setfield(L, -2, "json");
 
-    // Register volta.buffer
     lua_newtable(L);
     lua_pushcfunction(L, l_buffer_alloc);
     lua_setfield(L, -2, "alloc");
     lua_setfield(L, -2, "buffer");
 
-    // Register volta.vector2
     lua_newtable(L);
     lua_pushcfunction(L, l_vector2_new);
     lua_setfield(L, -2, "new");
     lua_setfield(L, -2, "vector2");
 
-    lua_newtable(L); // volta.particleEmitter
+    lua_newtable(L);
     lua_pushcfunction(L, l_particleEmitter_new);
     lua_setfield(L, -2, "new");
     lua_setfield(L, -2, "particleEmitter");
 
-    // Register volta.getRunningTime
     lua_pushcfunction(L, l_getRunningTime);
     lua_setfield(L, -2, "getRunningTime");
     lua_pushcfunction(L, l_onCustomEvent);
@@ -255,12 +245,10 @@ void VoltaFramework::registerLuaAPI() {
     lua_pushcfunction(L, l_triggerCustomEvent);
     lua_setfield(L, -2, "triggerEvent");
 
-    // Set the table as global 'volta'
     lua_setglobal(L, "volta");
 
-    // Register Buffer metatable
     luaL_newmetatable(L, "Buffer");
-    lua_newtable(L); // Index table for methods
+    lua_newtable(L);
     lua_pushcfunction(L, l_buffer_writeUInt8);
     lua_setfield(L, -2, "writeUInt8");
     lua_pushcfunction(L, l_buffer_readUInt8);
@@ -337,7 +325,6 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "__index");
     lua_pop(L, 1);
 
-    // Extend math table
     lua_getglobal(L, "math");
     if (lua_isnil(L, -1)) {
         lua_pop(L, 1);
@@ -359,7 +346,6 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "noise3d");
     lua_setglobal(L, "math");
 
-    // Extend table
     lua_getglobal(L, "table");
     if (lua_isnil(L, -1)) {
         lua_pop(L, 1);
@@ -369,7 +355,6 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "shallowCopy");
     lua_setglobal(L, "table");
 
-    // Final verification
     luaL_getmetatable(L, "Vector2");
     lua_getfield(L, -1, "__index");
     lua_pop(L, 2);

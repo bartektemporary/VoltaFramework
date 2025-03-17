@@ -2,10 +2,20 @@
 #include <cstring>
 #include "Maps.hpp"
 
-// Global instance pointer
 VoltaFramework* g_frameworkInstance {nullptr};
 
-VoltaFramework::VoltaFramework() : L{luaL_newstate()}, width{800}, height{600}, x{100}, y{100}, startTime{glfwGetTime()} {
+VoltaFramework::VoltaFramework() : 
+    L{luaL_newstate()}, 
+    width{800}, 
+    height{600}, 
+    x{100}, 
+    y{100}, 
+    startTime{glfwGetTime()},
+    customShaderProgram(0),
+    usingCustomShader(false),
+    customColorUniform(-1),
+    customUseTextureUniform(-1),
+    customTextureUniform(-1) {
     luaL_openlibs(L);
 
     if (!glfwInit()) {
@@ -33,9 +43,8 @@ VoltaFramework::VoltaFramework() : L{luaL_newstate()}, width{800}, height{600}, 
     initOpenGL();
 
     glViewport(0, 0, width, height);
-    glfwSetWindowPos(window, x, y); // Set initial position
+    glfwSetWindowPos(window, x, y);
 
-    // Set global instance and register size callback
     g_frameworkInstance = this;
     glfwSetWindowSizeCallback(window, windowSizeCallback);
     glfwSetWindowPosCallback(window, windowPosCallback);
@@ -43,10 +52,8 @@ VoltaFramework::VoltaFramework() : L{luaL_newstate()}, width{800}, height{600}, 
     glfwSetKeyCallback(window, key_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
 
-    // Set up GLFW joystick callback
     glfwSetJoystickCallback(joystickCallback);
 
-    // Check for already connected gamepads
     for (int jid = GLFW_JOYSTICK_1; jid <= GLFW_JOYSTICK_LAST; jid++) {
         if (glfwJoystickPresent(jid) && glfwJoystickIsGamepad(jid)) {
             gamepadStates[jid] = true;
@@ -61,7 +68,6 @@ VoltaFramework::VoltaFramework() : L{luaL_newstate()}, width{800}, height{600}, 
     filterMode = GL_LINEAR;
     globalVolume = 1.0f;
 
-    // Initialize miniaudio engine
     ma_result result {ma_engine_init(NULL, &engine)};
     if (result != MA_SUCCESS) {
         std::cerr << "Failed to initialize miniaudio engine\n";
@@ -131,7 +137,6 @@ void VoltaFramework::run() {
         if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
             std::cerr << "Init Error: " << lua_tostring(L, -1) << std::endl;
             lua_pop(L, 1);
-        } else {
         }
     } else {
         lua_pop(L, 1);
@@ -150,7 +155,7 @@ void VoltaFramework::run() {
 }
 
 void VoltaFramework::loadLuaScript(const std::string& filename) {
-    if (luaL_dofile(L, filename.c_str()) != LUA_OK ) {
+    if (luaL_dofile(L, filename.c_str()) != LUA_OK) {
         std::cerr << "Lua Error: " << lua_tostring(L, -1) << std::endl;
         lua_pop(L, 1);
     }
