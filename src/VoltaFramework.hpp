@@ -71,7 +71,6 @@ private:
     EmitterShape shape;
     float width;
     float height;
-
     GLuint particleTexture;
 };
 
@@ -136,23 +135,30 @@ public:
     void registerGamepadButtonPressedCallback(int button, int ref);
 
     // Custom shader management
-    bool setCustomShader(const std::string& vertexSource, const std::string& fragmentSource);
-    bool setCustomShaderFromFiles(const std::string& vertexFile, const std::string& fragmentFile);
+    bool createCustomShader(const std::string& shaderName, const std::string& vertexSource, const std::string& fragmentSource);
+    bool createCustomShaderFromFiles(const std::string& shaderName, const std::string& vertexFile, const std::string& fragmentFile);
+    void setShader(const std::string& shaderName);
+    void clearCustomShader(const std::string& shaderName);
+    void clearAllCustomShaders();
+    bool hasShader(const std::string& shaderName) const;
     void useCustomShader(bool use);
-    void clearCustomShader();
 
-    // Custom shader members
-    GLuint customShaderProgram;
+    struct ShaderProgram {
+        GLuint program;
+        GLint colorUniform;
+        GLint useTextureUniform;
+        GLint textureUniform;
+    };
+
+    std::unordered_map<std::string, ShaderProgram> customShaders;
+    std::string currentShaderName;
     bool usingCustomShader;
-    GLint customColorUniform;
-    GLint customUseTextureUniform;
-    GLint customTextureUniform;
 
     GLuint compileShader(GLenum type, const char* source);
     GLuint createShaderProgram(const char* vertexSource, const char* fragmentSource);
     void setShaderUniform(const std::string& name, float value);
     void setShaderUniform(const std::string& name, const Vector2& value);
-    
+
 private:
     lua_State* L;
     GLFWwindow* window;
@@ -214,6 +220,7 @@ int l_setColor(lua_State* L);
 int l_drawImage(lua_State* L);
 int l_setFilter(lua_State* L);
 int l_setCustomShader(lua_State* L);
+int l_setShader(lua_State* L);
 int l_useCustomShader(lua_State* L);
 int l_clearCustomShader(lua_State* L);
 int l_setCustomShaderUniform(lua_State* L);

@@ -1,105 +1,27 @@
-t = {}
-mt = { __index = function() end }
-setmetatable(t, mt)
-print(t.newkey)  -- Should trigger cache refresh
-t.newkey = 42     -- Should use cached __newindex
-print(t.newkey)  -- Should trigger cache refresh
-
 local time = 0
 
-local vertexShader = [[
-    #version 330 core
-    layout (location = 0) in vec2 aPos;
-    out vec2 FragCoord;
-
-    void main() {
-        gl_Position = vec4(aPos, 0.0, 1.0);
-        FragCoord = (aPos + 1.0) * 0.5; // Normalize to [0, 1] for easier distance calc
-    }
-]]
-
-local fragmentShader = [[
-    #version 330 core
-    in vec2 FragCoord;
-    out vec4 FragColor;
-
-    uniform vec3 uColor;
-    uniform float uTime;
-    uniform vec2 uRectPos;    // Bottom-left in [0, 1] coords
-    uniform vec2 uRectSize;   // Size in [0, 1] coords
-
-    // Signed distance function for a rectangle in [0, 1] space
-    float sdRectangle(vec2 p, vec2 pos, vec2 size) {
-        vec2 d = abs(p - (pos + size * 0.5)) - (size * 0.5);
-        return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
-    }
-
-    void main() {
-        // Compute distance from fragment to rectangle (in [0, 1] space)
-        float d = sdRectangle(FragCoord, uRectPos, uRectSize);
-
-        // Base color (rectangle interior)
-        vec3 baseColor = uColor * step(0.0, -d);
-
-        // Glow effect outside the rectangle with very tight range
-        float glow = 0.0;
-        if (d > 0.0) {
-            glow = 1.0 * exp(-d * 100.0); // Glow intensity
-            glow = clamp(glow, 0.0, 1.0);
-        }
-
-        // Pulse effect for brightness variation
-        float pulse = sin(uTime * 2.0) * 0.25 + 1.25; // Range: 1.0 to 1.5
-
-        // Apply pulse to both base color and glow to sync brightness
-        vec3 rectColor = baseColor * pulse;
-        vec3 glowColor = (glow * uColor) * pulse;
-
-        // Combine colors
-        vec3 finalColor = rectColor + glowColor;
-
-        // Normalize to prevent hue shift while increasing brightness
-        float maxComponent = max(max(finalColor.r, finalColor.g), finalColor.b);
-        if (maxComponent > 1.0) {
-            finalColor = finalColor / maxComponent; // Preserve hue by normalizing
-        }
-
-        // Background
-        if (d > 0.01) { // Reduced threshold to match tight glow range
-            finalColor = vec3(0.1, 0.1, 0.1); // Dark gray background
-        }
-
-        // Debug: Visualize distance (uncomment to test)
-        // FragColor = vec4(vec3(d), 1.0);
-
-        FragColor = vec4(finalColor, 1.0);
-    }
-]]
-
 function init()
-    local success = volta.graphics.setCustomShader(vertexShader, fragmentShader)
+    local success = volta.graphics.setCustomShader("glow", {
+        vertex = "glow_vertex.glsl",
+        fragment = "glow_fragment.glsl"
+    })
     if not success then
         print("Failed to set custom shader")
         return
     end
-
-    volta.graphics.setUseCustomShader(true)
-    print("Custom shader applied")
+    print("Custom shader 'glow' created")
 end
 
 function update(dt)
     time = time + dt
 
-    -- Set color every frame
-    volta.graphics.setColor(1.0, 0.5, 0.0) -- Orange
-
-    -- Update uniforms
+    -- Set shader and uniforms
+    volta.graphics.setShader("glow")
     volta.graphics.setCustomShaderUniform("uTime", volta.getRunningTime())
 
     local windowWidth, windowHeight = volta.window.getSize()
     local centerX, centerY = windowWidth / 2, windowHeight / 2
 
-    -- Rectangle position and size in window coordinates
     local radius = 100
     local speed = 2.0
     local rectPos = volta.vector2.new(
@@ -108,9 +30,8 @@ function update(dt)
     )
     local rectSize = volta.vector2.new(50, 50)
 
-    -- Convert to [0, 1] coordinates (normalized screen space)
     local normPosX = rectPos.x / windowWidth
-    local normPosY = 1.0 - (rectPos.y / windowHeight) -- Invert Y for [0, 1] top-left origin
+    local normPosY = 1.0 - (rectPos.y / windowHeight)
     local normSizeX = rectSize.x / windowWidth
     local normSizeY = rectSize.y / windowHeight
     local glPos = volta.vector2.new(normPosX, normPosY)
@@ -118,9 +39,13 @@ function update(dt)
 
     volta.graphics.setCustomShaderUniform("uRectPos", glPos)
     volta.graphics.setCustomShaderUniform("uRectSize", glSize)
+    volta.graphics.setColor(1.0, 1.0, 1.0) -- White base color for pure transition
 
-    -- Render a full-screen quad (using the framework's rectangle with max size)
-    volta.graphics.rectangle(true, volta.vector2.new(0, 0), volta.vector2.new(windowWidth, windowHeight))
+    -- Debug prints
+    print("Base Color: 1.0, 1.0, 1.0")
+    print("Rect X-Pos (normalized): " .. normPosX)
+
+    volta.graphics.rectangle(true, rectPos, rectSize)
 end
 
 --[[local vector2 = volta.vector2

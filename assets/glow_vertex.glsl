@@ -1,14 +1,15 @@
 #version 330 core
 layout (location = 0) in vec2 aPos;
-layout (location = 1) in vec2 aTexCoord;
 
-out vec2 TexCoord;
-out vec2 FragPos;
+uniform vec3 uColor; // Base color from framework
+uniform bool uUseTexture; // Provided by framework
+uniform vec2 uRectPos; // Rectangle center position in [0, 1] space
 
-uniform float uTime;
+out vec3 fragColor;
+out vec2 fragPos; // Pass position to fragment shader
 
 void main() {
     gl_Position = vec4(aPos, 0.0, 1.0);
-    TexCoord = aTexCoord;
-    FragPos = aPos;
+    fragColor = uColor; // Pass base color
+    fragPos = uRectPos; // Pass rectangle position
 }

@@ -116,6 +116,8 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "setFilter");
     lua_pushcfunction(L, l_setCustomShader);
     lua_setfield(L, -2, "setCustomShader");
+    lua_pushcfunction(L, l_setShader);
+    lua_setfield(L, -2, "setShader");
     lua_pushcfunction(L, l_useCustomShader);
     lua_setfield(L, -2, "setUseCustomShader");
     lua_pushcfunction(L, l_clearCustomShader);

@@ -76,6 +76,8 @@
         "xlocbuf": "cpp",
         "xlocmes": "cpp",
         "lobject.h": "c",
-        "ltable.h": "c"
+        "ltable.h": "c",
+        "lua.h": "c",
+        "lparser.h": "c"
     }
 }

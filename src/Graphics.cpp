@@ -40,12 +40,13 @@ int l_rectangle(lua_State* L) {
             left, bottom
         };
         
-        if (framework->usingCustomShader && framework->customShaderProgram != 0) {
-            glUseProgram(framework->customShaderProgram);
-            if (framework->customColorUniform != -1)
-                glUniform3fv(framework->customColorUniform, 1, framework->currentColor);
-            if (framework->customUseTextureUniform != -1)
-                glUniform1i(framework->customUseTextureUniform, 0);
+        if (framework->usingCustomShader && !framework->currentShaderName.empty()) {
+            auto& shader = framework->customShaders[framework->currentShaderName];
+            glUseProgram(shader.program);
+            if (shader.colorUniform != -1)
+                glUniform3fv(shader.colorUniform, 1, framework->currentColor);
+            if (shader.useTextureUniform != -1)
+                glUniform1i(shader.useTextureUniform, 0);
         } else {
             glUseProgram(framework->shaderProgram);
             glUniform3fv(framework->colorUniform, 1, framework->currentColor);
@@ -65,12 +66,13 @@ int l_rectangle(lua_State* L) {
             left, bottom
         };
         
-        if (framework->usingCustomShader && framework->customShaderProgram != 0) {
-            glUseProgram(framework->customShaderProgram);
-            if (framework->customColorUniform != -1)
-                glUniform3fv(framework->customColorUniform, 1, framework->currentColor);
-            if (framework->customUseTextureUniform != -1)
-                glUniform1i(framework->customUseTextureUniform, 0);
+        if (framework->usingCustomShader && !framework->currentShaderName.empty()) {
+            auto& shader = framework->customShaders[framework->currentShaderName];
+            glUseProgram(shader.program);
+            if (shader.colorUniform != -1)
+                glUniform3fv(shader.colorUniform, 1, framework->currentColor);
+            if (shader.useTextureUniform != -1)
+                glUniform1i(shader.useTextureUniform, 0);
         } else {
             glUseProgram(framework->shaderProgram);
             glUniform3fv(framework->colorUniform, 1, framework->currentColor);
@@ -85,7 +87,6 @@ int l_rectangle(lua_State* L) {
     }
     
     glBindVertexArray(0);
-    
     return 0;
 }
 
@@ -127,12 +128,13 @@ int l_circle(lua_State* L) {
         vertices.push_back(y);
     }
     
-    if (framework->usingCustomShader && framework->customShaderProgram != 0) {
-        glUseProgram(framework->customShaderProgram);
-        if (framework->customColorUniform != -1)
-            glUniform3fv(framework->customColorUniform, 1, framework->currentColor);
-        if (framework->customUseTextureUniform != -1)
-            glUniform1i(framework->customUseTextureUniform, 0);
+    if (framework->usingCustomShader && !framework->currentShaderName.empty()) {
+        auto& shader = framework->customShaders[framework->currentShaderName];
+        glUseProgram(shader.program);
+        if (shader.colorUniform != -1)
+            glUniform3fv(shader.colorUniform, 1, framework->currentColor);
+        if (shader.useTextureUniform != -1)
+            glUniform1i(shader.useTextureUniform, 0);
     } else {
         glUseProgram(framework->shaderProgram);
         glUniform3fv(framework->colorUniform, 1, framework->currentColor);
@@ -150,7 +152,6 @@ int l_circle(lua_State* L) {
     }
     
     glBindVertexArray(0);
-    
     return 0;
 }
 
@@ -199,12 +200,13 @@ int l_drawLine(lua_State* L) {
         endX - halfWidthPerpX, endY - halfWidthPerpY
     };
     
-    if (framework->usingCustomShader && framework->customShaderProgram != 0) {
-        glUseProgram(framework->customShaderProgram);
-        if (framework->customColorUniform != -1)
-            glUniform3fv(framework->customColorUniform, 1, framework->currentColor);
-        if (framework->customUseTextureUniform != -1)
-            glUniform1i(framework->customUseTextureUniform, 0);
+    if (framework->usingCustomShader && !framework->currentShaderName.empty()) {
+        auto& shader = framework->customShaders[framework->currentShaderName];
+        glUseProgram(shader.program);
+        if (shader.colorUniform != -1)
+            glUniform3fv(shader.colorUniform, 1, framework->currentColor);
+        if (shader.useTextureUniform != -1)
+            glUniform1i(shader.useTextureUniform, 0);
     } else {
         glUseProgram(framework->shaderProgram);
         glUniform3fv(framework->colorUniform, 1, framework->currentColor);
@@ -218,7 +220,6 @@ int l_drawLine(lua_State* L) {
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     
     glBindVertexArray(0);
-    
     return 0;
 }
 
@@ -250,14 +251,15 @@ int l_drawImage(lua_State* L) {
         left, bottom,   0.0f, 0.0f
     };
     
-    if (framework->usingCustomShader && framework->customShaderProgram != 0) {
-        glUseProgram(framework->customShaderProgram);
-        if (framework->customColorUniform != -1)
-            glUniform3fv(framework->customColorUniform, 1, framework->currentColor);
-        if (framework->customUseTextureUniform != -1)
-            glUniform1i(framework->customUseTextureUniform, 1);
-        if (framework->customTextureUniform != -1)
-            glUniform1i(framework->customTextureUniform, 0);
+    if (framework->usingCustomShader && !framework->currentShaderName.empty()) {
+        auto& shader = framework->customShaders[framework->currentShaderName];
+        glUseProgram(shader.program);
+        if (shader.colorUniform != -1)
+            glUniform3fv(shader.colorUniform, 1, framework->currentColor);
+        if (shader.useTextureUniform != -1)
+            glUniform1i(shader.useTextureUniform, 1);
+        if (shader.textureUniform != -1)
+            glUniform1i(shader.textureUniform, 0);
     } else {
         glUseProgram(framework->shaderProgram);
         glUniform3fv(framework->colorUniform, 1, framework->currentColor);
@@ -275,7 +277,6 @@ int l_drawImage(lua_State* L) {
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     
     glBindVertexArray(0);
-    
     return 0;
 }
 
@@ -293,7 +294,6 @@ int l_setColor(lua_State* L) {
     framework->currentColor[0] = static_cast<float>(r);
     framework->currentColor[1] = static_cast<float>(g);
     framework->currentColor[2] = static_cast<float>(b);
-    
     return 0;
 }
 
@@ -312,7 +312,6 @@ int l_setFilter(lua_State* L) {
     } else {
         luaL_argerror(L, 1, "expected 'nearest' or 'linear'");
     }
-
     return 0;
 }
 
@@ -323,37 +322,49 @@ int l_setCustomShader(lua_State* L) {
         return 1;
     }
 
+    const char* shaderName = luaL_checkstring(L, 1);
     bool success;
-    // Check if we have two string arguments (existing behavior)
-    if (lua_isstring(L, 1) && lua_isstring(L, 2)) {
-        const char* vertexSource = luaL_checkstring(L, 1);
-        const char* fragmentSource = luaL_checkstring(L, 2);
-        success = framework->setCustomShader(vertexSource, fragmentSource);
+
+    if (lua_isstring(L, 2) && lua_isstring(L, 3)) {
+        const char* vertexSource = luaL_checkstring(L, 2);
+        const char* fragmentSource = luaL_checkstring(L, 3);
+        success = framework->createCustomShader(shaderName, vertexSource, fragmentSource);
     }
-    // Check if we have one table argument with "vertex" and "fragment" fields
-    else if (lua_istable(L, 1) && lua_gettop(L) == 1) {
-        lua_getfield(L, 1, "vertex");
-        lua_getfield(L, 1, "fragment");
+    else if (lua_istable(L, 2) && lua_gettop(L) == 2) {
+        lua_getfield(L, 2, "vertex");
+        lua_getfield(L, 2, "fragment");
         
         if (!lua_isstring(L, -2) || !lua_isstring(L, -1)) {
-            luaL_argerror(L, 1, "table must contain 'vertex' and 'fragment' string fields");
+            luaL_argerror(L, 2, "table must contain 'vertex' and 'fragment' string fields");
             return 0;
         }
         
         const char* vertexFile = lua_tostring(L, -2);
         const char* fragmentFile = lua_tostring(L, -1);
-        success = framework->setCustomShaderFromFiles(vertexFile, fragmentFile);
+        success = framework->createCustomShaderFromFiles(shaderName, vertexFile, fragmentFile);
         
-        lua_pop(L, 2); // Remove the two strings from stack
+        lua_pop(L, 2);
     }
     else {
-        luaL_argerror(L, 1, "expected two strings or a table with 'vertex' and 'fragment' fields");
+        luaL_argerror(L, 2, "expected two strings or a table with 'vertex' and 'fragment' fields");
         return 0;
     }
 
     lua_pushboolean(L, success);
     return 1;
 }
+
+int l_setShader(lua_State* L) {
+    VoltaFramework* framework = getFramework(L);
+    if (!framework) {
+        return 0;
+    }
+    
+    const char* shaderName = luaL_checkstring(L, 1);
+    framework->setShader(shaderName);
+    framework->useCustomShader(true); // Automatically enable custom shader when setting
+    return 0;
+}   
 
 int l_useCustomShader(lua_State* L) {
     bool use = lua_toboolean(L, 1);
@@ -367,13 +378,15 @@ int l_useCustomShader(lua_State* L) {
     return 0;
 }
 
+
 int l_clearCustomShader(lua_State* L) {
     VoltaFramework* framework = getFramework(L);
     if (!framework) {
         return 0;
     }
 
-    framework->clearCustomShader();
+    const char* shaderName = luaL_checkstring(L, 1);
+    framework->clearCustomShader(shaderName);
     return 0;
 }
 
@@ -385,12 +398,10 @@ int l_setCustomShaderUniform(lua_State* L) {
         return 0;
     }
     
-    // Check if the second argument is a number
     if (lua_isnumber(L, 2)) {
         float value = static_cast<float>(luaL_checknumber(L, 2));
         framework->setShaderUniform(name, value);
     }
-    // Check if the second argument is a Vector2 userdata
     else if (lua_isuserdata(L, 2)) {
         Vector2* vec = checkVector2(L, 2);
         if (vec) {
@@ -401,7 +412,6 @@ int l_setCustomShaderUniform(lua_State* L) {
     } else {
         luaL_argerror(L, 2, "number or Vector2 expected");
     }
-    
     return 0;
 }
 
@@ -452,34 +462,24 @@ GLuint VoltaFramework::loadTexture(const std::string& filename) {
     return texture;
 }
 
-bool VoltaFramework::setCustomShader(const std::string& vertexSource, const std::string& fragmentSource) {
-    if (customShaderProgram != 0) {
-        glDeleteProgram(customShaderProgram);
-        customShaderProgram = 0;
-    }
-
+bool VoltaFramework::createCustomShader(const std::string& shaderName, const std::string& vertexSource, const std::string& fragmentSource) {
     GLuint newProgram = createShaderProgram(vertexSource.c_str(), fragmentSource.c_str());
     if (newProgram == 0) {
-        std::cerr << "Failed to create custom shader program from source\n";
+        std::cerr << "Failed to create custom shader program: " << shaderName << "\n";
         return false;
     }
 
-    customShaderProgram = newProgram;
-    
-    customColorUniform = glGetUniformLocation(customShaderProgram, "uColor");
-    customUseTextureUniform = glGetUniformLocation(customShaderProgram, "uUseTexture");
-    customTextureUniform = glGetUniformLocation(customShaderProgram, "uTexture");
-    
+    ShaderProgram shader;
+    shader.program = newProgram;
+    shader.colorUniform = glGetUniformLocation(newProgram, "uColor");
+    shader.useTextureUniform = glGetUniformLocation(newProgram, "uUseTexture");
+    shader.textureUniform = glGetUniformLocation(newProgram, "uTexture");
+
+    customShaders[shaderName] = shader;
     return true;
 }
 
-bool VoltaFramework::setCustomShaderFromFiles(const std::string& vertexFile, const std::string& fragmentFile) {
-    if (customShaderProgram != 0) {
-        glDeleteProgram(customShaderProgram);
-        customShaderProgram = 0;
-    }
-
-    // Load vertex shader file
+bool VoltaFramework::createCustomShaderFromFiles(const std::string& shaderName, const std::string& vertexFile, const std::string& fragmentFile) {
     std::string vertexPath = "assets/" + vertexFile;
     std::ifstream vertexStream(vertexPath);
     if (!vertexStream.is_open()) {
@@ -491,7 +491,6 @@ bool VoltaFramework::setCustomShaderFromFiles(const std::string& vertexFile, con
     std::string vertexSource = vertexBuffer.str();
     vertexStream.close();
 
-    // Load fragment shader file
     std::string fragmentPath = "assets/" + fragmentFile;
     std::ifstream fragmentStream(fragmentPath);
     if (!fragmentStream.is_open()) {
@@ -503,34 +502,46 @@ bool VoltaFramework::setCustomShaderFromFiles(const std::string& vertexFile, con
     std::string fragmentSource = fragmentBuffer.str();
     fragmentStream.close();
 
-    GLuint newProgram = createShaderProgram(vertexSource.c_str(), fragmentSource.c_str());
-    if (newProgram == 0) {
-        std::cerr << "Failed to create custom shader program from files\n";
-        return false;
-    }
+    return createCustomShader(shaderName, vertexSource, fragmentSource);
+}
 
-    customShaderProgram = newProgram;
-    
-    customColorUniform = glGetUniformLocation(customShaderProgram, "uColor");
-    customUseTextureUniform = glGetUniformLocation(customShaderProgram, "uUseTexture");
-    customTextureUniform = glGetUniformLocation(customShaderProgram, "uTexture");
-    
-    return true;
+void VoltaFramework::setShader(const std::string& shaderName) {
+    if (customShaders.find(shaderName) != customShaders.end()) {
+        currentShaderName = shaderName;
+    } else {
+        std::cerr << "Shader not found: " << shaderName << "\n";
+        currentShaderName = "";
+        usingCustomShader = false; // Disable if shader doesn't exist
+    }
 }
 
 void VoltaFramework::useCustomShader(bool use) {
-    usingCustomShader = use && (customShaderProgram != 0);
+    usingCustomShader = use && !currentShaderName.empty();
 }
 
-void VoltaFramework::clearCustomShader() {
-    if (customShaderProgram != 0) {
-        glDeleteProgram(customShaderProgram);
-        customShaderProgram = 0;
+void VoltaFramework::clearCustomShader(const std::string& shaderName) {
+    auto it = customShaders.find(shaderName);
+    if (it != customShaders.end()) {
+        glDeleteProgram(it->second.program);
+        customShaders.erase(it);
+        if (currentShaderName == shaderName) {
+            currentShaderName = "";
+            usingCustomShader = false;
+        }
     }
+}
+
+void VoltaFramework::clearAllCustomShaders() {
+    for (auto& pair : customShaders) {
+        glDeleteProgram(pair.second.program);
+    }
+    customShaders.clear();
+    currentShaderName = "";
     usingCustomShader = false;
-    customColorUniform = -1;
-    customUseTextureUniform = -1;
-    customTextureUniform = -1;
+}
+
+bool VoltaFramework::hasShader(const std::string& shaderName) const {
+    return customShaders.find(shaderName) != customShaders.end();
 }
 
 const char* vertexShaderSource = R"(
@@ -612,26 +623,32 @@ GLuint VoltaFramework::createShaderProgram(const char* vertexSource, const char*
 }
 
 void VoltaFramework::setShaderUniform(const std::string& name, float value) {
-    if (usingCustomShader && customShaderProgram != 0) {
-        glUseProgram(customShaderProgram);
-        GLint location = glGetUniformLocation(customShaderProgram, name.c_str());
+    if (usingCustomShader && !currentShaderName.empty()) {
+        GLuint program = customShaders[currentShaderName].program;
+        glUseProgram(program); // Ensure the shader is active
+        GLint location = glGetUniformLocation(program, name.c_str());
         if (location != -1) {
             glUniform1f(location, value);
         } else {
-            std::cerr << "Uniform '" << name << "' not found\n";
+            std::cerr << "Uniform '" << name << "' not found in shader '" << currentShaderName << "'\n";
         }
+    } else {
+        std::cerr << "No custom shader active for uniform '" << name << "'\n";
     }
 }
 
 void VoltaFramework::setShaderUniform(const std::string& name, const Vector2& value) {
-    if (usingCustomShader && customShaderProgram != 0) {
-        glUseProgram(customShaderProgram);
-        GLint location = glGetUniformLocation(customShaderProgram, name.c_str());
+    if (usingCustomShader && !currentShaderName.empty()) {
+        GLuint program = customShaders[currentShaderName].program;
+        glUseProgram(program); // Ensure the shader is active
+        GLint location = glGetUniformLocation(program, name.c_str());
         if (location != -1) {
             glUniform2f(location, value.x, value.y);
         } else {
-            std::cerr << "Uniform '" << name << "' not found\n";
+            std::cerr << "Uniform '" << name << "' not found in shader '" << currentShaderName << "'\n";
         }
+    } else {
+        std::cerr << "No custom shader active for uniform '" << name << "'\n";
     }
 }
 
@@ -694,7 +711,5 @@ void VoltaFramework::cleanupOpenGL() {
     glDeleteBuffers(1, &textureVBO);
     glDeleteBuffers(1, &shapeEBO);
     glDeleteProgram(shaderProgram);
-    if (customShaderProgram != 0) {
-        glDeleteProgram(customShaderProgram);
-    }
+    clearAllCustomShaders();
 }

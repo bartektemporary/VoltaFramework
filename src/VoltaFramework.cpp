@@ -11,11 +11,7 @@ VoltaFramework::VoltaFramework() :
     x{100}, 
     y{100}, 
     startTime{glfwGetTime()},
-    customShaderProgram(0),
-    usingCustomShader(false),
-    customColorUniform(-1),
-    customUseTextureUniform(-1),
-    customTextureUniform(-1) {
+    usingCustomShader(false) {
     luaL_openlibs(L);
 
     if (!glfwInit()) {
@@ -167,6 +163,8 @@ void VoltaFramework::update(float dt) {
     currentColor[0] = 1.0f;
     currentColor[1] = 1.0f;
     currentColor[2] = 1.0f;
+    currentShaderName = ""; // Reset shader to default each frame
+    usingCustomShader = false; // Disable custom shader by default
 
     lua_getglobal(L, "update");
     if (lua_isfunction(L, -1)) {
