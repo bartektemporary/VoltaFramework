@@ -226,6 +226,26 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "json");
 
     lua_newtable(L);
+    
+    lua_pushcfunction(L, l_sqlite_open);
+    lua_setfield(L, -2, "open");
+    lua_pushcfunction(L, l_sqlite_close);
+    lua_setfield(L, -2, "close");
+    lua_pushcfunction(L, l_sqlite_exec);
+    lua_setfield(L, -2, "exec");
+    lua_pushcfunction(L, l_sqlite_prepare);
+    lua_setfield(L, -2, "prepare");
+    lua_pushcfunction(L, l_sqlite_step);
+    lua_setfield(L, -2, "step");
+    lua_pushcfunction(L, l_sqlite_finalize);
+    lua_setfield(L, -2, "finalize");
+    lua_pushcfunction(L, l_sqlite_bind);
+    lua_setfield(L, -2, "bind");
+    lua_pushcfunction(L, l_sqlite_column);
+    lua_setfield(L, -2, "column");
+    lua_setfield(L, -2, "sqlite");
+
+    lua_newtable(L);
     lua_pushcfunction(L, l_buffer_alloc);
     lua_setfield(L, -2, "alloc");
     lua_setfield(L, -2, "buffer");

@@ -120,6 +120,10 @@ VoltaFramework::~VoltaFramework() {
     for (auto& pair : audioCache) {
         ma_sound_uninit(&pair.second);
     }
+    for (auto& pair : databaseCache) {
+        sqlite3_close(pair.second);
+    }
+    databaseCache.clear();
     ma_engine_uninit(&engine);
     glfwDestroyWindow(window);
     glfwTerminate();

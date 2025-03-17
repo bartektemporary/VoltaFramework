@@ -1,0 +1,17 @@
+{
+  "OutputFoldersPerTargetSystem": {
+    "Local Machine": [
+      "out\\build\\x64-Debug",
+      "out\\install\\x64-Debug"
+    ]
+  },
+  "ExpandedNodes": [
+    "",
+    "\\include",
+    "\\include\\FreeImage\\Wrapper\\FreeImage.NET\\cs",
+    "\\include\\FreeImage\\Wrapper\\FreeImage.NET\\cs\\Library",
+    "\\include\\sqlite"
+  ],
+  "SelectedNode": "\\include\\sqlite",
+  "PreviewInSolutionExplorer": false
+}

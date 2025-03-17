@@ -17,6 +17,7 @@ namespace fs = std::filesystem;
 #include <lua.hpp>
 #include "miniaudio.h"
 #include <FreeImage.h>
+#include <sqlite3.h>
 
 struct Vector2 {
     float x;
@@ -159,6 +160,8 @@ public:
     void setShaderUniform(const std::string& name, float value);
     void setShaderUniform(const std::string& name, const Vector2& value);
 
+    std::unordered_map<std::string, sqlite3*> databaseCache;
+
 private:
     lua_State* L;
     GLFWwindow* window;
@@ -276,6 +279,15 @@ int l_filesystem_getUserDir(lua_State* L);
 
 int l_json_decode(lua_State* L);
 int l_json_encode(lua_State* L);
+
+int l_sqlite_open(lua_State* L);
+int l_sqlite_close(lua_State* L);
+int l_sqlite_exec(lua_State* L);
+int l_sqlite_prepare(lua_State* L);
+int l_sqlite_step(lua_State* L);
+int l_sqlite_finalize(lua_State* L);
+int l_sqlite_bind(lua_State* L);
+int l_sqlite_column(lua_State* L);
 
 int l_buffer_alloc(lua_State* L);
 int l_buffer_writeUInt8(lua_State* L);

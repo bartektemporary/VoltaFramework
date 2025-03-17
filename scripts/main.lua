@@ -1,54 +1,4 @@
-local time = 0
-
-function init()
-    local success = volta.graphics.setCustomShader("glow", {
-        vertex = "glow_vertex.glsl",
-        fragment = "glow_fragment.glsl"
-    })
-    if not success then
-        print("Failed to set custom shader")
-        return
-    end
-    print("Custom shader 'glow' created")
-end
-
-function update(dt)
-    time = time + dt
-
-    -- Set shader and uniforms
-    volta.graphics.setShader("glow")
-    volta.graphics.setCustomShaderUniform("uTime", volta.getRunningTime())
-
-    local windowWidth, windowHeight = volta.window.getSize()
-    local centerX, centerY = windowWidth / 2, windowHeight / 2
-
-    local radius = 100
-    local speed = 2.0
-    local rectPos = volta.vector2.new(
-        centerX + math.cos(time * speed) * radius,
-        centerY + math.sin(time * speed) * radius
-    )
-    local rectSize = volta.vector2.new(50, 50)
-
-    local normPosX = rectPos.x / windowWidth
-    local normPosY = 1.0 - (rectPos.y / windowHeight)
-    local normSizeX = rectSize.x / windowWidth
-    local normSizeY = rectSize.y / windowHeight
-    local glPos = volta.vector2.new(normPosX, normPosY)
-    local glSize = volta.vector2.new(normSizeX, normSizeY)
-
-    volta.graphics.setCustomShaderUniform("uRectPos", glPos)
-    volta.graphics.setCustomShaderUniform("uRectSize", glSize)
-    volta.graphics.setColor(1.0, 1.0, 1.0) -- White base color for pure transition
-
-    -- Debug prints
-    print("Base Color: 1.0, 1.0, 1.0")
-    print("Rect X-Pos (normalized): " .. normPosX)
-
-    volta.graphics.rectangle(true, rectPos, rectSize)
-end
-
---[[local vector2 = volta.vector2
+local vector2 = volta.vector2
 
 local defaultPosition = vector2.new(400, 300)
 local speed<const> = 200
@@ -264,4 +214,4 @@ end)
 -- Example: Button 0 (A button on Xbox controller)
 volta.input.getGamepadButtonPressed(0, 0, function(gamepadId, button)
     print("Gamepad button pressed:", gamepadId, button)
-end)]]
+end)
