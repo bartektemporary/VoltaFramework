@@ -1,3 +1,4 @@
+# cmake -S . -B build -G "MinGW Makefiles" cmake --build build
 cmake_minimum_required(VERSION 3.10)
 project(MyGameFramework)
 

@@ -121,8 +121,7 @@ void ParticleEmitter::update(float dt) {
 void ParticleEmitter::render(VoltaFramework* framework) {
     if (particles.empty()) return;
 
-    std::vector<float> vertices;
-    std::vector<float> texCoords;
+    std::vector<float> vertexData;
     
     for (const auto& p : particles) {
         float alpha = p.life / p.maxLife;
@@ -131,19 +130,19 @@ void ParticleEmitter::render(VoltaFramework* framework) {
         float right = glX + (p.size / framework->getWidth()) * 2.0f;
         float bottom = glY - (p.size / framework->getHeight()) * 2.0f;
 
-        vertices.insert(vertices.end(), {
-            glX, glY,
-            right, glY,
-            right, bottom,
-            glX, bottom
-        });
-
         if (p.texture != 0) {
-            texCoords.insert(texCoords.end(), {
-                0.0f, 1.0f,  // Top-left -> Bottom-left
-                1.0f, 1.0f,  // Top-right -> Bottom-right
-                1.0f, 0.0f,  // Bottom-right -> Top-right
-                0.0f, 0.0f   // Bottom-left -> Top-left
+            vertexData.insert(vertexData.end(), {
+                glX, glY,     0.0f, 1.0f,
+                right, glY,   1.0f, 1.0f,
+                right, bottom, 1.0f, 0.0f,
+                glX, bottom,  0.0f, 0.0f
+            });
+        } else {
+            vertexData.insert(vertexData.end(), {
+                glX, glY,     0.0f, 0.0f,
+                right, glY,   0.0f, 0.0f,
+                right, bottom, 0.0f, 0.0f,
+                glX, bottom,  0.0f, 0.0f
             });
         }
     }
@@ -152,19 +151,14 @@ void ParticleEmitter::render(VoltaFramework* framework) {
     float color[4] = {framework->currentColor[0], framework->currentColor[1], framework->currentColor[2], 1.0f};
     glUniform3fv(framework->colorUniform, 1, color);
 
-    glBindVertexArray(framework->textureVAO);
+    glBindVertexArray(framework->particleVAO);
     
-    glBindBuffer(GL_ARRAY_BUFFER, framework->textureVBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, framework->particleVBO);
+    glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), vertexData.data(), GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-
-    if (!texCoords.empty()) {
-        glBindBuffer(GL_ARRAY_BUFFER, framework->textureVBO + 1);
-        glBufferData(GL_ARRAY_BUFFER, texCoords.size() * sizeof(float), texCoords.data(), GL_DYNAMIC_DRAW);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    }
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     size_t particleCount = particles.size();
     size_t offset = 0;
@@ -178,6 +172,7 @@ void ParticleEmitter::render(VoltaFramework* framework) {
 
         glUniform1i(framework->useTextureUniform, currentTexture != 0);
         if (currentTexture != 0) {
+            glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, currentTexture);
             glUniform1i(framework->textureUniform, 0);
         }
@@ -186,11 +181,10 @@ void ParticleEmitter::render(VoltaFramework* framework) {
         offset += batchSize;
     }
 
-    glDisableVertexAttribArray(0);
-    if (!texCoords.empty()) {
-        glDisableVertexAttribArray(1);
-    }
+    // Minimal cleanup: only unbind VAO and texture
     glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    // Leave shader and vertex attributes active
 }
 
 void VoltaFramework::renderParticles(float dt) {

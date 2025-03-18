@@ -127,6 +127,7 @@ public:
 
     void renderParticles(float dt);
     std::vector<ParticleEmitter> particleEmitters;
+    GLuint particleVAO, particleVBO;
 
     bool isGamepadConnected(int gamepadId) const;
     bool isGamepadButtonDown(int gamepadId, int button) const;

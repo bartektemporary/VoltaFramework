@@ -21,6 +21,7 @@ int l_rectangle(lua_State* L) {
     
     Vector2* position = checkVector2(L, 2);
     Vector2* size = checkVector2(L, 3);
+    lua_Number rotation {luaL_optnumber(L, 4, 0.0)};
 
     VoltaFramework* framework {getFramework(L)};
     if (!framework || !framework->getWindow()) {
@@ -28,65 +29,57 @@ int l_rectangle(lua_State* L) {
         return 0;
     }
     
-    float left, top, right, bottom;
-    framework->windowToGLCoords(position->x, position->y, &left, &top);
-    framework->windowToGLCoords(position->x + size->x, position->y + size->y, &right, &bottom);
+    float centerX, centerY;
+    framework->windowToGLCoords(position->x + size->x/2.0f, position->y + size->y/2.0f, &centerX, &centerY);
+    
+    float halfWidth = size->x / 2.0f;
+    float halfHeight = size->y / 2.0f;
+    
+    float rad = -rotation * M_PI / 180.0f;
+    float cosR = cosf(rad);
+    float sinR = sinf(rad);
+    
+    std::vector<float> rotatedVertices;
+    float corners[8] = {
+        -halfWidth, halfHeight,
+        halfWidth, halfHeight,
+        halfWidth, -halfHeight,
+        -halfWidth, -halfHeight
+    };
+    
+    for (int i = 0; i < 4; i++) {
+        float x = corners[i * 2];
+        float y = corners[i * 2 + 1];
+        float rotatedX = x * cosR - y * sinR;
+        float rotatedY = x * sinR + y * cosR;
+        float glX, glY;
+        framework->windowToGLCoords(position->x + halfWidth + rotatedX, position->y + halfHeight + rotatedY, &glX, &glY);
+        rotatedVertices.push_back(glX);
+        rotatedVertices.push_back(glY);
+    }
+    
+    float vertices[8];
+    for (int i = 0; i < 8; i++) {
+        vertices[i] = rotatedVertices[i];
+    }
+    
+    glUseProgram(framework->shaderProgram); // Explicitly bind shader
+    glUniform3fv(framework->colorUniform, 1, framework->currentColor);
+    glUniform1i(framework->useTextureUniform, 0);
+
+    glBindVertexArray(framework->shapeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, framework->shapeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0); // Ensure attribute is enabled
     
     if (fill) {
-        float vertices[] = {
-            left, top,
-            right, top,
-            right, bottom,
-            left, bottom
-        };
-        
-        if (framework->usingCustomShader && !framework->currentShaderName.empty()) {
-            auto& shader = framework->customShaders[framework->currentShaderName];
-            glUseProgram(shader.program);
-            if (shader.colorUniform != -1)
-                glUniform3fv(shader.colorUniform, 1, framework->currentColor);
-            if (shader.useTextureUniform != -1)
-                glUniform1i(shader.useTextureUniform, 0);
-        } else {
-            glUseProgram(framework->shaderProgram);
-            glUniform3fv(framework->colorUniform, 1, framework->currentColor);
-            glUniform1i(framework->useTextureUniform, 0);
-        }
-        
-        glBindVertexArray(framework->shapeVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, framework->shapeVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
-        
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     } else {
-        float vertices[] = {
-            left, top,
-            right, top,
-            right, bottom,
-            left, bottom
-        };
-        
-        if (framework->usingCustomShader && !framework->currentShaderName.empty()) {
-            auto& shader = framework->customShaders[framework->currentShaderName];
-            glUseProgram(shader.program);
-            if (shader.colorUniform != -1)
-                glUniform3fv(shader.colorUniform, 1, framework->currentColor);
-            if (shader.useTextureUniform != -1)
-                glUniform1i(shader.useTextureUniform, 0);
-        } else {
-            glUseProgram(framework->shaderProgram);
-            glUniform3fv(framework->colorUniform, 1, framework->currentColor);
-            glUniform1i(framework->useTextureUniform, 0);
-        }
-        
-        glBindVertexArray(framework->shapeVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, framework->shapeVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
-        
         glDrawArrays(GL_LINE_LOOP, 0, 4);
     }
     
-    glBindVertexArray(0);
+    glBindVertexArray(0); // Unbind VAO but leave shader active
     return 0;
 }
 
@@ -128,22 +121,15 @@ int l_circle(lua_State* L) {
         vertices.push_back(y);
     }
     
-    if (framework->usingCustomShader && !framework->currentShaderName.empty()) {
-        auto& shader = framework->customShaders[framework->currentShaderName];
-        glUseProgram(shader.program);
-        if (shader.colorUniform != -1)
-            glUniform3fv(shader.colorUniform, 1, framework->currentColor);
-        if (shader.useTextureUniform != -1)
-            glUniform1i(shader.useTextureUniform, 0);
-    } else {
-        glUseProgram(framework->shaderProgram);
-        glUniform3fv(framework->colorUniform, 1, framework->currentColor);
-        glUniform1i(framework->useTextureUniform, 0);
-    }
+    glUseProgram(framework->shaderProgram); // Explicitly bind shader
+    glUniform3fv(framework->colorUniform, 1, framework->currentColor);
+    glUniform1i(framework->useTextureUniform, 0);
     
     glBindVertexArray(framework->shapeVAO);
     glBindBuffer(GL_ARRAY_BUFFER, framework->shapeVBO);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0); // Ensure attribute is enabled
     
     if (fill) {
         glDrawArrays(GL_TRIANGLE_FAN, 0, vertices.size() / 2);
@@ -200,22 +186,15 @@ int l_drawLine(lua_State* L) {
         endX - halfWidthPerpX, endY - halfWidthPerpY
     };
     
-    if (framework->usingCustomShader && !framework->currentShaderName.empty()) {
-        auto& shader = framework->customShaders[framework->currentShaderName];
-        glUseProgram(shader.program);
-        if (shader.colorUniform != -1)
-            glUniform3fv(shader.colorUniform, 1, framework->currentColor);
-        if (shader.useTextureUniform != -1)
-            glUniform1i(shader.useTextureUniform, 0);
-    } else {
-        glUseProgram(framework->shaderProgram);
-        glUniform3fv(framework->colorUniform, 1, framework->currentColor);
-        glUniform1i(framework->useTextureUniform, 0);
-    }
+    glUseProgram(framework->shaderProgram); // Explicitly bind shader
+    glUniform3fv(framework->colorUniform, 1, framework->currentColor);
+    glUniform1i(framework->useTextureUniform, 0);
     
     glBindVertexArray(framework->shapeVAO);
     glBindBuffer(GL_ARRAY_BUFFER, framework->shapeVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0); // Ensure attribute is enabled
     
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     
@@ -227,6 +206,7 @@ int l_drawImage(lua_State* L) {
     const char* filename {luaL_checkstring(L, 1)};
     Vector2* position = checkVector2(L, 2);
     Vector2* size = checkVector2(L, 3);
+    lua_Number rotation {luaL_optnumber(L, 4, 0.0)}; // Optional rotation in degrees
 
     VoltaFramework* framework {getFramework(L)};
     if (!framework || !framework->getWindow()) {
@@ -234,22 +214,68 @@ int l_drawImage(lua_State* L) {
         return 0;
     }
 
-    float left, top, right, bottom;
-    framework->windowToGLCoords(position->x, position->y, &left, &top);
-    framework->windowToGLCoords(position->x + size->x, position->y + size->y, &right, &bottom);
+    // Convert center position to GL coordinates
+    float centerX, centerY;
+    framework->windowToGLCoords(position->x + size->x/2.0f, position->y + size->y/2.0f, &centerX, &centerY);
+    
+    // Calculate half sizes in window coordinates
+    float halfWidth = size->x / 2.0f;
+    float halfHeight = size->y / 2.0f;
+    
+    // Convert rotation to radians (negative for OpenGL Y-axis)
+    float rad = -rotation * M_PI / 180.0f;
+    float cosR = cosf(rad);
+    float sinR = sinf(rad);
+    
+    // Define corners in window coordinate space relative to center
+    std::vector<float> rotatedVertices;
+    float corners[8] = {
+        -halfWidth, halfHeight,   // top-left
+        halfWidth, halfHeight,    // top-right
+        halfWidth, -halfHeight,   // bottom-right
+        -halfWidth, -halfHeight   // bottom-left
+    };
+    
+    for (int i = 0; i < 4; i++) {
+        float x = corners[i * 2];
+        float y = corners[i * 2 + 1];
+        // Rotate around origin (0,0) in window space
+        float rotatedX = x * cosR - y * sinR;
+        float rotatedY = x * sinR + y * cosR;
+        // Convert rotated coordinates to GL space
+        float glX, glY;
+        framework->windowToGLCoords(position->x + halfWidth + rotatedX, position->y + halfHeight + rotatedY, &glX, &glY);
+        rotatedVertices.push_back(glX);
+        rotatedVertices.push_back(glY);
+    }
+    
+    // Adjust texture coordinates to ensure upright image at 0° rotation
+    // OpenGL expects (0,0) at bottom-left, (1,1) at top-right
+    float vertices[16]; // x, y, u, v for 4 vertices
+    for (int i = 0; i < 4; i++) {
+        vertices[i * 4] = rotatedVertices[i * 2];     // x
+        vertices[i * 4 + 1] = rotatedVertices[i * 2 + 1]; // y
+        // Fix texture coordinates to match vertex order
+        if (i == 0) { // bottom-left
+            vertices[i * 4 + 2] = 0.0f; // u
+            vertices[i * 4 + 3] = 0.0f; // v
+        } else if (i == 1) { // bottom-right
+            vertices[i * 4 + 2] = 1.0f; // u
+            vertices[i * 4 + 3] = 0.0f; // v
+        } else if (i == 2) { // top-right
+            vertices[i * 4 + 2] = 1.0f; // u
+            vertices[i * 4 + 3] = 1.0f; // v
+        } else if (i == 3) { // top-left
+            vertices[i * 4 + 2] = 0.0f; // u
+            vertices[i * 4 + 3] = 1.0f; // v
+        }
+    }
     
     std::string fullPath {std::string("assets/") + filename};
     GLuint textureID {framework->loadTexture(fullPath)};
     if (textureID == 0) {
         return 0;
     }
-    
-    float vertices[] = {
-        left, top,      0.0f, 1.0f,
-        right, top,     1.0f, 1.0f,
-        right, bottom,  1.0f, 0.0f,
-        left, bottom,   0.0f, 0.0f
-    };
     
     if (framework->usingCustomShader && !framework->currentShaderName.empty()) {
         auto& shader = framework->customShaders[framework->currentShaderName];
@@ -659,10 +685,12 @@ void VoltaFramework::initOpenGL() {
     useTextureUniform = glGetUniformLocation(shaderProgram, "uUseTexture");
     textureUniform = glGetUniformLocation(shaderProgram, "uTexture");
     
+    // Shape VAO (for rectangles, circles, etc.)
     glGenVertexArrays(1, &shapeVAO);
     glGenBuffers(1, &shapeVBO);
     glGenBuffers(1, &shapeEBO);
     
+    // Texture VAO (for images)
     glGenVertexArrays(1, &textureVAO);
     glGenBuffers(1, &textureVBO);
     
@@ -689,10 +717,16 @@ void VoltaFramework::initOpenGL() {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
     
-    glBindVertexArray(shapeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, shapeVBO);
+    // Particle VAO (for particles)
+    glGenVertexArrays(1, &particleVAO);
+    glGenBuffers(1, &particleVBO);
+    
+    glBindVertexArray(particleVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, particleVBO);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
     
     glBindVertexArray(0);
     
@@ -707,8 +741,10 @@ void VoltaFramework::initOpenGL() {
 void VoltaFramework::cleanupOpenGL() {
     glDeleteVertexArrays(1, &shapeVAO);
     glDeleteVertexArrays(1, &textureVAO);
+    glDeleteVertexArrays(1, &particleVAO);
     glDeleteBuffers(1, &shapeVBO);
     glDeleteBuffers(1, &textureVBO);
+    glDeleteBuffers(1, &particleVBO);
     glDeleteBuffers(1, &shapeEBO);
     glDeleteProgram(shaderProgram);
     clearAllCustomShaders();
