@@ -112,6 +112,14 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "setColor");
     lua_pushcfunction(L, l_drawImage);
     lua_setfield(L, -2, "drawImage");
+    lua_pushcfunction(L, l_setColor);
+    lua_setfield(L, -2, "setColor");
+    lua_pushcfunction(L, l_loadFont);
+    lua_setfield(L, -2, "loadFont");
+    lua_pushcfunction(L, l_setFont);
+    lua_setfield(L, -2, "setFont");
+    lua_pushcfunction(L, l_drawText);
+    lua_setfield(L, -2, "drawText");
     lua_pushcfunction(L, l_setFilter);
     lua_setfield(L, -2, "setFilter");
     lua_pushcfunction(L, l_setCustomShader);

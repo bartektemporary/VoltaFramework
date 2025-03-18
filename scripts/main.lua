@@ -78,6 +78,9 @@ function init()
         print("Button 0 is down on gamepad 0")
     end
 
+    volta.graphics.loadFont("Minecraft.ttf", 24)
+    volta.graphics.setFont("Minecraft.ttf")
+
 end
 
 function update(dt)
@@ -177,6 +180,9 @@ function update(dt)
 
     volta.graphics.setColor(1, 1, 1)
     volta.graphics.drawImage("tree.png", treePos, vector2.new(200, 200))
+
+    volta.graphics.setFont("Minecraft.ttf")
+    volta.graphics.drawText("Hello, World!", volta.vector2.new(1000, 150), 1.5) -- Text at (100,100), 1.5x scale
 end
 
 volta.input.keyPressed("up", function()
@@ -185,6 +191,10 @@ end)
 
 volta.input.keyPressed("down", function()
     volta.audio.setGlobalVolume(volta.audio.getGlobalVolume() - 0.1)
+end)
+
+volta.input.keyPressed("escape", function()
+    os.exit()
 end)
 
 volta.input.keyPressed("i", function()

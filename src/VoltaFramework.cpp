@@ -4,26 +4,46 @@
 
 VoltaFramework* g_frameworkInstance {nullptr};
 
+
 VoltaFramework::VoltaFramework() : 
-    L{luaL_newstate()}, 
+    L{nullptr}, 
+    window{nullptr}, 
     width{800}, 
     height{600}, 
     x{100}, 
     y{100}, 
-    startTime{glfwGetTime()},
-    usingCustomShader(false) {
+    startTime{0.0},
+    usingCustomShader(false),
+    ftLibrary{nullptr},
+    ftFace{nullptr},
+    textVAO{0},
+    textVBO{0},
+    shapeVAO{0},
+    shapeVBO{0},
+    shapeEBO{0},
+    textureVAO{0},
+    textureVBO{0},
+    particleVAO{0},
+    particleVBO{0}
+{
+    L = luaL_newstate();
+    if (!L) {
+        std::cerr << "Failed to create Lua state\n";
+        exit(1);
+    }
     luaL_openlibs(L);
 
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW\n";
+        lua_close(L);
         exit(1);
     }
 
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
     window = glfwCreateWindow(width, height, "Lua OpenGL Game", nullptr, nullptr);
     if (!window) {
         std::cerr << "Failed to create GLFW window\n";
+        lua_close(L);
         glfwTerminate();
         exit(1);
     }
@@ -32,12 +52,13 @@ VoltaFramework::VoltaFramework() :
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK) {
         std::cerr << "Failed to initialize GLEW\n";
+        glfwDestroyWindow(window);
+        lua_close(L);
         glfwTerminate();
         exit(1);
     }
 
     initOpenGL();
-
     glViewport(0, 0, width, height);
     glfwSetWindowPos(window, x, y);
 
@@ -47,7 +68,6 @@ VoltaFramework::VoltaFramework() :
     glfwSetWindowMaximizeCallback(window, windowMaximizeCallback);
     glfwSetKeyCallback(window, key_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
-
     glfwSetJoystickCallback(joystickCallback);
 
     for (int jid = GLFW_JOYSTICK_1; jid <= GLFW_JOYSTICK_LAST; jid++) {
@@ -55,22 +75,40 @@ VoltaFramework::VoltaFramework() :
             gamepadStates[jid] = true;
         }
     }
-    
+
     lua_pushlightuserdata(L, this);
     lua_setfield(L, LUA_REGISTRYINDEX, "VoltaFrameworkInstance");
 
     FreeImage_Initialise();
-
     filterMode = GL_LINEAR;
     globalVolume = 1.0f;
 
-    ma_result result {ma_engine_init(NULL, &engine)};
+    ma_result result = ma_engine_init(NULL, &engine);
     if (result != MA_SUCCESS) {
-        std::cerr << "Failed to initialize miniaudio engine\n";
+        std::cerr << "Failed to initialize miniaudio engine: " << result << "\n";
+        FreeImage_DeInitialise();
+        glfwDestroyWindow(window);
+        lua_close(L);
+        glfwTerminate();
         exit(1);
     }
 
+    currentColor[0] = 1.0f;
+    currentColor[1] = 1.0f;
+    currentColor[2] = 1.0f;
+
     registerLuaAPI();
+
+    if (FT_Init_FreeType(&ftLibrary) != 0) {
+        std::cerr << "Failed to initialize FreeType\n";
+    } else if (fs::exists("assets/Minecraft.ttf")) {
+        loadFont("Minecraft.ttf", 24);
+        setFont("Minecraft.ttf");
+    } else {
+        std::cerr << "Warning: Minecraft.ttf not found in assets/, text rendering disabled\n";
+    }
+
+    startTime = glfwGetTime();
     std::cout << "Framework initialized successfully\n";
 }
 
@@ -124,8 +162,17 @@ VoltaFramework::~VoltaFramework() {
         sqlite3_close(pair.second);
     }
     databaseCache.clear();
+    for (auto& pair : fontCache) {
+        FT_Done_Face(pair.second);
+    }
+    fontCache.clear();
+    if (ftLibrary) {
+        FT_Done_FreeType(ftLibrary);
+    }
     ma_engine_uninit(&engine);
-    glfwDestroyWindow(window);
+    if (window) {
+        glfwDestroyWindow(window);
+    }
     glfwTerminate();
 }
 
@@ -142,10 +189,10 @@ void VoltaFramework::run() {
         lua_pop(L, 1);
     }
 
-    double lastTime {glfwGetTime()};
+    double lastTime = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
-        double currentTime {glfwGetTime()};
-        float dt {static_cast<float>(currentTime - lastTime)};
+        double currentTime = glfwGetTime();
+        float dt = static_cast<float>(currentTime - lastTime);
         lastTime = currentTime;
 
         glfwPollEvents();
@@ -167,8 +214,8 @@ void VoltaFramework::update(float dt) {
     currentColor[0] = 1.0f;
     currentColor[1] = 1.0f;
     currentColor[2] = 1.0f;
-    currentShaderName = ""; // Reset shader to default each frame
-    usingCustomShader = false; // Disable custom shader by default
+    currentShaderName = "";
+    usingCustomShader = false;
 
     lua_getglobal(L, "update");
     if (lua_isfunction(L, -1)) {

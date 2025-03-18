@@ -5,9 +5,10 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/include/glfw-3.4/include",
-                "${workspaceFolder}/include/glew/auto/src",
+                "${workspaceFolder}/include/glew/",
                 "${workspaceFolder}/include/FreeImage/Dist",
-                "${workspaceFolder}/include/miniaudio"
+                "${workspaceFolder}/include/miniaudio",
+                "${workspaceFolder}/include/freetype-2.13.3/devel"
             ],
             "defines": [
                 "_DEBUG",

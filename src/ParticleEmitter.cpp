@@ -147,9 +147,15 @@ void ParticleEmitter::render(VoltaFramework* framework) {
         }
     }
 
-    glUseProgram(framework->shaderProgram);
-    float color[4] = {framework->currentColor[0], framework->currentColor[1], framework->currentColor[2], 1.0f};
-    glUniform3fv(framework->colorUniform, 1, color);
+    // Use the appropriate shader based on texture presence
+    if (particles[0].texture != 0) {
+        glUseProgram(framework->imageShaderProgram); // Use image shader for textured particles
+        glUniform3fv(framework->imageColorUniform, 1, framework->currentColor);
+        glUniform1i(framework->imageTextureUniform, 0);
+    } else {
+        glUseProgram(framework->shapeShaderProgram); // Use shape shader for untextured particles
+        glUniform3fv(framework->shapeColorUniform, 1, framework->currentColor);
+    }
 
     glBindVertexArray(framework->particleVAO);
     
@@ -170,11 +176,9 @@ void ParticleEmitter::render(VoltaFramework* framework) {
             batchSize++;
         }
 
-        glUniform1i(framework->useTextureUniform, currentTexture != 0);
         if (currentTexture != 0) {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, currentTexture);
-            glUniform1i(framework->textureUniform, 0);
         }
 
         glDrawArrays(GL_QUADS, offset * 4, batchSize * 4);

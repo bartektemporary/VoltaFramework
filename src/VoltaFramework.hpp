@@ -17,11 +17,14 @@ namespace fs = std::filesystem;
 #include <lua.hpp>
 #include "miniaudio.h"
 #include <FreeImage.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
 #include <sqlite3.h>
 
 struct Vector2 {
     float x;
     float y;
+    Vector2(float x_ = 0.0f, float y_ = 0.0f) : x(x_), y(y_) {}
 };
 
 struct Particle {
@@ -111,7 +114,37 @@ public:
 
     std::unordered_map<Buffer*, std::unique_ptr<Buffer>> bufferCache;
 
-    GLuint shaderProgram;
+    struct Character {
+        GLuint textureID;
+        Vector2 size;
+        Vector2 bearing;
+        unsigned int advance;
+    };
+
+    FT_Library ftLibrary;
+    FT_Face ftFace;
+    std::unordered_map<std::string, FT_Face> fontCache;
+    std::unordered_map<char, struct Character> characters;
+    GLuint textVAO, textVBO;
+
+    void loadFont(const std::string& fontPath, unsigned int fontSize);
+    void setFont(const std::string& fontPath);
+    void drawText(const std::string& text, float x, float y, float scale = 1.0f);
+
+
+    // Shader programs for different rendering tasks
+    GLuint shapeShaderProgram;  // For shapes (rectangles, circles, lines)
+    GLuint imageShaderProgram;  // For images (like tree.png)
+    GLuint textShaderProgram;   // For text rendering
+    // Uniforms for shape shader
+    GLint shapeColorUniform;
+    // Uniforms for image shader
+    GLint imageColorUniform;
+    GLint imageTextureUniform;
+    // Uniforms for text shader
+    GLint textColorUniform;
+    GLint textTextureUniform;
+    
     GLuint shapeVAO, shapeVBO, shapeEBO;
     GLuint textureVAO, textureVBO;
     GLint colorUniform, useTextureUniform, textureUniform;
@@ -136,7 +169,6 @@ public:
     void registerGamepadDisconnectedCallback(int ref);
     void registerGamepadButtonPressedCallback(int button, int ref);
 
-    // Custom shader management
     bool createCustomShader(const std::string& shaderName, const std::string& vertexSource, const std::string& fragmentSource);
     bool createCustomShaderFromFiles(const std::string& shaderName, const std::string& vertexFile, const std::string& fragmentFile);
     void setShader(const std::string& shaderName);
@@ -172,15 +204,15 @@ private:
     int y;
     int state;
 
-    std::unordered_map<std::string, GLuint> textureCache {};
-    std::unordered_map<std::string, ma_sound> audioCache {};
+    std::unordered_map<std::string, GLuint> textureCache;
+    std::unordered_map<std::string, ma_sound> audioCache;
     GLenum filterMode;
     ma_engine engine;
     float globalVolume;
 
-    std::unordered_map<int, std::vector<int>> keyPressCallbackRefs {};
+    std::unordered_map<int, std::vector<int>> keyPressCallbackRefs;
     static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-    std::unordered_map<int, std::vector<int>> mouseButtonCallbackRefs {};
+    std::unordered_map<int, std::vector<int>> mouseButtonCallbackRefs;
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
     void loadLuaScript(const std::string& filename);
@@ -191,7 +223,7 @@ private:
     static void windowPosCallback(GLFWwindow* window, int xpos, int ypos);
     static void windowMaximizeCallback(GLFWwindow* window, int maximized);
 
-    std::unordered_map<std::string, std::vector<int>> customEventCallbackRefs {};
+    std::unordered_map<std::string, std::vector<int>> customEventCallbackRefs;
 
     std::unordered_map<int, bool> gamepadStates;
     std::vector<int> gamepadConnectedCallbackRefs;
@@ -222,6 +254,9 @@ int l_circle(lua_State* L);
 int l_drawLine(lua_State* L);
 int l_setColor(lua_State* L);
 int l_drawImage(lua_State* L);
+int l_loadFont(lua_State* L);
+int l_setFont(lua_State* L);
+int l_drawText(lua_State* L);
 int l_setFilter(lua_State* L);
 int l_setCustomShader(lua_State* L);
 int l_setShader(lua_State* L);

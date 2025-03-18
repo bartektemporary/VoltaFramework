@@ -17,7 +17,7 @@ include_directories(${GLFW3_INCLUDE_DIR})
 add_definitions(-DGLEW_STATIC)
 set(GLEW_ROOT "C:/Users/barte/Desktop/VoltaFramework/include/glew-2.1.0")
 set(GLEW_INCLUDE_DIR "${GLEW_ROOT}/include")
-set(GLEW_LIBRARY "${GLEW_ROOT}/build/cmake/build/lib/libglew32.a")
+set(GLEW_LIBRARY "${GLEW_ROOT}/lib/libglew32.a")
 include_directories(${GLEW_INCLUDE_DIR})
 
 # FreeImage
@@ -51,7 +51,7 @@ include_directories(${LUA_INCLUDE_DIR})
 # SQLite3
 set(SQLITE3_ROOT "C:/Users/barte/Desktop/VoltaFramework/include/sqlite")
 set(SQLITE3_INCLUDE_DIR "${SQLITE3_ROOT}")
-set(SQLITE3_LIBRARY "${SQLITE3_ROOT}/sqlite3.lib")  # Assuming you have the .lib file
+set(SQLITE3_LIBRARY "${SQLITE3_ROOT}/sqlite3.lib")
 set(SQLITE3_DLL "${SQLITE3_ROOT}/sqlite3.dll")
 include_directories(${SQLITE3_INCLUDE_DIR})
 
@@ -62,6 +62,17 @@ endif()
 
 if(NOT EXISTS "${SQLITE3_DLL}")
     message(WARNING "SQLite3 DLL not found at ${SQLITE3_DLL}. Ensure it’s available at runtime.")
+endif()
+
+# FreeType (Static)
+set(FREETYPE_ROOT "C:/Users/barte/Desktop/VoltaFramework/include/freetype-2.13.3")
+set(FREETYPE_INCLUDE_DIR "${FREETYPE_ROOT}/include")
+set(FREETYPE_LIBRARY "${FREETYPE_ROOT}/build/libfreetype.a")  # Static library for MinGW
+include_directories(${FREETYPE_INCLUDE_DIR})
+
+# Check if FreeType static library exists
+if(NOT EXISTS "${FREETYPE_LIBRARY}")
+    message(FATAL_ERROR "FreeType static library not found at ${FREETYPE_LIBRARY}")
 endif()
 
 # Source files
@@ -99,7 +110,8 @@ target_link_libraries(game
     ${OPENGL_LIBRARIES}
     ${LUA_LIBRARY}
     ${FREEIMAGE_LIBRARY}
-    ${SQLITE3_LIBRARY}  # Added SQLite3 library
+    ${SQLITE3_LIBRARY}
+    ${FREETYPE_LIBRARY}  # Link static FreeType library
     opengl32
     ws2_32
 )

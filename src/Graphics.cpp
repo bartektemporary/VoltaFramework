@@ -63,9 +63,8 @@ int l_rectangle(lua_State* L) {
         vertices[i] = rotatedVertices[i];
     }
     
-    glUseProgram(framework->shaderProgram); // Explicitly bind shader
-    glUniform3fv(framework->colorUniform, 1, framework->currentColor);
-    glUniform1i(framework->useTextureUniform, 0);
+    glUseProgram(framework->shapeShaderProgram); // Use shape shader
+    glUniform3fv(framework->shapeColorUniform, 1, framework->currentColor);
 
     glBindVertexArray(framework->shapeVAO);
     glBindBuffer(GL_ARRAY_BUFFER, framework->shapeVBO);
@@ -121,9 +120,8 @@ int l_circle(lua_State* L) {
         vertices.push_back(y);
     }
     
-    glUseProgram(framework->shaderProgram); // Explicitly bind shader
-    glUniform3fv(framework->colorUniform, 1, framework->currentColor);
-    glUniform1i(framework->useTextureUniform, 0);
+    glUseProgram(framework->shapeShaderProgram); // Use shape shader
+    glUniform3fv(framework->shapeColorUniform, 1, framework->currentColor);
     
     glBindVertexArray(framework->shapeVAO);
     glBindBuffer(GL_ARRAY_BUFFER, framework->shapeVBO);
@@ -186,9 +184,8 @@ int l_drawLine(lua_State* L) {
         endX - halfWidthPerpX, endY - halfWidthPerpY
     };
     
-    glUseProgram(framework->shaderProgram); // Explicitly bind shader
-    glUniform3fv(framework->colorUniform, 1, framework->currentColor);
-    glUniform1i(framework->useTextureUniform, 0);
+    glUseProgram(framework->shapeShaderProgram); // Use shape shader
+    glUniform3fv(framework->shapeColorUniform, 1, framework->currentColor);
     
     glBindVertexArray(framework->shapeVAO);
     glBindBuffer(GL_ARRAY_BUFFER, framework->shapeVBO);
@@ -203,80 +200,64 @@ int l_drawLine(lua_State* L) {
 }
 
 int l_drawImage(lua_State* L) {
-    const char* filename {luaL_checkstring(L, 1)};
-    Vector2* position = checkVector2(L, 2);
-    Vector2* size = checkVector2(L, 3);
-    lua_Number rotation {luaL_optnumber(L, 4, 0.0)}; // Optional rotation in degrees
+    const char* filename = luaL_checkstring(L, 1);
+    Vector2* position = static_cast<Vector2*>(luaL_checkudata(L, 2, "Vector2"));
+    Vector2* size = static_cast<Vector2*>(luaL_checkudata(L, 3, "Vector2"));
+    lua_Number rotation = luaL_optnumber(L, 4, 0.0);
 
-    VoltaFramework* framework {getFramework(L)};
+    VoltaFramework* framework = getFramework(L);
     if (!framework || !framework->getWindow()) {
         std::cerr << "l_drawImage: Framework or window is null\n";
         return 0;
     }
 
-    // Convert center position to GL coordinates
     float centerX, centerY;
     framework->windowToGLCoords(position->x + size->x/2.0f, position->y + size->y/2.0f, &centerX, &centerY);
     
-    // Calculate half sizes in window coordinates
     float halfWidth = size->x / 2.0f;
     float halfHeight = size->y / 2.0f;
     
-    // Convert rotation to radians (negative for OpenGL Y-axis)
     float rad = -rotation * M_PI / 180.0f;
     float cosR = cosf(rad);
     float sinR = sinf(rad);
     
-    // Define corners in window coordinate space relative to center
+    // Precompute rotated corners
     std::vector<float> rotatedVertices;
     float corners[8] = {
-        -halfWidth, halfHeight,   // top-left
-        halfWidth, halfHeight,    // top-right
-        halfWidth, -halfHeight,   // bottom-right
-        -halfWidth, -halfHeight   // bottom-left
+        -halfWidth, halfHeight,
+        halfWidth, halfHeight,
+        halfWidth, -halfHeight,
+        -halfWidth, -halfHeight
     };
     
     for (int i = 0; i < 4; i++) {
         float x = corners[i * 2];
         float y = corners[i * 2 + 1];
-        // Rotate around origin (0,0) in window space
         float rotatedX = x * cosR - y * sinR;
         float rotatedY = x * sinR + y * cosR;
-        // Convert rotated coordinates to GL space
         float glX, glY;
         framework->windowToGLCoords(position->x + halfWidth + rotatedX, position->y + halfHeight + rotatedY, &glX, &glY);
         rotatedVertices.push_back(glX);
         rotatedVertices.push_back(glY);
     }
     
-    // Adjust texture coordinates to ensure upright image at 0° rotation
-    // OpenGL expects (0,0) at bottom-left, (1,1) at top-right
-    float vertices[16]; // x, y, u, v for 4 vertices
-    for (int i = 0; i < 4; i++) {
-        vertices[i * 4] = rotatedVertices[i * 2];     // x
-        vertices[i * 4 + 1] = rotatedVertices[i * 2 + 1]; // y
-        // Fix texture coordinates to match vertex order
-        if (i == 0) { // bottom-left
-            vertices[i * 4 + 2] = 0.0f; // u
-            vertices[i * 4 + 3] = 0.0f; // v
-        } else if (i == 1) { // bottom-right
-            vertices[i * 4 + 2] = 1.0f; // u
-            vertices[i * 4 + 3] = 0.0f; // v
-        } else if (i == 2) { // top-right
-            vertices[i * 4 + 2] = 1.0f; // u
-            vertices[i * 4 + 3] = 1.0f; // v
-        } else if (i == 3) { // top-left
-            vertices[i * 4 + 2] = 0.0f; // u
-            vertices[i * 4 + 3] = 1.0f; // v
-        }
-    }
+    // Correct texture coordinates (0,0 to 1,1 across all vertices)
+    float vertices[16] = {
+        rotatedVertices[0], rotatedVertices[1], 0.0f, 0.0f,  // Top-left
+        rotatedVertices[2], rotatedVertices[3], 1.0f, 0.0f,  // Top-right
+        rotatedVertices[4], rotatedVertices[5], 1.0f, 1.0f,  // Bottom-right
+        rotatedVertices[6], rotatedVertices[7], 0.0f, 1.0f   // Bottom-left
+    };
     
-    std::string fullPath {std::string("assets/") + filename};
-    GLuint textureID {framework->loadTexture(fullPath)};
+    std::string fullPath = std::string("assets/") + filename;
+    GLuint textureID = framework->loadTexture(fullPath);
     if (textureID == 0) {
         return 0;
     }
     
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     if (framework->usingCustomShader && !framework->currentShaderName.empty()) {
         auto& shader = framework->customShaders[framework->currentShaderName];
         glUseProgram(shader.program);
@@ -287,10 +268,9 @@ int l_drawImage(lua_State* L) {
         if (shader.textureUniform != -1)
             glUniform1i(shader.textureUniform, 0);
     } else {
-        glUseProgram(framework->shaderProgram);
-        glUniform3fv(framework->colorUniform, 1, framework->currentColor);
-        glUniform1i(framework->useTextureUniform, 1);
-        glUniform1i(framework->textureUniform, 0);
+        glUseProgram(framework->imageShaderProgram); // Use image shader
+        glUniform3fv(framework->imageColorUniform, 1, framework->currentColor);
+        glUniform1i(framework->imageTextureUniform, 0);
     }
     
     glActiveTexture(GL_TEXTURE0);
@@ -299,19 +279,21 @@ int l_drawImage(lua_State* L) {
     glBindVertexArray(framework->textureVAO);
     glBindBuffer(GL_ARRAY_BUFFER, framework->textureVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
-    
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     
     glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_BLEND);
+
     return 0;
 }
 
 int l_setColor(lua_State* L) {
-    lua_Number r {luaL_checknumber(L, 1)};
-    lua_Number g {luaL_checknumber(L, 2)};
-    lua_Number b {luaL_checknumber(L, 3)};
+    lua_Number r = luaL_checknumber(L, 1);
+    lua_Number g = luaL_checknumber(L, 2);
+    lua_Number b = luaL_checknumber(L, 3);
     
-    VoltaFramework* framework {getFramework(L)};
+    VoltaFramework* framework = getFramework(L);
     if (!framework) {
         std::cerr << "l_setColor: Framework is null\n";
         return 0;
@@ -438,6 +420,46 @@ int l_setCustomShaderUniform(lua_State* L) {
     } else {
         luaL_argerror(L, 2, "number or Vector2 expected");
     }
+    return 0;
+}
+
+int l_drawText(lua_State* L) {
+    const char* text = luaL_checkstring(L, 1);
+    Vector2* position = static_cast<Vector2*>(luaL_checkudata(L, 2, "Vector2"));
+    lua_Number scale = luaL_optnumber(L, 3, 1.0);
+
+    VoltaFramework* framework = getFramework(L);
+    if (!framework || !framework->getWindow()) {
+        std::cerr << "l_drawText: Framework or window is null\n";
+        return 0;
+    }
+
+    framework->drawText(text, position->x, position->y, static_cast<float>(scale));
+    return 0;
+}
+
+int l_loadFont(lua_State* L) {
+    const char* fontPath = luaL_checkstring(L, 1);
+    lua_Number fontSize = luaL_checknumber(L, 2);
+
+    VoltaFramework* framework = getFramework(L);
+    if (!framework) {
+        std::cerr << "l_loadFont: Framework is null\n";
+        return 0;
+    }
+
+    framework->loadFont(fontPath, static_cast<unsigned int>(fontSize));
+    return 0;
+}
+
+int l_setFont(lua_State* L) {
+    const char* fontPath = luaL_checkstring(L, 1);
+    VoltaFramework* framework = getFramework(L);
+    if (!framework) {
+        std::cerr << "l_setFont: Framework is null\n";
+        return 0;
+    }
+    framework->setFont(fontPath);
     return 0;
 }
 
@@ -570,34 +592,63 @@ bool VoltaFramework::hasShader(const std::string& shaderName) const {
     return customShaders.find(shaderName) != customShaders.end();
 }
 
-const char* vertexShaderSource = R"(
+// Text Vertex Shader (same for both, as vertex processing is identical)
+const char* textVertexShaderSource = R"(
     #version 330 core
     layout (location = 0) in vec2 aPos;
     layout (location = 1) in vec2 aTexCoord;
-    
     out vec2 TexCoord;
-    
     void main() {
         gl_Position = vec4(aPos, 0.0, 1.0);
         TexCoord = aTexCoord;
     }
 )";
 
-const char* fragmentShaderSource = R"(
+// Text Fragment Shader (for GL_RED font textures)
+const char* textFragmentShaderSource = R"(
     #version 330 core
     in vec2 TexCoord;
     out vec4 FragColor;
-    
     uniform vec3 uColor;
-    uniform bool uUseTexture;
     uniform sampler2D uTexture;
-    
     void main() {
-        if (uUseTexture) {
-            FragColor = texture(uTexture, TexCoord) * vec4(uColor, 1.0);
-        } else {
-            FragColor = vec4(uColor, 1.0);
-        }
+        float alpha = texture(uTexture, TexCoord).r; // Use red channel as alpha
+        FragColor = vec4(uColor, alpha); // Apply color with texture alpha
+    }
+)";
+
+// Image Vertex Shader (same as text)
+const char* imageVertexShaderSource = R"(
+    #version 330 core
+    layout (location = 0) in vec2 aPos;
+    layout (location = 1) in vec2 aTexCoord;
+    out vec2 TexCoord;
+    void main() {
+        gl_Position = vec4(aPos, 0.0, 1.0);
+        TexCoord = aTexCoord;
+    }
+)";
+
+// Image Fragment Shader (for GL_RGBA textures)
+const char* imageFragmentShaderSource = R"(
+    #version 330 core
+    in vec2 TexCoord;
+    out vec4 FragColor;
+    uniform vec3 uColor;
+    uniform sampler2D uTexture;
+    void main() {
+        vec4 texColor = texture(uTexture, TexCoord);
+        FragColor = vec4(texColor.rgb * uColor, texColor.a); // Use texture RGB and alpha
+    }
+)";
+
+// Existing shape fragment shader (for shapes without textures)
+const char* shapeFragmentShaderSource = R"(
+    #version 330 core
+    out vec4 FragColor;
+    uniform vec3 uColor;
+    void main() {
+        FragColor = vec4(uColor, 1.0);
     }
 )";
 
@@ -678,74 +729,253 @@ void VoltaFramework::setShaderUniform(const std::string& name, const Vector2& va
     }
 }
 
-void VoltaFramework::initOpenGL() {
-    shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
-    
-    colorUniform = glGetUniformLocation(shaderProgram, "uColor");
-    useTextureUniform = glGetUniformLocation(shaderProgram, "uUseTexture");
-    textureUniform = glGetUniformLocation(shaderProgram, "uTexture");
-    
-    // Shape VAO (for rectangles, circles, etc.)
-    glGenVertexArrays(1, &shapeVAO);
-    glGenBuffers(1, &shapeVBO);
-    glGenBuffers(1, &shapeEBO);
-    
-    // Texture VAO (for images)
-    glGenVertexArrays(1, &textureVAO);
-    glGenBuffers(1, &textureVBO);
-    
-    float rectVertices[] = {
-        -1.0f,  1.0f,   0.0f, 1.0f,
-         1.0f,  1.0f,   1.0f, 1.0f,
-         1.0f, -1.0f,   1.0f, 0.0f,
-        -1.0f, -1.0f,   0.0f, 0.0f
-    };
-    
-    unsigned int indices[] = {
-        0, 1, 2,
-        0, 2, 3
-    };
-    
-    glBindVertexArray(textureVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, textureVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(rectVertices), rectVertices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shapeEBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-    
+void VoltaFramework::loadFont(const std::string& fontPath, unsigned int fontSize) {
+    if (!ftLibrary) {
+        std::cerr << "FreeType not initialized, cannot load font: " << fontPath << "\n";
+        return;
+    }
+
+    std::string fullPath = "assets/" + fontPath;
+    if (!fs::exists(fullPath)) {
+        std::cerr << "Font file not found: " << fullPath << "\n";
+        return;
+    }
+
+    if (fontCache.find(fontPath) != fontCache.end()) {
+        return;
+    }
+
+    FT_Face newFace;
+    if (FT_New_Face(ftLibrary, fullPath.c_str(), 0, &newFace)) {
+        std::cerr << "ERROR: Failed to load font " << fontPath << "\n";
+        return;
+    }
+
+    FT_Set_Pixel_Sizes(newFace, 0, fontSize);
+    fontCache[fontPath] = newFace;
+
+    if (!ftFace) {
+        setFont(fontPath);
+    }
+}
+
+void VoltaFramework::setFont(const std::string& fontPath) {
+    auto it = fontCache.find(fontPath);
+    if (it == fontCache.end()) {
+        std::cerr << "Font '" << fontPath << "' not found. Load it first with loadFont.\n";
+        return;
+    }
+
+    if (ftFace != it->second) {
+        ftFace = it->second;
+        for (auto& pair : characters) {
+            glDeleteTextures(1, &pair.second.textureID);
+        }
+        characters.clear();
+
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        for (unsigned char c = 0; c < 128; c++) {
+            if (FT_Load_Char(ftFace, c, FT_LOAD_RENDER)) {
+                std::cerr << "ERROR: Failed to load glyph '" << c << "'\n";
+                continue;
+            }
+
+            GLuint texture;
+            glGenTextures(1, &texture);
+            glBindTexture(GL_TEXTURE_2D, texture);
+            glTexImage2D(
+                GL_TEXTURE_2D,
+                0,
+                GL_RED, // Internal format
+                ftFace->glyph->bitmap.width,
+                ftFace->glyph->bitmap.rows,
+                0,
+                GL_RED, // Format
+                GL_UNSIGNED_BYTE,
+                ftFace->glyph->bitmap.buffer
+            );
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            Character character = {
+                texture,
+                Vector2{(float)ftFace->glyph->bitmap.width, (float)ftFace->glyph->bitmap.rows},
+                Vector2{(float)ftFace->glyph->bitmap_left, (float)ftFace->glyph->bitmap_top},
+                (unsigned int)(ftFace->glyph->advance.x >> 6)
+            };
+            characters[c] = character;
+        }
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+}
+
+void VoltaFramework::drawText(const std::string& text, float x, float y, float scale) {
+    if (!ftFace || characters.empty()) {
+        std::cerr << "No font loaded for drawText\n";
+        return;
+    }
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    GLenum blendStatus = glIsEnabled(GL_BLEND);
+
+    glUseProgram(textShaderProgram); // Use text shader
+    glUniform3fv(textColorUniform, 1, currentColor);
+    glUniform1i(textTextureUniform, 0);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindVertexArray(textVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, textVBO);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
-    
-    // Particle VAO (for particles)
-    glGenVertexArrays(1, &particleVAO);
-    glGenBuffers(1, &particleVBO);
-    
-    glBindVertexArray(particleVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, particleVBO);
+
+    float cursorX = x;
+    for (char c : text) {
+        if (c == '\n') {
+            cursorX = x;
+            y -= (characters['A'].size.y + 10) * scale;
+            continue;
+        }
+
+        auto it = characters.find(c);
+        if (it == characters.end()) {
+            std::cerr << "Glyph not found for character: " << (int)c << " ('" << c << "')\n";
+            continue;
+        }
+
+        Character& ch = it->second;
+
+        float advancePixels = (float)ch.advance * scale;
+
+        float xpos, ypos;
+        windowToGLCoords(cursorX + ch.bearing.x * scale, y - (ch.size.y - ch.bearing.y) * scale, &xpos, &ypos);
+        float w = ch.size.x * scale * 2.0f / width;
+        float h = ch.size.y * scale * 2.0f / height;
+
+        float vertices[6][4] = {
+            { xpos,     ypos + h,   0.0f, 0.0f },
+            { xpos,     ypos,       0.0f, 1.0f },
+            { xpos + w, ypos,       1.0f, 1.0f },
+            { xpos,     ypos + h,   0.0f, 0.0f },
+            { xpos + w, ypos,       1.0f, 1.0f },
+            { xpos + w, ypos + h,   1.0f, 0.0f }
+        };
+
+        glBindTexture(GL_TEXTURE_2D, ch.textureID);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        cursorX += advancePixels;
+    }
+
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_BLEND);
+}
+
+void VoltaFramework::initOpenGL() {
+    // Shape Shader (for shapes without textures)
+    shapeShaderProgram = createShaderProgram(textVertexShaderSource, shapeFragmentShaderSource);
+    if (shapeShaderProgram == 0) {
+        std::cerr << "Failed to create shape shader program\n";
+        return;
+    }
+    shapeColorUniform = glGetUniformLocation(shapeShaderProgram, "uColor");
+
+    // Image Shader (for RGBA textures)
+    imageShaderProgram = createShaderProgram(imageVertexShaderSource, imageFragmentShaderSource);
+    if (imageShaderProgram == 0) {
+        std::cerr << "Failed to create image shader program\n";
+        return;
+    }
+    imageColorUniform = glGetUniformLocation(imageShaderProgram, "uColor");
+    imageTextureUniform = glGetUniformLocation(imageShaderProgram, "uTexture");
+
+    // Text Shader (for GL_RED font textures)
+    textShaderProgram = createShaderProgram(textVertexShaderSource, textFragmentShaderSource);
+    if (textShaderProgram == 0) {
+        std::cerr << "Failed to create text shader program\n";
+        return;
+    }
+    textColorUniform = glGetUniformLocation(textShaderProgram, "uColor");
+    textTextureUniform = glGetUniformLocation(textShaderProgram, "uTexture");
+
+    // Shape VAO (for rectangles, circles, lines)
+    glGenVertexArrays(1, &shapeVAO);
+    glGenBuffers(1, &shapeVBO);
+    glGenBuffers(1, &shapeEBO);
+    glBindVertexArray(shapeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, shapeVBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shapeEBO);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(2 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    
     glBindVertexArray(0);
-    
-    currentColor[0] = 1.0f;
-    currentColor[1] = 1.0f;
-    currentColor[2] = 1.0f;
-    
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Texture VAO (for images)
+    glGenVertexArrays(1, &textureVAO);
+    glGenBuffers(1, &textureVBO);
+    glBindVertexArray(textureVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, textureVBO);
+    float vertices[] = {
+        -1.0f,  1.0f, 0.0f, 1.0f,
+         1.0f,  1.0f, 1.0f, 1.0f,
+         1.0f, -1.0f, 1.0f, 0.0f,
+        -1.0f, -1.0f, 0.0f, 0.0f
+    };
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    unsigned int indices[] = {0, 1, 2, 0, 2, 3};
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shapeEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
+
+    // Text VAO
+    glGenVertexArrays(1, &textVAO);
+    glGenBuffers(1, &textVBO);
+    glBindVertexArray(textVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, textVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, nullptr, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0); // Position
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1); // TexCoord
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    // Particle VAO
+    glGenVertexArrays(1, &particleVAO);
+    glGenBuffers(1, &particleVBO);
+    glBindVertexArray(particleVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, particleVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, nullptr, GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
 }
 
 void VoltaFramework::cleanupOpenGL() {
     glDeleteVertexArrays(1, &shapeVAO);
-    glDeleteVertexArrays(1, &textureVAO);
-    glDeleteVertexArrays(1, &particleVAO);
     glDeleteBuffers(1, &shapeVBO);
-    glDeleteBuffers(1, &textureVBO);
-    glDeleteBuffers(1, &particleVBO);
     glDeleteBuffers(1, &shapeEBO);
-    glDeleteProgram(shaderProgram);
-    clearAllCustomShaders();
+    glDeleteVertexArrays(1, &textureVAO);
+    glDeleteBuffers(1, &textureVBO);
+    glDeleteProgram(shapeShaderProgram);
+    glDeleteProgram(imageShaderProgram);
+    glDeleteProgram(textShaderProgram);
+    glDeleteVertexArrays(1, &textVAO);
+    glDeleteBuffers(1, &textVBO);
+    glDeleteVertexArrays(1, &particleVAO);
+    glDeleteBuffers(1, &particleVBO);
+    for (auto& pair : characters) {
+        glDeleteTextures(1, &pair.second.textureID);
+    }
+    characters.clear();
 }
