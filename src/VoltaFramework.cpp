@@ -4,7 +4,6 @@
 
 VoltaFramework* g_frameworkInstance {nullptr};
 
-
 VoltaFramework::VoltaFramework() : 
     L{nullptr}, 
     window{nullptr}, 
@@ -179,15 +178,24 @@ VoltaFramework::~VoltaFramework() {
 void VoltaFramework::run() {
     loadLuaScript("scripts/main.lua");
 
-    lua_getglobal(L, "init");
-    if (lua_isfunction(L, -1)) {
-        if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
-            std::cerr << "Init Error: " << lua_tostring(L, -1) << std::endl;
-            lua_pop(L, 1);
+    // Get the 'volta' table
+    lua_getglobal(L, "volta");
+    if (lua_istable(L, -1)) {
+        // Get the 'init' function from the 'volta' table
+        lua_getfield(L, -1, "init");
+        if (lua_isfunction(L, -1)) {
+            if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
+                std::cerr << "Init Error: " << lua_tostring(L, -1) << std::endl;
+                lua_pop(L, 1);
+            }
+        } else {
+            std::cerr << "Warning: volta.init is not a function or not defined\n";
+            lua_pop(L, 1); // Pop the non-function value
         }
     } else {
-        lua_pop(L, 1);
+        std::cerr << "Error: 'volta' table not found in Lua environment\n";
     }
+    lua_pop(L, 1); // Pop the 'volta' table
 
     double lastTime = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
@@ -217,16 +225,24 @@ void VoltaFramework::update(float dt) {
     currentShaderName = "";
     usingCustomShader = false;
 
-    lua_getglobal(L, "update");
-    if (lua_isfunction(L, -1)) {
-        lua_pushnumber(L, dt);
-        if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
-            std::cerr << "Update Error: " << lua_tostring(L, -1) << std::endl;
-            lua_pop(L, 1);
+    // Get the 'volta' table
+    lua_getglobal(L, "volta");
+    if (lua_istable(L, -1)) {
+        // Get the 'update' function from the 'volta' table
+        lua_getfield(L, -1, "update");
+        if (lua_isfunction(L, -1)) {
+            lua_pushnumber(L, dt);
+            if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+                std::cerr << "Update Error: " << lua_tostring(L, -1) << std::endl;
+                lua_pop(L, 1);
+            }
+        } else {
+            lua_pop(L, 1); // Pop the non-function value
         }
     } else {
-        lua_pop(L, 1);
+        std::cerr << "Error: 'volta' table not found in Lua environment\n";
     }
+    lua_pop(L, 1); // Pop the 'volta' table
 
     renderParticles(dt);
 }

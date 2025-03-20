@@ -78,6 +78,10 @@
         "lobject.h": "c",
         "ltable.h": "c",
         "lua.h": "c",
-        "lparser.h": "c"
+        "lparser.h": "c",
+        "ljumptab.h": "c",
+        "ltm.h": "c",
+        "lvm.h": "c",
+        "lstring.h": "c"
     }
 }

@@ -17,7 +17,7 @@ local currentFps = 0
 local fire_emitter 
 local lastVelocity = vector2.new(0, 0) -- Track last movement direction
 
-function init()
+function volta.init()
     volta.window.setState("borderlessMaximized")
     volta.graphics.setFilter("nearest")
     volta.window.setIcon("tree.png")
@@ -83,7 +83,7 @@ function init()
 
 end
 
-function update(dt)
+function volta.update(dt)
     fpsCounter = fpsCounter + 1
     fpsTimer = fpsTimer + dt
     if fpsTimer >= 1 then
