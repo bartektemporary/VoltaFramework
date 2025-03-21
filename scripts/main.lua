@@ -17,6 +17,10 @@ local currentFps = 0
 local fire_emitter 
 local lastVelocity = vector2.new(0, 0) -- Track last movement direction
 
+-- Define colors for tweening
+local greenColor = volta.color.new(0.5, 1, 0)  -- Starting color (green)
+local blueColor = volta.color.new(0, 0, 1)     -- Target color (blue)
+
 function volta.init()
     volta.window.setState("borderlessMaximized")
     volta.graphics.setFilter("nearest")
@@ -81,6 +85,22 @@ function volta.init()
     volta.graphics.loadFont("Minecraft.ttf", 24)
     volta.graphics.setFont("Minecraft.ttf")
 
+    local red = volta.color.new(1.0, 0.0, 0.0)
+    local green = volta.color.fromHSV(120, 1.0, 1.0)
+    
+    print("Red:", red.r, red.g, red.b)
+    print("Green:", green.r, green.g, green.b)
+    
+    local styles = {"linear", "sine", "quad", "cubic", "quart", "quint", "exponential", "circular", "back", "elastic", "bounce"}
+    local directions = {"in", "out", "inout"}
+    
+    print("Tweening examples (Red to Green) at alpha = 0.5:")
+    for _, style in ipairs(styles) do
+        for _, direction in ipairs(directions) do
+            local result = red:tween(green, 0.5, direction, style)
+            print(string.format("%s %s: %.6f %.6f %.6f", style:gsub("^%l", string.upper), direction, result.r, result.g, result.b))
+        end
+    end
 end
 
 function volta.update(dt)
@@ -127,24 +147,23 @@ function volta.update(dt)
         tweenDirection = 1
     end
 
-       -- Dynamic sway based on time
-       local time = volta.getRunningTime()
-       local sway = math.sin(time * 2) * 10
-       local base_x = 400 + sway
-       local flicker = math.sin(time * 5) * 0.5 + 0.5 -- 0 to 1 range
-   
-       -- Update positions with sway
-       fire_base:setPosition(volta.vector2.new(base_x, 300))
-       fire_core:setPosition(volta.vector2.new(base_x, 300))
-       fire_tips:setPosition(volta.vector2.new(base_x, 250 + sway * 0.5))
-       fire_embers:setPosition(volta.vector2.new(base_x, 200 + sway * 0.3))
-   
-       -- Dynamic adjustments
-       fire_base:setSpeed(120 + flicker * 20)
-       fire_core:setSpeed(180 + flicker * 30)
-       fire_tips:setSpeed(100 + flicker * 20)
-       fire_base:setSpread(90 + flicker * 20)
+    -- Dynamic sway based on time
+    local time = volta.getRunningTime()
+    local sway = math.sin(time * 2) * 10
+    local base_x = 400 + sway
+    local flicker = math.sin(time * 5) * 0.5 + 0.5 -- 0 to 1 range
 
+    -- Update positions with sway
+    fire_base:setPosition(volta.vector2.new(base_x, 300))
+    fire_core:setPosition(volta.vector2.new(base_x, 300))
+    fire_tips:setPosition(volta.vector2.new(base_x, 250 + sway * 0.5))
+    fire_embers:setPosition(volta.vector2.new(base_x, 200 + sway * 0.3))
+
+    -- Dynamic adjustments
+    fire_base:setSpeed(120 + flicker * 20)
+    fire_core:setSpeed(180 + flicker * 30)
+    fire_tips:setSpeed(100 + flicker * 20)
+    fire_base:setSpread(90 + flicker * 20)
 
     -- Emit particles
     fire_base:emit(6 + math.floor(flicker * 2))    -- 6-8 particles
@@ -154,31 +173,33 @@ function volta.update(dt)
 
     -- Render layers (back to front)
     -- Embers/Smoke (dark red/gray)
-    volta.graphics.setColor(0.5, 0.2, 0.1) -- Dark red-orange
+    volta.graphics.setColor(volta.color.new(0.5, 0.2, 0.1)) -- Dark red-orange
     fire_embers:render()
     
     -- Base flame (orange-red)
-    volta.graphics.setColor(1.0, 0.4, 0.0) -- Orange-red
+    volta.graphics.setColor(volta.color.new(1.0, 0.4, 0.0)) -- Orange-red
     fire_base:render()
 
     -- Flickering tips (yellow)
-    volta.graphics.setColor(1.0, 0.8, 0.0) -- Yellow
+    volta.graphics.setColor(volta.color.new(1.0, 0.8, 0.0)) -- Yellow
     fire_tips:render()
 
     -- Core (white-yellow)
-    volta.graphics.setColor(1.0, 1.0, 0.8) -- White-yellow
+    volta.graphics.setColor(volta.color.new(1.0, 1.0, 0.8)) -- White-yellow
     fire_core:render()
 
-    local treePos = leftBound:tween(rightBound, t, "in", "back")
+    local treePos = leftBound:tween(rightBound, t, "inout", "quad")
 
-    volta.graphics.setColor(1, 1, 1)
+    volta.graphics.setColor(volta.color.new(1, 1, 1))
 
-    volta.graphics.setColor(0.5, 1, 0)
+    -- Tween the rectangle's color from green to blue using "back" style
+    local tweenedColor = greenColor:tween(blueColor, t, "inout", "quad")
+    volta.graphics.setColor(tweenedColor)
     volta.graphics.rectangle(true, defaultPosition, vector2.new(50, 50))
 
     volta.graphics.drawLine(vector2.new(100, 100), vector2.new(500, 500), 10)
 
-    volta.graphics.setColor(1, 1, 1)
+    volta.graphics.setColor(volta.color.new(1, 1, 1))
     volta.graphics.drawImage("tree.png", treePos, vector2.new(200, 200))
 
     volta.graphics.setFont("Minecraft.ttf")

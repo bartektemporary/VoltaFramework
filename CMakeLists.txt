@@ -1,6 +1,6 @@
 # cmake -S . -B build -G "MinGW Makefiles" cmake --build build
 cmake_minimum_required(VERSION 3.10)
-project(MyGameFramework)
+project(VoltaFramework)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -87,6 +87,7 @@ set(SOURCES
     ${SOURCE_DIR}/TableUtils.cpp
     ${SOURCE_DIR}/Buffer.cpp
     ${SOURCE_DIR}/Vector2.cpp
+    ${SOURCE_DIR}/Color.cpp
     ${SOURCE_DIR}/Event.cpp
     ${SOURCE_DIR}/ParticleEmitter.cpp
     ${SOURCE_DIR}/Json.cpp

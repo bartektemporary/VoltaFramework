@@ -9,8 +9,10 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
-#include "json.hpp"
+#include "Json.hpp"
 #include "Buffer.hpp"
+#include "Tweens.hpp"
+#include "Color.hpp"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>

@@ -72,6 +72,70 @@ void VoltaFramework::registerLuaAPI() {
     lua_pop(L, 1);
     lua_pop(L, 1);
 
+    luaL_newmetatable(L, "Color");
+
+    // Set __index metamethod with methods
+    lua_pushstring(L, "__index");
+    lua_newtable(L);  // Create table for methods
+    
+    // Add instance methods
+    lua_pushcfunction(L, l_color_toHex);
+    lua_setfield(L, -2, "toHex");
+    lua_pushcfunction(L, l_color_toHSV);
+    lua_setfield(L, -2, "toHSV");
+    lua_pushcfunction(L, l_color_toRGB);
+    lua_setfield(L, -2, "toRGB");
+    lua_pushcfunction(L, l_color_lerp);
+    lua_setfield(L, -2, "lerp");
+    lua_pushcfunction(L, l_color_tween);
+    lua_setfield(L, -2, "tween");
+    
+    // Add property getters
+    lua_pushcclosure(L, [](lua_State* L) {
+        Color* color = checkColor(L, 1);
+        const char* key = luaL_checkstring(L, 2);
+
+        if (strcmp(key, "r") == 0) {
+            lua_pushnumber(L, color->r);
+            return 1;
+        }
+        if (strcmp(key, "g") == 0) {
+            lua_pushnumber(L, color->g);
+            return 1;
+        }
+        if (strcmp(key, "b") == 0) {
+            lua_pushnumber(L, color->b);
+            return 1;
+        }
+        
+        // Look up methods in the __index table
+        lua_getfield(L, lua_upvalueindex(1), key);
+        if (!lua_isnil(L, -1)) {
+            return 1;
+        }
+        lua_pop(L, 1);
+        
+        lua_pushnil(L);
+        return 1;
+    }, 1);  // 1 upvalue: the method table
+    lua_settable(L, -3);
+
+    // Set __newindex metamethod
+    lua_pushstring(L, "__newindex");
+    lua_pushcfunction(L, [](lua_State* L) {
+        const char* key = luaL_checkstring(L, 2);
+        luaL_error(L, "Cannot modify Color: field '%s' is read-only", key);
+        return 0;
+    });
+    lua_settable(L, -3);
+
+    // Set __tostring metamethod
+    lua_pushstring(L, "__tostring");
+    lua_pushcfunction(L, l_color_tostring);
+    lua_settable(L, -3);
+
+    lua_pop(L, 1);  // Pop the Color metatable
+
     lua_newtable(L);
 
     lua_newtable(L);
@@ -257,6 +321,17 @@ void VoltaFramework::registerLuaAPI() {
     lua_pushcfunction(L, l_buffer_alloc);
     lua_setfield(L, -2, "alloc");
     lua_setfield(L, -2, "buffer");
+
+    lua_newtable(L);
+    lua_pushcfunction(L, l_color_create);
+    lua_setfield(L, -2, "new");
+    lua_pushcfunction(L, l_color_fromRGB);
+    lua_setfield(L, -2, "fromRGB");
+    lua_pushcfunction(L, l_color_newHSV);
+    lua_setfield(L, -2, "fromHSV");
+    lua_pushcfunction(L, l_color_newHex);
+    lua_setfield(L, -2, "fromHex");
+    lua_setfield(L, -2, "color");
 
     lua_newtable(L);
     lua_pushcfunction(L, l_vector2_new);

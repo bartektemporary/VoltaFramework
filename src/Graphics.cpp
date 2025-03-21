@@ -289,19 +289,25 @@ int l_drawImage(lua_State* L) {
 }
 
 int l_setColor(lua_State* L) {
-    lua_Number r = luaL_checknumber(L, 1);
-    lua_Number g = luaL_checknumber(L, 2);
-    lua_Number b = luaL_checknumber(L, 3);
-    
     VoltaFramework* framework = getFramework(L);
     if (!framework) {
         std::cerr << "l_setColor: Framework is null\n";
         return 0;
     }
-    
-    framework->currentColor[0] = static_cast<float>(r);
-    framework->currentColor[1] = static_cast<float>(g);
-    framework->currentColor[2] = static_cast<float>(b);
+
+    if (lua_isuserdata(L, 1)) {
+        Color* color = checkColor(L, 1);
+        framework->currentColor[0] = color->r;
+        framework->currentColor[1] = color->g;
+        framework->currentColor[2] = color->b;
+    } else {
+        lua_Number r = luaL_checknumber(L, 1);
+        lua_Number g = luaL_checknumber(L, 2);
+        lua_Number b = luaL_checknumber(L, 3);
+        framework->currentColor[0] = static_cast<float>(r);
+        framework->currentColor[1] = static_cast<float>(g);
+        framework->currentColor[2] = static_cast<float>(b);
+    }
     return 0;
 }
 
