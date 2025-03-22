@@ -134,7 +134,10 @@ ma_sound* VoltaFramework::loadAudio(const std::string& filename) {
         return &audioCache[filename];
     }
 
-    std::string fullPath {std::string("assets/") + filename};
+    std::string fullPath = loadFile(filename);
+    if (fullPath.empty()) {
+        return nullptr;
+    }
     ma_sound* sound {&audioCache[filename]};
     ma_result result {ma_sound_init_from_file(&engine, fullPath.c_str(), 0, NULL, NULL, sound)};
     if (result != MA_SUCCESS) {
@@ -142,7 +145,6 @@ ma_sound* VoltaFramework::loadAudio(const std::string& filename) {
         audioCache.erase(filename);
         return nullptr;
     }
-    // Apply initial global volume
     ma_sound_set_volume(sound, ma_sound_get_volume(sound) * globalVolume);
     return sound;
 }

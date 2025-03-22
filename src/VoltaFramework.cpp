@@ -1,4 +1,5 @@
 #include "VoltaFramework.hpp"
+#include <fstream>
 #include <cstring>
 #include "Maps.hpp"
 
@@ -175,6 +176,38 @@ VoltaFramework::~VoltaFramework() {
     glfwTerminate();
 }
 
+std::string VoltaFramework::loadFile(const std::string& filename, bool asText) {
+    fs::path fullPath;
+
+    // Check if the filename contains a separator
+    if (filename.find('/') != std::string::npos || filename.find('\\') != std::string::npos) {
+        fullPath = fs::path(filename); // Use as-is if it contains separators
+    } else {
+        fullPath = fs::path("assets") / filename; // Prepend "assets/" for simple filenames
+    }
+
+    fullPath = fullPath.lexically_normal();
+
+    if (!fs::exists(fullPath)) {
+        std::cerr << "File not found: " << fullPath.string() << std::endl;
+        return "";
+    }
+
+    if (asText) {
+        std::ifstream fileStream(fullPath, std::ios::binary);
+        if (!fileStream.is_open()) {
+            std::cerr << "Failed to open file: " << fullPath.string() << std::endl;
+            return "";
+        }
+        std::stringstream buffer;
+        buffer << fileStream.rdbuf();
+        fileStream.close();
+        return buffer.str();
+    }
+
+    return fullPath.string();
+}
+
 void VoltaFramework::run() {
     loadLuaScript("scripts/main.lua");
 
@@ -210,7 +243,11 @@ void VoltaFramework::run() {
 }
 
 void VoltaFramework::loadLuaScript(const std::string& filename) {
-    if (luaL_dofile(L, filename.c_str()) != LUA_OK) {
+    std::string fullPath = loadFile(filename);
+    if (fullPath.empty()) {
+        return;
+    }
+    if (luaL_dofile(L, fullPath.c_str()) != LUA_OK) {
         std::cerr << "Lua Error: " << lua_tostring(L, -1) << std::endl;
         lua_pop(L, 1);
     }

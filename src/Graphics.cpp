@@ -470,12 +470,9 @@ int l_setFont(lua_State* L) {
 }
 
 GLuint VoltaFramework::loadTexture(const std::string& filename) {
-    std::string fullPath;
-    
-    if (strchr(filename.c_str(), '/') || strchr(filename.c_str(), '\\')) {
-        fullPath = filename;
-    } else {
-        fullPath = "assets/" + filename;
+    std::string fullPath = loadFile(filename);
+    if (fullPath.empty()) {
+        return 0;
     }
 
     auto it = textureCache.find(fullPath);
@@ -534,27 +531,17 @@ bool VoltaFramework::createCustomShader(const std::string& shaderName, const std
 }
 
 bool VoltaFramework::createCustomShaderFromFiles(const std::string& shaderName, const std::string& vertexFile, const std::string& fragmentFile) {
-    std::string vertexPath = "assets/" + vertexFile;
-    std::ifstream vertexStream(vertexPath);
-    if (!vertexStream.is_open()) {
-        std::cerr << "Failed to open vertex shader file: " << vertexPath << "\n";
+    std::string vertexSource = loadFile(vertexFile, true);
+    if (vertexSource.empty()) {
+        std::cerr << "Failed to load vertex shader file: " << vertexFile << "\n";
         return false;
     }
-    std::stringstream vertexBuffer;
-    vertexBuffer << vertexStream.rdbuf();
-    std::string vertexSource = vertexBuffer.str();
-    vertexStream.close();
 
-    std::string fragmentPath = "assets/" + fragmentFile;
-    std::ifstream fragmentStream(fragmentPath);
-    if (!fragmentStream.is_open()) {
-        std::cerr << "Failed to open fragment shader file: " << fragmentPath << "\n";
+    std::string fragmentSource = loadFile(fragmentFile, true);
+    if (fragmentSource.empty()) {
+        std::cerr << "Failed to load fragment shader file: " << fragmentFile << "\n";
         return false;
     }
-    std::stringstream fragmentBuffer;
-    fragmentBuffer << fragmentStream.rdbuf();
-    std::string fragmentSource = fragmentBuffer.str();
-    fragmentStream.close();
 
     return createCustomShader(shaderName, vertexSource, fragmentSource);
 }
@@ -741,9 +728,8 @@ void VoltaFramework::loadFont(const std::string& fontPath, unsigned int fontSize
         return;
     }
 
-    std::string fullPath = "assets/" + fontPath;
-    if (!fs::exists(fullPath)) {
-        std::cerr << "Font file not found: " << fullPath << "\n";
+    std::string fullPath = loadFile(fontPath);
+    if (fullPath.empty()) {
         return;
     }
 

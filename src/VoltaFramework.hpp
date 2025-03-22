@@ -87,6 +87,8 @@ public:
     double startTime;
     GLFWwindow* getWindow() const { return window; }
 
+    std::string loadFile(const std::string& filename, bool asText = false);
+
     int getWidth() const { return width; }
     int getHeight() const { return height; }
     void setWidth(int newWidth) { width = newWidth; }
