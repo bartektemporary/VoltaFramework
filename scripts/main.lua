@@ -84,23 +84,6 @@ function volta.init()
 
     volta.graphics.loadFont("Minecraft.ttf", 24)
     volta.graphics.setFont("Minecraft.ttf")
-
-    local red = volta.color.new(1.0, 0.0, 0.0)
-    local green = volta.color.fromHSV(120, 1.0, 1.0)
-    
-    print("Red:", red.r, red.g, red.b)
-    print("Green:", green.r, green.g, green.b)
-    
-    local styles = {"linear", "sine", "quad", "cubic", "quart", "quint", "exponential", "circular", "back", "elastic", "bounce"}
-    local directions = {"in", "out", "inout"}
-    
-    print("Tweening examples (Red to Green) at alpha = 0.5:")
-    for _, style in ipairs(styles) do
-        for _, direction in ipairs(directions) do
-            local result = red:tween(green, 0.5, direction, style)
-            print(string.format("%s %s: %.6f %.6f %.6f", style:gsub("^%l", string.upper), direction, result.r, result.g, result.b))
-        end
-    end
 end
 
 function volta.update(dt)

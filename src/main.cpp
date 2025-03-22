@@ -72,6 +72,63 @@ void VoltaFramework::registerLuaAPI() {
     lua_pop(L, 1);
     lua_pop(L, 1);
 
+    luaL_newmetatable(L, "Vector3");
+
+    // Set metamethods
+    lua_pushcfunction(L, l_vector3_add);
+    lua_setfield(L, -2, "__add");
+    lua_pushcfunction(L, l_vector3_subtract);
+    lua_setfield(L, -2, "__sub");
+    lua_pushcfunction(L, l_vector3_multiply);
+    lua_setfield(L, -2, "__mul");
+    lua_pushcfunction(L, l_vector3_divide);
+    lua_setfield(L, -2, "__div");
+    lua_pushcfunction(L, l_vector3_tostring);
+    lua_setfield(L, -2, "__tostring");
+
+    // Create methods table
+    lua_newtable(L);
+    lua_pushcfunction(L, l_vector3_add);
+    lua_setfield(L, -2, "add");
+    lua_pushcfunction(L, l_vector3_subtract);
+    lua_setfield(L, -2, "subtract");
+    lua_pushcfunction(L, l_vector3_multiply);
+    lua_setfield(L, -2, "multiply");
+    lua_pushcfunction(L, l_vector3_divide);
+    lua_setfield(L, -2, "divide");
+    lua_pushcfunction(L, l_vector3_magnitude);
+    lua_setfield(L, -2, "magnitude");
+    lua_pushcfunction(L, l_vector3_normalize);
+    lua_setfield(L, -2, "normalize");
+    lua_pushcfunction(L, l_vector3_dot);
+    lua_setfield(L, -2, "dot");
+    lua_pushcfunction(L, l_vector3_lerp);
+    lua_setfield(L, -2, "lerp");
+    lua_pushcfunction(L, l_vector3_distance);
+    lua_setfield(L, -2, "distance");
+    lua_pushcfunction(L, l_vector3_angle);
+    lua_setfield(L, -2, "angle");
+    lua_pushcfunction(L, l_vector3_tween);
+    lua_setfield(L, -2, "tween");
+
+    // Store methods table in registry for reuse
+    lua_pushvalue(L, -1);
+    lua_setfield(L, LUA_REGISTRYINDEX, "Vector3Methods");
+
+    // Set __index to methods table
+    lua_pushvalue(L, -1);  // Duplicate the methods table
+    lua_setfield(L, -3, "__index");  // Set it as __index
+
+    // Set __newindex to prevent modification
+    lua_pushcfunction(L, [](lua_State* L) {
+        const char* key = luaL_checkstring(L, 2);
+        luaL_error(L, "Cannot modify Vector3: field '%s' is read-only", key);
+        return 0;
+    });
+    lua_setfield(L, -2, "__newindex");
+
+    lua_pop(L, 1);  // Pop the metatable
+
     luaL_newmetatable(L, "Color");
 
     // Set __index metamethod with methods
@@ -337,6 +394,11 @@ void VoltaFramework::registerLuaAPI() {
     lua_pushcfunction(L, l_vector2_new);
     lua_setfield(L, -2, "new");
     lua_setfield(L, -2, "vector2");
+
+    lua_newtable(L);
+    lua_pushcfunction(L, l_vector3_new);
+    lua_setfield(L, -2, "new");
+    lua_setfield(L, -2, "vector3");
 
     lua_newtable(L);
     lua_pushcfunction(L, l_particleEmitter_new);

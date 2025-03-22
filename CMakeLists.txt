@@ -87,6 +87,7 @@ set(SOURCES
     ${SOURCE_DIR}/TableUtils.cpp
     ${SOURCE_DIR}/Buffer.cpp
     ${SOURCE_DIR}/Vector2.cpp
+    ${SOURCE_DIR}/Vector3.cpp
     ${SOURCE_DIR}/Color.cpp
     ${SOURCE_DIR}/Event.cpp
     ${SOURCE_DIR}/ParticleEmitter.cpp

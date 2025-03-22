@@ -28,6 +28,13 @@ struct Vector2 {
     Vector2(float x_ = 0.0f, float y_ = 0.0f) : x(x_), y(y_) {}
 };
 
+struct Vector3 {
+    float x;
+    float y;
+    float z;
+    Vector3(float x_ = 0.0f, float y_ = 0.0f, float z_ = 0.0f) : x(x_), y(y_), z(z_) {}
+};
+
 struct Particle {
     Vector2 position;
     Vector2 velocity;
@@ -134,7 +141,6 @@ public:
     void setFont(const std::string& fontPath);
     void drawText(const std::string& text, float x, float y, float scale = 1.0f);
 
-
     // Shader programs for different rendering tasks
     GLuint shapeShaderProgram;  // For shapes (rectangles, circles, lines)
     GLuint imageShaderProgram;  // For images (like tree.png)
@@ -239,6 +245,7 @@ private:
 extern VoltaFramework* g_frameworkInstance;
 VoltaFramework* getFramework(lua_State* L);
 
+// Existing Lua function declarations
 int l_window_setTitle(lua_State* L);
 int l_window_getTitle(lua_State* L);
 int l_window_setSize(lua_State* L);
@@ -360,6 +367,21 @@ int l_vector2_distance(lua_State* L);
 int l_vector2_angle(lua_State* L);
 int l_vector2_tween(lua_State* L);
 int l_vector2_tostring(lua_State* L);
+
+// New Vector3 Lua function declarations
+int l_vector3_new(lua_State* L);
+int l_vector3_add(lua_State* L);
+int l_vector3_subtract(lua_State* L);
+int l_vector3_multiply(lua_State* L);
+int l_vector3_divide(lua_State* L);
+int l_vector3_magnitude(lua_State* L);
+int l_vector3_normalize(lua_State* L);
+int l_vector3_dot(lua_State* L);
+int l_vector3_lerp(lua_State* L);
+int l_vector3_distance(lua_State* L);
+int l_vector3_angle(lua_State* L);
+int l_vector3_tween(lua_State* L);
+int l_vector3_tostring(lua_State* L);
 
 int l_particleEmitter_new(lua_State* L);
 int l_particleEmitter_emit(lua_State* L);
