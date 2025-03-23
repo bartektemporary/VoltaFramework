@@ -1,5 +1,8 @@
 #include "Vector2.hpp"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 Vector2* checkVector2(lua_State* L, int index) {
     return static_cast<Vector2*>(luaL_checkudata(L, index, "Vector2"));
 }

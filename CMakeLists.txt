@@ -85,6 +85,7 @@ set(SOURCES
     ${SOURCE_DIR}/Input.cpp
     ${SOURCE_DIR}/MathUtils.cpp
     ${SOURCE_DIR}/TableUtils.cpp
+    ${SOURCE_DIR}/Camera2D.cpp
     ${SOURCE_DIR}/Buffer.cpp
     ${SOURCE_DIR}/Vector2.cpp
     ${SOURCE_DIR}/Vector3.cpp

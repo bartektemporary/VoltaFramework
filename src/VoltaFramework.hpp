@@ -7,13 +7,16 @@
 #include <sstream>
 #include <string>
 #include <filesystem>
+#include <float.h>
 namespace fs = std::filesystem;
 
 #include "Json.hpp"
 #include "Buffer.hpp"
 #include "Color.hpp"
 #include "Matrix.hpp"
+#include "Vector2.hpp"
 #include "Vector3.hpp"
+#include "Camera2D.hpp"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -23,11 +26,6 @@ namespace fs = std::filesystem;
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <sqlite3.h>
-
-struct Vector2 {
-    float x, y;
-    Vector2(float x_ = 0.0f, float y_ = 0.0f) : x(x_), y(y_) {}
-};
 
 struct Particle {
     Vector2 position;
@@ -134,6 +132,25 @@ public:
     void loadFont(const std::string& fontPath, unsigned int fontSize);
     void setFont(const std::string& fontPath);
     void drawText(const std::string& text, float x, float y, float scale = 1.0f);
+
+    enum class PositionMode {
+        Screen,  // Positions are in screen coordinates
+        World    // Positions are in world coordinates
+    };
+
+    void setPositionMode(PositionMode mode) { positionMode = mode; }
+    PositionMode getPositionMode() const { return positionMode; }
+
+    struct Rect {
+        float left, right, bottom, top;
+        Rect(float l, float r, float b, float t) : left(l), right(r), bottom(b), top(t) {}
+    };
+    
+    Rect cachedViewBounds{-FLT_MAX, FLT_MAX, -FLT_MAX, FLT_MAX}; // Default to "infinite"
+    bool isRectInView(const Rect& objectBounds) const;
+
+    void setCamera2D(Camera2D* camera);  // New method
+    Camera2D* getCamera2D() const { return currentCamera; }  // New method
 
     // 2D rendering resources
     GLuint shape2DShaderProgram;  // For 2D shapes (rectangles, circles, lines)
@@ -243,6 +260,9 @@ private:
     void update(float dt);
     void registerLuaAPI();
 
+    PositionMode positionMode = PositionMode::Screen;
+    Camera2D* currentCamera = nullptr;
+
     static void windowSizeCallback(GLFWwindow* window, int newWidth, int newHeight);
     static void windowPosCallback(GLFWwindow* window, int xpos, int ypos);
     static void windowMaximizeCallback(GLFWwindow* window, int maximized);
@@ -289,6 +309,7 @@ int l_setShader(lua_State* L);
 int l_useCustomShader(lua_State* L);
 int l_clearCustomShader(lua_State* L);
 int l_setCustomShaderUniform(lua_State* L);
+int l_setPositionMode(lua_State* L);
 
 int l_isKeyDown(lua_State* L);
 int l_input_keyPressed(lua_State* L);
@@ -370,6 +391,18 @@ int l_buffer_writeInt64(lua_State* L);
 int l_buffer_readInt64(lua_State* L);
 int l_buffer_size(lua_State* L);
 
+int l_camera2d_new(lua_State* L);
+int l_camera2d_getPosition(lua_State* L);
+int l_camera2d_setPosition(lua_State* L);
+int l_camera2d_getZoom(lua_State* L);
+int l_camera2d_setZoom(lua_State* L);
+int l_camera2d_getRotation(lua_State* L);
+int l_camera2d_setRotation(lua_State* L);
+int l_camera2d_move(lua_State* L);
+int l_camera2d_zoomBy(lua_State* L);
+int l_camera2d_rotateBy(lua_State* L);
+int l_camera2d_tostring(lua_State* L);
+
 int l_vector2_new(lua_State* L);
 int l_vector2_add(lua_State* L);
 int l_vector2_subtract(lua_State* L);
@@ -431,5 +464,7 @@ int l_math_noise3d(lua_State* L);
 int l_table_shallowCopy(lua_State* L);
 
 int l_getRunningTime(lua_State* L);
+int l_getRunningTime(lua_State* L);
+int l_setCamera2D(lua_State* L);
 
 #endif // VOLTA_FRAMEWORK_H

@@ -12,6 +12,11 @@ void Matrix4::setIdentity() {
     m[0] = m[5] = m[10] = m[15] = 1.0f;
 }
 
+// New implementation of operator*
+Matrix4 Matrix4::operator*(const Matrix4& other) const {
+    return multiply(*this, other);
+}
+
 Matrix4 multiply(const Matrix4& a, const Matrix4& b) {
     Matrix4 result;
     for (int i = 0; i < 4; i++) {
@@ -71,7 +76,7 @@ void rotateX(Matrix4& mat, float angle) {
     rot.setIdentity();
     rot.m[5] = c;  rot.m[6] = -s;  // Row 1: [0,  c, -s, 0]
     rot.m[9] = s;  rot.m[10] = c;  // Row 2: [0,  s,  c, 0]
-    mat = multiply(mat, rot); // Use multiply instead of *
+    mat = multiply(mat, rot);
 }
 
 void rotateY(Matrix4& mat, float angle) {
@@ -100,4 +105,14 @@ void scale(Matrix4& mat, const Vector3& scaleFactors) {
     s.m[5] = scaleFactors.y;
     s.m[10] = scaleFactors.z;
     mat = multiply(mat, s);
+}
+
+void orthographic(Matrix4& mat, float left, float right, float bottom, float top, float nearPlane, float farPlane) {
+    mat.setIdentity();
+    mat.m[0] = 2.0f / (right - left);              // Scale x
+    mat.m[5] = 2.0f / (top - bottom);              // Scale y
+    mat.m[10] = -2.0f / (farPlane - nearPlane);    // Scale z
+    mat.m[12] = -(right + left) / (right - left);  // Translate x
+    mat.m[13] = -(top + bottom) / (top - bottom);  // Translate y
+    mat.m[14] = -(farPlane + nearPlane) / (farPlane - nearPlane); // Translate z
 }

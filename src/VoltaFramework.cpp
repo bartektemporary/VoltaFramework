@@ -252,6 +252,41 @@ void VoltaFramework::loadLuaScript(const std::string& filename) {
 
 void VoltaFramework::update(float dt) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glDisable(GL_DEPTH_TEST);
+
+    if (currentCamera) {
+        setCamera2D(currentCamera);
+        Vector2 cameraPos = currentCamera->getPosition();
+        float zoom = currentCamera->getZoom();
+        float halfWidth = (width / 2.0f) / zoom;
+        float halfHeight = (height / 2.0f) / zoom;
+
+        // Basic bounds without rotation
+        cachedViewBounds = Rect(
+            cameraPos.x - halfWidth,
+            cameraPos.x + halfWidth,
+            cameraPos.y - halfHeight,
+            cameraPos.y + halfHeight
+        );
+
+        // If rotation is significant, expand bounds to ensure visibility
+        float rotation = currentCamera->getRotation();
+        if (rotation != 0.0f) {
+            float rad = rotation * M_PI / 180.0f;
+            float cosR = fabs(cosf(rad));
+            float sinR = fabs(sinf(rad));
+            float rotatedWidth = halfWidth * cosR + halfHeight * sinR;
+            float rotatedHeight = halfWidth * sinR + halfHeight * cosR;
+            cachedViewBounds = Rect(
+                cameraPos.x - rotatedWidth,
+                cameraPos.x + rotatedWidth,
+                cameraPos.y - rotatedHeight,
+                cameraPos.y + rotatedHeight
+            );
+        }
+    } else {
+        cachedViewBounds = Rect(-FLT_MAX, FLT_MAX, -FLT_MAX, FLT_MAX); // No culling
+    }
 
     currentColor[0] = 1.0f;
     currentColor[1] = 1.0f;
@@ -276,7 +311,7 @@ void VoltaFramework::update(float dt) {
     }
     lua_pop(L, 1);
 
-    renderParticles(dt); // Assumed 2D for now; adjust if 3D particles are needed
+    renderParticles(dt);
 }
 
 int l_getRunningTime(lua_State* L) {

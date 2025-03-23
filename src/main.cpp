@@ -2,6 +2,33 @@
 #include <cstring>
 
 void VoltaFramework::registerLuaAPI() {
+    // Add Camera2D metatable and methods
+    luaL_newmetatable(L, "Camera2D");
+    lua_newtable(L); // Create table for methods
+    lua_pushcfunction(L, l_camera2d_getPosition);
+    lua_setfield(L, -2, "getPosition");
+    lua_pushcfunction(L, l_camera2d_setPosition);
+    lua_setfield(L, -2, "setPosition");
+    lua_pushcfunction(L, l_camera2d_getZoom);
+    lua_setfield(L, -2, "getZoom");
+    lua_pushcfunction(L, l_camera2d_setZoom);
+    lua_setfield(L, -2, "setZoom");
+    lua_pushcfunction(L, l_camera2d_getRotation);
+    lua_setfield(L, -2, "getRotation");
+    lua_pushcfunction(L, l_camera2d_setRotation);
+    lua_setfield(L, -2, "setRotation");
+    lua_pushcfunction(L, l_camera2d_move);
+    lua_setfield(L, -2, "move");
+    lua_pushcfunction(L, l_camera2d_zoomBy);
+    lua_setfield(L, -2, "zoomBy");
+    lua_pushcfunction(L, l_camera2d_rotateBy);
+    lua_setfield(L, -2, "rotateBy");
+    lua_pushcfunction(L, l_camera2d_tostring);
+    lua_setfield(L, -2, "__tostring");
+    lua_setfield(L, -2, "__index"); // Set as __index for Camera2D
+
+    lua_pop(L, 1); // Pop the Camera2D metatable
+
     // Vector2 setup (unchanged)
     luaL_newmetatable(L, "Vector2");
     lua_pushcfunction(L, l_vector2_add);
@@ -271,6 +298,8 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "clearCustomShader");
     lua_pushcfunction(L, l_setCustomShaderUniform);
     lua_setfield(L, -2, "setCustomShaderUniform");
+    lua_pushcfunction(L, l_setPositionMode);
+    lua_setfield(L, -2, "setPositionMode");
     lua_setfield(L, -2, "graphics");
 
     lua_newtable(L);
@@ -419,6 +448,11 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "vector3");
 
     lua_newtable(L);
+    lua_pushcfunction(L, l_camera2d_new);
+    lua_setfield(L, -2, "new");
+    lua_setfield(L, -2, "camera2d");
+
+    lua_newtable(L);
     lua_pushcfunction(L, l_particleEmitter_new);
     lua_setfield(L, -2, "new");
     lua_setfield(L, -2, "particleEmitter");
@@ -429,6 +463,8 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "onEvent");
     lua_pushcfunction(L, l_triggerCustomEvent);
     lua_setfield(L, -2, "triggerEvent");
+    lua_pushcfunction(L, l_setCamera2D);
+    lua_setfield(L, -2, "setCamera2D");
 
     lua_setglobal(L, "volta");
 

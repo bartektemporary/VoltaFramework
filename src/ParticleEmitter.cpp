@@ -121,84 +121,137 @@ void ParticleEmitter::update(float dt) {
 void ParticleEmitter::render(VoltaFramework* framework) {
     if (particles.empty()) return;
 
-    std::vector<float> vertexData;
-    
+    bool isWorldMode = framework->getPositionMode() == VoltaFramework::PositionMode::World;
+    Camera2D* camera = isWorldMode ? framework->getCamera2D() : nullptr;
+    Vector2 cameraPos = camera ? camera->getPosition() : Vector2{0, 0};
+    float zoom = camera ? camera->getZoom() : 1.0f;
+    if (zoom <= 0.0f) zoom = 1.0f;
+    float rotation = camera ? camera->getRotation() : 0.0f;
+
+    // Manually set cachedViewBounds here for testing
+    if (camera) {
+        float halfWidth = (framework->getWidth() / 2.0f) / zoom;
+        float halfHeight = (framework->getHeight() / 2.0f) / zoom;
+        framework->cachedViewBounds = VoltaFramework::Rect(
+            cameraPos.x - halfWidth,
+            cameraPos.x + halfWidth,
+            cameraPos.y - halfHeight,
+            cameraPos.y + halfHeight
+        );
+    } else {
+        framework->cachedViewBounds = VoltaFramework::Rect(-FLT_MAX, FLT_MAX, -FLT_MAX, FLT_MAX);
+    }
+
+    std::cout << "World mode: " << isWorldMode << ", Camera: " << (camera ? "active" : "null") 
+              << ", Zoom: " << zoom << ", CameraPos: (" << cameraPos.x << ", " << cameraPos.y << ")\n";
+    std::cout << "CachedViewBounds: (" << framework->cachedViewBounds.left << ", " 
+              << framework->cachedViewBounds.right << ", " << framework->cachedViewBounds.bottom << ", " 
+              << framework->cachedViewBounds.top << ")\n";
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+    GLuint shaderProgram = (particleTexture != 0) ? framework->imageShaderProgram : framework->shape2DShaderProgram;
+    glUseProgram(shaderProgram);
+    glBindVertexArray(framework->shape2DVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, framework->shape2DVBO);
+
+    if (particleTexture != 0) {
+        glUniform1i(framework->imageTextureUniform, 0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, particleTexture);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+        glEnableVertexAttribArray(1);
+    } else {
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+    }
+
     for (const auto& p : particles) {
         if (p.life <= 0) continue;
 
-        float alpha = p.life / p.maxLife;
-        float glX, glY;
-        framework->windowToGLCoords(p.position.x - p.size / 2, p.position.y - p.size / 2, &glX, &glY);
-        float right = glX + (p.size / framework->getWidth()) * 2.0f;
-        float bottom = glY - (p.size / framework->getHeight()) * 2.0f;
+        Vector2 adjustedPos = p.position;
+        if (isWorldMode && camera) {
+            float halfSize = p.size / 2.0f;
+            VoltaFramework::Rect bounds(
+                p.position.x - halfSize,
+                p.position.x + halfSize,
+                p.position.y - halfSize,
+                p.position.y + halfSize
+            );
 
-        if (p.texture != 0) {
-            vertexData.insert(vertexData.end(), {
-                // Triangle 1
-                glX, glY,     0.0f, 0.0f,  // Top-left (texture bottom-left)
-                right, glY,   1.0f, 0.0f,  // Top-right (texture bottom-right)
-                right, bottom, 1.0f, 1.0f, // Bottom-right (texture top-right)
-                // Triangle 2
-                glX, glY,     0.0f, 0.0f,  // Top-left (texture bottom-left)
-                right, bottom, 1.0f, 1.0f, // Bottom-right (texture top-right)
-                glX, bottom,  0.0f, 1.0f   // Bottom-left (texture top-left)
-            });
+            std::cout << "Particle at (" << p.position.x << ", " << p.position.y << "), Size: " << p.size 
+                      << ", Bounds: (" << bounds.left << ", " << bounds.right << ", " 
+                      << bounds.bottom << ", " << bounds.top << ")\n";
+
+            if (!framework->isRectInView(bounds)) {
+                std::cout << "Particle culled at (" << p.position.x << ", " << p.position.y << ")\n";
+                continue;
+            }
+
+            adjustedPos.x = (p.position.x - cameraPos.x) * zoom + framework->getWidth() / 2.0f;
+            adjustedPos.y = (p.position.y - cameraPos.y) * zoom + framework->getHeight() / 2.0f;
+        }
+
+        float hw = (p.size / 2.0f) * zoom;
+        float hh = (p.size / 2.0f) * zoom;
+
+        Vector2 vertices[4];
+        vertices[0].x = -hw; vertices[0].y = -hh;
+        vertices[1].x =  hw; vertices[1].y = -hh;
+        vertices[2].x =  hw; vertices[2].y =  hh;
+        vertices[3].x = -hw; vertices[3].y =  hh;
+
+        if (rotation != 0) {
+            float cosR = cosf(rotation * M_PI / 180.0f);
+            float sinR = sinf(rotation * M_PI / 180.0f);
+            for (int i = 0; i < 4; i++) {
+                float x = vertices[i].x;
+                float y = vertices[i].y;
+                vertices[i].x = x * cosR - y * sinR;
+                vertices[i].y = x * sinR + y * cosR;
+            }
+        }
+
+        float modulatedColor[3] = {
+            framework->currentColor[0],
+            framework->currentColor[1],
+            framework->currentColor[2]
+        };
+
+        if (particleTexture != 0) {
+            glUniform3fv(framework->imageColorUniform, 1, modulatedColor);
+            float vertexData[16];
+            for (int i = 0; i < 4; i++) {
+                float winX = adjustedPos.x + vertices[i].x;
+                float winY = adjustedPos.y + vertices[i].y;
+                float glX, glY;
+                framework->windowToGLCoords(winX, winY, &glX, &glY);
+                vertexData[i * 4] = glX;
+                vertexData[i * 4 + 1] = glY;
+                vertexData[i * 4 + 2] = (i % 2) ? 1.0f : 0.0f;
+                vertexData[i * 4 + 3] = (i < 2) ? 0.0f : 1.0f;
+            }
+            glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_DYNAMIC_DRAW);
         } else {
-            vertexData.insert(vertexData.end(), {
-                // Triangle 1
-                glX, glY,     0.0f, 0.0f,
-                right, glY,   0.0f, 0.0f,
-                right, bottom, 0.0f, 0.0f,
-                // Triangle 2
-                glX, glY,     0.0f, 0.0f,
-                right, bottom, 0.0f, 0.0f,
-                glX, bottom,  0.0f, 0.0f
-            });
-        }
-    }
-
-    if (vertexData.empty()) return;
-
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Alpha blending for distinct particles
-
-    if (particles[0].texture != 0) {
-        glUseProgram(framework->imageShaderProgram);
-        glUniform3fv(framework->imageColorUniform, 1, framework->currentColor);
-        glUniform1i(framework->imageTextureUniform, 0);
-    } else {
-        glUseProgram(framework->shape2DShaderProgram);
-        glUniform3fv(framework->shape2DColorUniform, 1, framework->currentColor);
-    }
-
-    glBindVertexArray(framework->particleVAO);
-    
-    glBindBuffer(GL_ARRAY_BUFFER, framework->particleVBO);
-    glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), vertexData.data(), GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    size_t particleCount = particles.size();
-    size_t offset = 0;
-    while (offset < particleCount) {
-        GLuint currentTexture = particles[offset].texture;
-        size_t batchSize = 1;
-        
-        while (offset + batchSize < particleCount && particles[offset + batchSize].texture == currentTexture) {
-            batchSize++;
+            glUniform3fv(framework->shape2DColorUniform, 1, modulatedColor);
+            float vertexData[8];
+            for (int i = 0; i < 4; i++) {
+                float winX = adjustedPos.x + vertices[i].x;
+                float winY = adjustedPos.y + vertices[i].y;
+                float glX, glY;
+                framework->windowToGLCoords(winX, winY, &glX, &glY);
+                vertexData[i * 2] = glX;
+                vertexData[i * 2 + 1] = glY;
+            }
+            glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_DYNAMIC_DRAW);
         }
 
-        if (currentTexture != 0) {
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, currentTexture);
-        }
-
-        glDrawArrays(GL_TRIANGLES, offset * 6, batchSize * 6);
-        offset += batchSize;
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }
 
     glBindVertexArray(0);

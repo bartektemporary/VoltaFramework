@@ -1,241 +1,116 @@
-local vector2 = volta.vector2
+-- Global variables
+local player = {
+    pos = volta.vector2.new(0, 0), -- Using Vector2 for position
+    size = volta.vector2.new(50, 50) -- Using Vector2 for size
+}
+local camera = nil
+local speed = 200 -- Movement speed in world units per second
+local emitter
 
-local defaultPosition = vector2.new(400, 300)
-local speed<const> = 200
-
-local t = 0
-local tweenDirection = 1
-local tweenSpeed = 0.5
-local leftBound = vector2.new(100, 100)
-local rightBound = vector2.new(700, 100)
-local sound
-
-local fpsCounter = 0
-local fpsTimer = 0
-local currentFps = 0
-
-local fire_emitter 
-local lastVelocity = vector2.new(0, 0) -- Track last movement direction
-
--- Define colors for tweening
-local greenColor = volta.color.new(0.5, 1, 0)  -- Starting color (green)
-local blueColor = volta.color.new(0, 0, 1)     -- Target color (blue)
-
-local rotation = 0
-
+-- Initialize the game
 function volta.init()
+    -- Create a camera at the origin with default zoom and rotation
+    camera = volta.camera2d.new(volta.vector2.new(0, 0), 1, 0)
+    volta.setCamera2D(camera)
     volta.window.setState("borderlessMaximized")
-    volta.graphics.setFilter("nearest")
-    volta.window.setIcon("tree.png")
-
-    sound = volta.audio.loadAudio("music.mp3")
-    if sound then
-        sound:setVolume(1)
-        sound:setLooped(true)
-        sound:play()
-    end
-
-    fire_base = volta.particleEmitter.new(
-        volta.vector2.new(400, 300),
-        1.0,                        -- lifetime
-        120,                        -- moderate speed
-        90,                         -- wide spread for base
-        volta.vector2.new(0, 1),   -- upward
-        "cone"
-    )
-
-    -- Core flame (narrow cone for bright center)
-    fire_core = volta.particleEmitter.new(
-        volta.vector2.new(400, 300),
-        0.7,                        -- shorter lifetime
-        180,                        -- faster speed
-        20,                         -- narrow spread
-        volta.vector2.new(0, 1),
-        "cone"
-    )
-
-    -- Flickering tips (circle for top wisps)
-    fire_tips = volta.particleEmitter.new(
-        volta.vector2.new(400, 250), -- higher position
-        0.5,                        -- short lifetime
-        100,                        -- moderate speed
-        360,                        -- full spread
-        volta.vector2.new(0, 1),
-        "circle"
-    )
-
-    -- Smoke/embers (sparse circle)
-    fire_embers = volta.particleEmitter.new(
-        volta.vector2.new(400, 200), -- even higher
-        1.5,                        -- longer lifetime
-        80,                         -- slower speed
-        360,                        -- full spread
-        volta.vector2.new(0, 1),
-        "circle"
-    )
-
-    -- Check if a gamepad is connected
-    if volta.input.isGamepadConnected(0) then
-        print("Gamepad 0 is connected")
-    end
-
-    -- Check if a specific gamepad button is down
-    if volta.input.isGamepadButtonDown(0, 0) then
-        print("Button 0 is down on gamepad 0")
-    end
-
-    volta.graphics.loadFont("Minecraft.ttf", 24)
-    volta.graphics.setFont("Minecraft.ttf")
-end
-
-function volta.update(dt)
-    fpsCounter = fpsCounter + 1
-    fpsTimer = fpsTimer + dt
-    if fpsTimer >= 1 then
-        currentFps = fpsCounter
-        fpsCounter = 0
-        fpsTimer = fpsTimer - 1
-        print("FPS: " .. currentFps)
-    end
-
-    local newX = defaultPosition.x
-    local newY = defaultPosition.y
-    local velocity = vector2.new(0, 0) -- Current frame's velocity
-
-    local moved = false
-    if volta.input.isKeyDown("w") then
-        newY = newY + speed * dt
-        moved = true
-    end
-    if volta.input.isKeyDown("s") then
-        newY = newY - speed * dt
-        moved = true
-    end
-    if volta.input.isKeyDown("a") then
-        newX = newX - speed * dt
-        moved = true
-    end
-    if volta.input.isKeyDown("d") then
-        newX = newX + speed * dt
-        moved = true
-    end
-
-    volta.graphics.setColor(volta.color.new(1, 0, 0)) -- Red color for visibility
-    local pos = volta.vector3.new(0, 0, -5) -- Move cube farther from camera
-    local size = volta.vector3.new(0.5, 0.5, 0.5) -- Smaller size
-    local cubeRotation = volta.vector3.new(45, rotation, 0)
-    rotation = rotation + 0.5
-    volta.graphics.drawCube(pos, size, cubeRotation)
-
-    -- Update emitter position
-    defaultPosition = vector2.new(newX, newY)
-
-    t = t + dt * tweenSpeed * tweenDirection
-    if t >= 1 then
-        t = 1 - (t - 1)
-        tweenDirection = -1
-    elseif t <= 0 then
-        t = -t
-        tweenDirection = 1
-    end
-
-    -- Dynamic sway based on time
-    local time = volta.getRunningTime()
-    local sway = math.sin(time * 2) * 10
-    local base_x = 400 + sway
-    local flicker = math.sin(time * 5) * 0.5 + 0.5 -- 0 to 1 range
-
-    -- Update positions with sway
-    fire_base:setPosition(volta.vector2.new(base_x, 200))
-    fire_core:setPosition(volta.vector2.new(base_x, 200))
-    fire_tips:setPosition(volta.vector2.new(base_x, 250 + sway * 0.5))
-    fire_embers:setPosition(volta.vector2.new(base_x, 300 + sway * 0.3))
-
-    -- Dynamic adjustments
-    fire_base:setSpeed(120 + flicker * 20)
-    fire_core:setSpeed(180 + flicker * 30)
-    fire_tips:setSpeed(100 + flicker * 20)
-    fire_base:setSpread(90 + flicker * 20)
-
-    -- Emit particles
-    fire_base:emit(6 + math.floor(flicker * 2))    -- 6-8 particles
-    fire_core:emit(3 + math.floor(flicker * 2))    -- 3-5 particles
-    fire_tips:emit(2 + math.floor(flicker * 1))    -- 2-3 particles
-    fire_embers:emit(1)                            -- sparse embers
-
-    -- Render layers (back to front)
-    -- Embers/Smoke (dark red/gray)
-    volta.graphics.setColor(volta.color.new(0.5, 0.2, 0.1)) -- Dark red-orange
-    fire_embers:render()
     
-    -- Base flame (orange-red)
-    volta.graphics.setColor(volta.color.new(1.0, 0.4, 0.0)) -- Orange-red
-    fire_base:render()
+    emitter = volta.particleEmitter.new(
+        volta.vector2.new(0, 0), -- Position
+        22.0,                    -- Particle life
+        100.0,                  -- Speed
+        90.0,                   -- Spread (degrees)
+        volta.vector2.new(1, 0),-- Direction (up)
+        "cone"                  -- Shape
+    )
 
-    -- Flickering tips (yellow)
-    volta.graphics.setColor(volta.color.new(1.0, 0.8, 0.0)) -- Yellow
-    fire_tips:render()
-
-    -- Core (white-yellow)
-    volta.graphics.setColor(volta.color.new(1.0, 1.0, 0.8)) -- White-yellow
-    fire_core:render()
-
-    local treePos = leftBound:tween(rightBound, t, "inout", "quad")
-
-    volta.graphics.setColor(volta.color.new(1, 1, 1))
-
-    -- Tween the rectangle's color from green to blue using "back" style
-    local tweenedColor = greenColor:tween(blueColor, t, "inout", "quad")
-    volta.graphics.setColor(tweenedColor)
-    volta.graphics.rectangle(true, defaultPosition, vector2.new(50, 50))
-
-    volta.graphics.drawLine(vector2.new(100, 500), vector2.new(500, 1000), 10)
-
-    volta.graphics.setColor(volta.color.new(1, 1, 1))
-    volta.graphics.drawImage("tree.png", treePos, vector2.new(200, 200))
-
-    volta.graphics.setFont("Minecraft.ttf")
-    volta.graphics.drawText("Hello, World!", volta.vector2.new(1000, 700), 1.5) -- Text at (100,100), 1.5x scale
+    -- Set initial background color
+    volta.graphics.setColor(0.2, 0.2, 0.2) -- Dark gray background
 end
 
-volta.input.keyPressed("up", function()
-    volta.audio.setGlobalVolume(volta.audio.getGlobalVolume() + 0.1)
-end)
-
-volta.input.keyPressed("down", function()
-    volta.audio.setGlobalVolume(volta.audio.getGlobalVolume() - 0.1)
-end)
-
-volta.input.keyPressed("escape", function()
-    os.exit()
-end)
-
-volta.input.keyPressed("i", function()
-    print(volta.getRunningTime())
-    local pressedKeys = volta.input.getPressedKeys()
-    for i = 1, #pressedKeys do
-        print("Pressed key:", pressedKeys[i])
+-- Update function called every frame
+function volta.update(dt)
+    -- Handle player movement
+    local move = volta.vector2.new(0, 0)
+    if volta.input.isKeyDown("W") then
+        move = volta.vector2.new(move.x, move.y - 1)
+    end
+    if volta.input.isKeyDown("S") then
+        move = volta.vector2.new(move.x, move.y + 1)
+    end
+    if volta.input.isKeyDown("A") then
+        move = volta.vector2.new(move.x - 1, move.y)
+    end
+    if volta.input.isKeyDown("D") then
+        move = volta.vector2.new(move.x + 1, move.y)
     end
 
-    -- Example usage in Lua for mouse buttons
-    local pressedButtons = volta.input.getPressedMouseButtons()
-    for i = 1, #pressedButtons do
-        print("Pressed mouse button:", pressedButtons[i])
+    -- Normalize movement vector if moving diagonally
+    local mag = move:magnitude()
+    if mag > 0 then
+        local normalizedMove = move:normalize()
+        local movement = normalizedMove:multiply(speed * dt) -- Multiply Vector2 by scalar
+        player.pos = player.pos:add(movement) -- Add Vector2 to Vector2
     end
-end)
 
--- Register a callback for when a gamepad is connected
-volta.input.gamepadConnected(function(gamepadId)
-    print("Gamepad connected:", gamepadId)
-end)
+    -- Make the camera follow the player
+    camera:setPosition(player.pos)
 
--- Register a callback for when a gamepad is disconnected
-volta.input.gamepadDisconnected(function(gamepadId)
-    print("Gamepad disconnected:", gamepadId)
-end)
+    -- Update and render particles
+    emitter:setPosition(volta.vector2.new(2000, 2000)) -- Beyond (960, 540)
+    emitter:emit(10) -- Emit 5 particles per frame
+    emitter:render()
 
--- Register a callback for when a specific gamepad button is pressed
--- Example: Button 0 (A button on Xbox controller)
-volta.input.getGamepadButtonPressed(0, 0, function(gamepadId, button)
-    print("Gamepad button pressed:", gamepadId, button)
-end)
+    -- Draw screen-space UI elements
+    volta.graphics.setPositionMode("screen")
+    local uiPos1 = volta.vector2.new(10, 10)
+    local uiSize1 = volta.vector2.new(100, 20)
+    volta.graphics.setColor(1, 1, 1) -- White
+    volta.graphics.rectangle(true, uiPos1, uiSize1, 0) -- Top-left screen-space rectangle
+    local uiPos2 = volta.vector2.new(50, 50)
+    volta.graphics.setColor(0, 0, 1) -- Blue
+    volta.graphics.circle(true, uiPos2, 15) -- Screen-space circle
+
+    -- Draw world-space objects
+    volta.graphics.setPositionMode("world")
+    
+    -- Player rectangle (red)
+    volta.graphics.setColor(1, 0, 0)
+    volta.graphics.rectangle(true, player.pos, player.size, 0)
+
+    -- Scattered shapes in world space using Vector2
+    local greenPos = volta.vector2.new(100, 100)
+    local greenSize = volta.vector2.new(60, 60)
+    volta.graphics.setColor(0, 1, 0) -- Green
+    volta.graphics.rectangle(true, greenPos, greenSize, 45) -- Rotated square
+
+    local yellowPos = volta.vector2.new(-50, -50)
+    volta.graphics.setColor(1, 1, 0) -- Yellow
+    volta.graphics.circle(true, yellowPos, 30) -- Circle to the left
+
+    local cyanPos = volta.vector2.new(-200, 200)
+    local cyanSize = volta.vector2.new(80, 80)
+    volta.graphics.setColor(0, 1, 1) -- Cyan
+    volta.graphics.rectangle(false, cyanPos, cyanSize, 0) -- Outline rectangle
+
+    local magentaPos = volta.vector2.new(300, -100)
+    volta.graphics.setColor(1, 0, 1) -- Magenta
+    volta.graphics.circle(false, magentaPos, 40) -- Outline circle
+
+    -- Draw some lines in world space using Vector2
+    local lineStart1 = volta.vector2.new(-100, -100)
+    local lineEnd1 = volta.vector2.new(100, 100)
+    local lineStart2 = volta.vector2.new(0, -150)
+    local lineEnd2 = volta.vector2.new(0, 150)
+    volta.graphics.setColor(0.5, 0.5, 0.5) -- Gray
+    volta.graphics.setPositionMode("world")
+    volta.graphics.drawLine(lineStart1, lineEnd1, 1) -- Diagonal line
+    volta.graphics.drawLine(lineStart2, lineEnd2, 1) -- Vertical line
+
+    -- Yellow image (tree.png)
+    volta.graphics.setColor(1, 1, 0)
+    volta.graphics.drawImage("tree.png", volta.vector2.new(-50, -50), volta.vector2.new(100, 100), 0)
+        
+    -- Blue text with Minecraft.ttf
+    volta.graphics.setColor(0, 0, 1)
+    volta.graphics.drawText("Minecraft Test", volta.vector2.new(100, 100), 1)
+end

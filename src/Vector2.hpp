@@ -1,10 +1,14 @@
 #ifndef VECTOR2_HPP
 #define VECTOR2_HPP
 
-#include "VoltaFramework.hpp"
+#include <lua.hpp> // Include Lua directly for bindings
+#include <cstring>
 
-#define _USE_MATH_DEFINES
-#include <math.h>
+// Define Vector2 here as the canonical definition
+struct Vector2 {
+    float x, y;
+    Vector2(float x_ = 0.0f, float y_ = 0.0f) : x(x_), y(y_) {}
+};
 
 // Function declarations
 Vector2* checkVector2(lua_State* L, int index);
