@@ -18,9 +18,6 @@ VoltaFramework::VoltaFramework() :
     ftFace{nullptr},
     textVAO{0},
     textVBO{0},
-    shapeVAO{0},
-    shapeVBO{0},
-    shapeEBO{0},
     textureVAO{0},
     textureVBO{0},
     particleVAO{0},
@@ -262,10 +259,8 @@ void VoltaFramework::update(float dt) {
     currentShaderName = "";
     usingCustomShader = false;
 
-    // Get the 'volta' table
     lua_getglobal(L, "volta");
     if (lua_istable(L, -1)) {
-        // Get the 'update' function from the 'volta' table
         lua_getfield(L, -1, "update");
         if (lua_isfunction(L, -1)) {
             lua_pushnumber(L, dt);
@@ -274,14 +269,14 @@ void VoltaFramework::update(float dt) {
                 lua_pop(L, 1);
             }
         } else {
-            lua_pop(L, 1); // Pop the non-function value
+            lua_pop(L, 1);
         }
     } else {
         std::cerr << "Error: 'volta' table not found in Lua environment\n";
     }
-    lua_pop(L, 1); // Pop the 'volta' table
+    lua_pop(L, 1);
 
-    renderParticles(dt);
+    renderParticles(dt); // Assumed 2D for now; adjust if 3D particles are needed
 }
 
 int l_getRunningTime(lua_State* L) {

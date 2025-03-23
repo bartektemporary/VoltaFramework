@@ -9,31 +9,15 @@
 
 void VoltaFramework::windowToGLCoords(float winX, float winY, float* glX, float* glY) {
     *glX = (winX / (width / 2.0f)) - 1.0f;
-    *glY = 1.0f - (winY / (height / 2.0f));
+    *glY = (winY / (height / 2.0f)) - 1.0f;  // Changed from 1.0f - (winY / (height / 2.0f))
 }
 
-int l_rectangle(lua_State* L) {
-    int isbool {lua_isboolean(L, 1)};
-    if (!isbool) {
-        luaL_argerror(L, 1, "boolean expected");
-    }
-    bool fill {lua_toboolean(L, 1) != 0};
-    
-    Vector2* position = checkVector2(L, 2);
-    Vector2* size = checkVector2(L, 3);
-    lua_Number rotation {luaL_optnumber(L, 4, 0.0)};
-
-    VoltaFramework* framework {getFramework(L)};
-    if (!framework || !framework->getWindow()) {
-        std::cerr << "l_rectangle: Framework or window is null\n";
-        return 0;
-    }
-    
+void VoltaFramework::drawRectangle(bool fill, const Vector2& position, const Vector2& size, float rotation) {
     float centerX, centerY;
-    framework->windowToGLCoords(position->x + size->x/2.0f, position->y + size->y/2.0f, &centerX, &centerY);
+    windowToGLCoords(position.x + size.x / 2.0f, position.y + size.y / 2.0f, &centerX, &centerY);
     
-    float halfWidth = size->x / 2.0f;
-    float halfHeight = size->y / 2.0f;
+    float halfWidth = size.x / 2.0f;
+    float halfHeight = size.y / 2.0f;
     
     float rad = -rotation * M_PI / 180.0f;
     float cosR = cosf(rad);
@@ -53,7 +37,7 @@ int l_rectangle(lua_State* L) {
         float rotatedX = x * cosR - y * sinR;
         float rotatedY = x * sinR + y * cosR;
         float glX, glY;
-        framework->windowToGLCoords(position->x + halfWidth + rotatedX, position->y + halfHeight + rotatedY, &glX, &glY);
+        windowToGLCoords(position.x + halfWidth + rotatedX, position.y + halfHeight + rotatedY, &glX, &glY);
         rotatedVertices.push_back(glX);
         rotatedVertices.push_back(glY);
     }
@@ -63,46 +47,52 @@ int l_rectangle(lua_State* L) {
         vertices[i] = rotatedVertices[i];
     }
     
-    glUseProgram(framework->shapeShaderProgram); // Use shape shader
-    glUniform3fv(framework->shapeColorUniform, 1, framework->currentColor);
+    glDisable(GL_DEPTH_TEST); // 2D rendering, no depth
+    glUseProgram(shape2DShaderProgram);
+    glUniform3fv(shape2DColorUniform, 1, currentColor);
 
-    glBindVertexArray(framework->shapeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, framework->shapeVBO);
+    glBindVertexArray(shape2DVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, shape2DVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0); // Ensure attribute is enabled
-    
+    glEnableVertexAttribArray(0);
+
     if (fill) {
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     } else {
         glDrawArrays(GL_LINE_LOOP, 0, 4);
     }
     
-    glBindVertexArray(0); // Unbind VAO but leave shader active
-    return 0;
+    glBindVertexArray(0);
 }
 
-int l_circle(lua_State* L) {
-    int isbool {lua_isboolean(L, 1)};
+int l_rectangle(lua_State* L) {
+    int isbool = lua_isboolean(L, 1);
     if (!isbool) {
         luaL_argerror(L, 1, "boolean expected");
     }
-    bool fill {lua_toboolean(L, 1) != 0};
+    bool fill = lua_toboolean(L, 1) != 0;
     
-    Vector2* center = checkVector2(L, 2);
-    lua_Number r {luaL_checknumber(L, 3)};
+    Vector2* position = checkVector2(L, 2);
+    Vector2* size = checkVector2(L, 3);
+    lua_Number rotation = luaL_optnumber(L, 4, 0.0);
 
-    VoltaFramework* framework {getFramework(L)};
+    VoltaFramework* framework = getFramework(L);
     if (!framework || !framework->getWindow()) {
-        std::cerr << "l_circle: Framework or window is null\n";
+        std::cerr << "l_rectangle: Framework or window is null\n";
         return 0;
     }
     
+    framework->drawRectangle(fill, *position, *size, static_cast<float>(rotation));
+    return 0;
+}
+
+void VoltaFramework::drawCircle(bool fill, const Vector2& center, float radius) {
     float centerX, centerY;
-    framework->windowToGLCoords(center->x, center->y, &centerX, &centerY);
+    windowToGLCoords(center.x, center.y, &centerX, &centerY);
     
-    float radiusX = r / (framework->getWidth() / 2.0f);
-    float radiusY = r / (framework->getHeight() / 2.0f);
+    float radiusX = radius / (width / 2.0f);
+    float radiusY = radius / (height / 2.0f);
     
     const int segments = 35;
     std::vector<float> vertices;
@@ -120,14 +110,15 @@ int l_circle(lua_State* L) {
         vertices.push_back(y);
     }
     
-    glUseProgram(framework->shapeShaderProgram); // Use shape shader
-    glUniform3fv(framework->shapeColorUniform, 1, framework->currentColor);
+    glDisable(GL_DEPTH_TEST); // 2D rendering
+    glUseProgram(shape2DShaderProgram);
+    glUniform3fv(shape2DColorUniform, 1, currentColor);
     
-    glBindVertexArray(framework->shapeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, framework->shapeVBO);
+    glBindVertexArray(shape2DVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, shape2DVBO);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0); // Ensure attribute is enabled
+    glEnableVertexAttribArray(0);
     
     if (fill) {
         glDrawArrays(GL_TRIANGLE_FAN, 0, vertices.size() / 2);
@@ -136,34 +127,39 @@ int l_circle(lua_State* L) {
     }
     
     glBindVertexArray(0);
-    return 0;
 }
 
-int l_drawLine(lua_State* L) {
-    Vector2* start = checkVector2(L, 1);
-    Vector2* end = checkVector2(L, 2);
-    lua_Number lineWidth {luaL_optnumber(L, 3, 1.0)};
-
-    if (lineWidth <= 0) {
-        luaL_argerror(L, 3, "line width must be positive");
+int l_circle(lua_State* L) {
+    int isbool = lua_isboolean(L, 1);
+    if (!isbool) {
+        luaL_argerror(L, 1, "boolean expected");
     }
+    bool fill = lua_toboolean(L, 1) != 0;
+    
+    Vector2* center = checkVector2(L, 2);
+    lua_Number r = luaL_checknumber(L, 3);
 
-    VoltaFramework* framework {getFramework(L)};
+    VoltaFramework* framework = getFramework(L);
     if (!framework || !framework->getWindow()) {
-        std::cerr << "l_drawLine: Framework or window is null\n";
+        std::cerr << "l_circle: Framework or window is null\n";
         return 0;
     }
     
+    framework->drawCircle(fill, *center, static_cast<float>(r));
+    return 0;
+}
+
+void VoltaFramework::drawLine(const Vector2& start, const Vector2& end, float lineWidth) {
     float startX, startY, endX, endY;
-    framework->windowToGLCoords(start->x, start->y, &startX, &startY);
-    framework->windowToGLCoords(end->x, end->y, &endX, &endY);
+    windowToGLCoords(start.x, start.y, &startX, &startY);
+    windowToGLCoords(end.x, end.y, &endX, &endY);
     
     float dx = endX - startX;
     float dy = endY - startY;
     float length = std::sqrt(dx * dx + dy * dy);
     
     if (length == 0) {
-        return 0;
+        return;
     }
     
     float nx = dx / length;
@@ -172,7 +168,8 @@ int l_drawLine(lua_State* L) {
     float perpX = -ny;
     float perpY = nx;
     
-    float halfWidth = lineWidth / framework->getWidth();
+    // Adjust line width based on window dimensions
+    float halfWidth = (lineWidth / 2.0f) / (width / 2.0f); // Normalize to OpenGL coordinates
     
     float halfWidthPerpX = perpX * halfWidth;
     float halfWidthPerpY = perpY * halfWidth;
@@ -184,18 +181,39 @@ int l_drawLine(lua_State* L) {
         endX - halfWidthPerpX, endY - halfWidthPerpY
     };
     
-    glUseProgram(framework->shapeShaderProgram); // Use shape shader
-    glUniform3fv(framework->shapeColorUniform, 1, framework->currentColor);
+    // Ensure 2D rendering state
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glUseProgram(shape2DShaderProgram);
+    glUniform3fv(shape2DColorUniform, 1, currentColor);
     
-    glBindVertexArray(framework->shapeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, framework->shapeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+    glBindVertexArray(shape2DVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, shape2DVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0); // Ensure attribute is enabled
+    glEnableVertexAttribArray(0);
     
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     
     glBindVertexArray(0);
+}
+
+int l_drawLine(lua_State* L) {
+    Vector2* start = checkVector2(L, 1);
+    Vector2* end = checkVector2(L, 2);
+    lua_Number lineWidth = luaL_optnumber(L, 3, 1.0);
+
+    if (lineWidth <= 0) {
+        luaL_argerror(L, 3, "line width must be positive");
+    }
+
+    VoltaFramework* framework = getFramework(L);
+    if (!framework || !framework->getWindow()) {
+        std::cerr << "l_drawLine: Framework or window is null\n";
+        return 0;
+    }
+    
+    framework->drawLine(*start, *end, static_cast<float>(lineWidth));
     return 0;
 }
 
@@ -243,10 +261,10 @@ int l_drawImage(lua_State* L) {
     
     // Correct texture coordinates (0,0 to 1,1 across all vertices)
     float vertices[16] = {
-        rotatedVertices[0], rotatedVertices[1], 0.0f, 0.0f,  // Top-left
-        rotatedVertices[2], rotatedVertices[3], 1.0f, 0.0f,  // Top-right
-        rotatedVertices[4], rotatedVertices[5], 1.0f, 1.0f,  // Bottom-right
-        rotatedVertices[6], rotatedVertices[7], 0.0f, 1.0f   // Bottom-left
+        rotatedVertices[0], rotatedVertices[1], 0.0f, 1.0f,
+        rotatedVertices[2], rotatedVertices[3], 1.0f, 1.0f,
+        rotatedVertices[4], rotatedVertices[5], 1.0f, 0.0f,
+        rotatedVertices[6], rotatedVertices[7], 0.0f, 0.0f
     };
     
     std::string fullPath = std::string("assets/") + filename;
@@ -645,6 +663,25 @@ const char* shapeFragmentShaderSource = R"(
     }
 )";
 
+const char* shapeVertexShaderSource2D = R"(
+    #version 330 core
+    layout (location = 0) in vec2 aPos;
+    void main() {
+        gl_Position = vec4(aPos, 0.0, 1.0);
+    }
+)";
+
+const char* shapeVertexShaderSource3D = R"(
+    #version 330 core
+    layout (location = 0) in vec3 aPos;
+    uniform mat4 projection;
+    uniform mat4 view;
+    uniform mat4 model;
+    void main() {
+        gl_Position = projection * view * model * vec4(aPos, 1.0);
+    }
+)";
+
 GLuint VoltaFramework::compileShader(GLenum type, const char* source) {
     GLuint shader = glCreateShader(type);
     glShaderSource(shader, 1, &source, NULL);
@@ -871,15 +908,13 @@ void VoltaFramework::drawText(const std::string& text, float x, float y, float s
 }
 
 void VoltaFramework::initOpenGL() {
-    // Shape Shader (for shapes without textures)
-    shapeShaderProgram = createShaderProgram(textVertexShaderSource, shapeFragmentShaderSource);
-    if (shapeShaderProgram == 0) {
-        std::cerr << "Failed to create shape shader program\n";
-        return;
-    }
-    shapeColorUniform = glGetUniformLocation(shapeShaderProgram, "uColor");
+    // Initialize 2D rendering resources
+    initOpenGL2D();
 
-    // Image Shader (for RGBA textures)
+    // Initialize 3D rendering resources
+    initOpenGL3D();
+
+    // Initialize image rendering (shared between 2D and 3D)
     imageShaderProgram = createShaderProgram(imageVertexShaderSource, imageFragmentShaderSource);
     if (imageShaderProgram == 0) {
         std::cerr << "Failed to create image shader program\n";
@@ -887,26 +922,6 @@ void VoltaFramework::initOpenGL() {
     }
     imageColorUniform = glGetUniformLocation(imageShaderProgram, "uColor");
     imageTextureUniform = glGetUniformLocation(imageShaderProgram, "uTexture");
-
-    // Text Shader (for GL_RED font textures)
-    textShaderProgram = createShaderProgram(textVertexShaderSource, textFragmentShaderSource);
-    if (textShaderProgram == 0) {
-        std::cerr << "Failed to create text shader program\n";
-        return;
-    }
-    textColorUniform = glGetUniformLocation(textShaderProgram, "uColor");
-    textTextureUniform = glGetUniformLocation(textShaderProgram, "uTexture");
-
-    // Shape VAO (for rectangles, circles, lines)
-    glGenVertexArrays(1, &shapeVAO);
-    glGenBuffers(1, &shapeVBO);
-    glGenBuffers(1, &shapeEBO);
-    glBindVertexArray(shapeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, shapeVBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shapeEBO);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glBindVertexArray(0);
 
     // Texture VAO (for images)
     glGenVertexArrays(1, &textureVAO);
@@ -921,7 +936,7 @@ void VoltaFramework::initOpenGL() {
     };
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     unsigned int indices[] = {0, 1, 2, 0, 2, 3};
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shapeEBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shape2DEBO); // Reuse 2D EBO for simplicity
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
@@ -929,20 +944,29 @@ void VoltaFramework::initOpenGL() {
     glEnableVertexAttribArray(1);
     glBindVertexArray(0);
 
+    // Initialize text rendering
+    textShaderProgram = createShaderProgram(textVertexShaderSource, textFragmentShaderSource);
+    if (textShaderProgram == 0) {
+        std::cerr << "Failed to create text shader program\n";
+        return;
+    }
+    textColorUniform = glGetUniformLocation(textShaderProgram, "uColor");
+    textTextureUniform = glGetUniformLocation(textShaderProgram, "uTexture");
+
     // Text VAO
     glGenVertexArrays(1, &textVAO);
     glGenBuffers(1, &textVBO);
     glBindVertexArray(textVAO);
     glBindBuffer(GL_ARRAY_BUFFER, textVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, nullptr, GL_DYNAMIC_DRAW);
-    glEnableVertexAttribArray(0); // Position
+    glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1); // TexCoord
+    glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    // Particle VAO
+    // Particle VAO (assumed 2D for now)
     glGenVertexArrays(1, &particleVAO);
     glGenBuffers(1, &particleVBO);
     glBindVertexArray(particleVAO);
@@ -951,21 +975,183 @@ void VoltaFramework::initOpenGL() {
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     glBindVertexArray(0);
+
+    glViewport(0, 0, width, height);
+}
+
+void VoltaFramework::initOpenGL2D() {
+    // 2D Shape Shader
+    shape2DShaderProgram = createShaderProgram(shapeVertexShaderSource2D, shapeFragmentShaderSource);
+    if (shape2DShaderProgram == 0) {
+        std::cerr << "Failed to create 2D shape shader program\n";
+        return;
+    }
+    shape2DColorUniform = glGetUniformLocation(shape2DShaderProgram, "uColor");
+
+    // 2D VAO
+    glGenVertexArrays(1, &shape2DVAO);
+    glGenBuffers(1, &shape2DVBO);
+    glGenBuffers(1, &shape2DEBO);
+    glBindVertexArray(shape2DVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, shape2DVBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shape2DEBO);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
+
+    // Orthographic projection for 2D
+    projection2D.setIdentity();
+    float left = 0.0f, right = (float)width, bottom = 0.0f, top = (float)height;
+    projection2D.m[0] = 2.0f / (right - left);
+    projection2D.m[5] = 2.0f / (top - bottom);
+    projection2D.m[12] = -(right + left) / (right - left);
+    projection2D.m[13] = -(top + bottom) / (top - bottom);
+}
+
+void VoltaFramework::initOpenGL3D() {
+    // Enable depth testing and face culling for 3D
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
+
+    // 3D Shape Shader
+    shape3DShaderProgram = createShaderProgram(shapeVertexShaderSource3D, shapeFragmentShaderSource);
+    if (shape3DShaderProgram == 0) {
+        std::cerr << "Failed to create 3D shape shader program\n";
+        return;
+    }
+    shape3DColorUniform = glGetUniformLocation(shape3DShaderProgram, "uColor");
+    shape3DProjectionUniform = glGetUniformLocation(shape3DShaderProgram, "projection");
+    shape3DViewUniform = glGetUniformLocation(shape3DShaderProgram, "view");
+    shape3DModelUniform = glGetUniformLocation(shape3DShaderProgram, "model");
+
+    // 3D VAO
+    glGenVertexArrays(1, &shape3DVAO);
+    glGenBuffers(1, &shape3DVBO);
+    glGenBuffers(1, &shape3DEBO);
+    glBindVertexArray(shape3DVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, shape3DVBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shape3DEBO);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
+
+    // Perspective projection and view for 3D
+    setPerspective(projection3D, 45.0f * M_PI / 180.0f, (float)width / (float)height, 0.1f, 100.0f);
+    setLookAt(view3D, {0.0f, 0.0f, 5.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f});
+    model.setIdentity();
+}
+
+void VoltaFramework::drawCube(const Vector3& position, const Vector3& size, const Vector3& rotation) {
+    // Define cube vertices (centered at origin)
+    float halfX = size.x / 2.0f;
+    float halfY = size.y / 2.0f;
+    float halfZ = size.z / 2.0f;
+    float vertices[] = {
+        -halfX, -halfY,  halfZ,  // 0
+         halfX, -halfY,  halfZ,  // 1
+         halfX,  halfY,  halfZ,  // 2
+        -halfX,  halfY,  halfZ,  // 3
+        -halfX, -halfY, -halfZ,  // 4
+         halfX, -halfY, -halfZ,  // 5
+         halfX,  halfY, -halfZ,  // 6
+        -halfX,  halfY, -halfZ   // 7
+    };
+
+    unsigned int indices[] = {
+        0, 1, 2,  2, 3, 0,  // Front
+        1, 5, 6,  6, 2, 1,  // Right
+        5, 4, 7,  7, 6, 5,  // Back
+        4, 0, 3,  3, 7, 4,  // Left
+        3, 2, 6,  6, 7, 3,  // Top
+        0, 4, 5,  5, 1, 0   // Bottom
+    };
+
+    // Convert rotations from degrees to radians
+    float radX = rotation.x * M_PI / 180.0f;
+    float radY = rotation.y * M_PI / 180.0f;
+    float radZ = rotation.z * M_PI / 180.0f;
+
+    // Set up the model matrix
+    model.setIdentity();
+    translate(model, position);
+    rotateX(model, radX);
+    rotateY(model, radY);
+    rotateZ(model, radZ);
+
+    // Enable 3D rendering states
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glUseProgram(shape3DShaderProgram);
+    glUniform3fv(shape3DColorUniform, 1, currentColor);
+    glUniformMatrix4fv(shape3DProjectionUniform, 1, GL_FALSE, projection3D.m);
+    glUniformMatrix4fv(shape3DViewUniform, 1, GL_FALSE, view3D.m);
+    glUniformMatrix4fv(shape3DModelUniform, 1, GL_FALSE, model.m);
+
+    // Bind and draw the cube
+    glBindVertexArray(shape3DVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, shape3DVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shape3DEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+    glBindVertexArray(0);
+}
+
+int l_drawCube(lua_State* L) {
+    Vector3* position = checkVector3(L, 1);
+    Vector3* size = checkVector3(L, 2);
+    Vector3* rotation = checkVector3(L, 3);
+
+    VoltaFramework* framework = getFramework(L);
+    if (!framework) {
+        luaL_error(L, "Framework not found");
+        return 0;
+    }
+
+    framework->drawCube(*position, *size, *rotation);
+    return 0;
+}
+
+void VoltaFramework::cleanupOpenGL2D() {
+    glDeleteVertexArrays(1, &shape2DVAO);
+    glDeleteBuffers(1, &shape2DVBO);
+    glDeleteBuffers(1, &shape2DEBO);
+    glDeleteProgram(shape2DShaderProgram);
+}
+
+void VoltaFramework::cleanupOpenGL3D() {
+    glDeleteVertexArrays(1, &shape3DVAO);
+    glDeleteBuffers(1, &shape3DVBO);
+    glDeleteBuffers(1, &shape3DEBO);
+    glDeleteProgram(shape3DShaderProgram);
 }
 
 void VoltaFramework::cleanupOpenGL() {
-    glDeleteVertexArrays(1, &shapeVAO);
-    glDeleteBuffers(1, &shapeVBO);
-    glDeleteBuffers(1, &shapeEBO);
+    cleanupOpenGL2D();
+    cleanupOpenGL3D();
+
+    // Cleanup image rendering
     glDeleteVertexArrays(1, &textureVAO);
     glDeleteBuffers(1, &textureVBO);
-    glDeleteProgram(shapeShaderProgram);
     glDeleteProgram(imageShaderProgram);
-    glDeleteProgram(textShaderProgram);
+
+    // Cleanup text rendering
     glDeleteVertexArrays(1, &textVAO);
     glDeleteBuffers(1, &textVBO);
+    glDeleteProgram(textShaderProgram);
+
+    // Cleanup particles
     glDeleteVertexArrays(1, &particleVAO);
     glDeleteBuffers(1, &particleVBO);
+
+    // Cleanup font textures
     for (auto& pair : characters) {
         glDeleteTextures(1, &pair.second.textureID);
     }

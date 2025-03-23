@@ -115,9 +115,31 @@ void VoltaFramework::registerLuaAPI() {
     lua_pushvalue(L, -1);
     lua_setfield(L, LUA_REGISTRYINDEX, "Vector3Methods");
 
-    // Set __index to methods table
-    lua_pushvalue(L, -1);  // Duplicate the methods table
-    lua_setfield(L, -3, "__index");  // Set it as __index
+    // Set __index with a custom function to handle x, y, z
+    lua_pushcfunction(L, [](lua_State* L) {
+        Vector3* vec = static_cast<Vector3*>(luaL_checkudata(L, 1, "Vector3"));
+        const char* key = luaL_checkstring(L, 2);
+
+        if (strcmp(key, "x") == 0) {
+            lua_pushnumber(L, vec->x);
+            return 1;
+        }
+        if (strcmp(key, "y") == 0) {
+            lua_pushnumber(L, vec->y);
+            return 1;
+        }
+        if (strcmp(key, "z") == 0) {
+            lua_pushnumber(L, vec->z);
+            return 1;
+        }
+
+        // Fallback to methods table
+        lua_getfield(L, LUA_REGISTRYINDEX, "Vector3Methods");
+        lua_getfield(L, -1, key);
+        lua_remove(L, -2);  // Remove the methods table, leaving the result
+        return 1;
+    });
+    lua_setfield(L, -2, "__index");
 
     // Set __newindex to prevent modification
     lua_pushcfunction(L, [](lua_State* L) {
@@ -241,6 +263,9 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "setFont");
     lua_pushcfunction(L, l_drawText);
     lua_setfield(L, -2, "drawText");
+    lua_pushcfunction(L, l_drawCube);
+    lua_setfield(L, -2, "drawCube");
+    
     lua_pushcfunction(L, l_setFilter);
     lua_setfield(L, -2, "setFilter");
     lua_pushcfunction(L, l_setCustomShader);

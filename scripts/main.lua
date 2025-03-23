@@ -21,6 +21,8 @@ local lastVelocity = vector2.new(0, 0) -- Track last movement direction
 local greenColor = volta.color.new(0.5, 1, 0)  -- Starting color (green)
 local blueColor = volta.color.new(0, 0, 1)     -- Target color (blue)
 
+local rotation = 0
+
 function volta.init()
     volta.window.setState("borderlessMaximized")
     volta.graphics.setFilter("nearest")
@@ -38,7 +40,7 @@ function volta.init()
         1.0,                        -- lifetime
         120,                        -- moderate speed
         90,                         -- wide spread for base
-        volta.vector2.new(0, -1),   -- upward
+        volta.vector2.new(0, 1),   -- upward
         "cone"
     )
 
@@ -48,7 +50,7 @@ function volta.init()
         0.7,                        -- shorter lifetime
         180,                        -- faster speed
         20,                         -- narrow spread
-        volta.vector2.new(0, -1),
+        volta.vector2.new(0, 1),
         "cone"
     )
 
@@ -58,7 +60,7 @@ function volta.init()
         0.5,                        -- short lifetime
         100,                        -- moderate speed
         360,                        -- full spread
-        volta.vector2.new(0, -1),
+        volta.vector2.new(0, 1),
         "circle"
     )
 
@@ -68,7 +70,7 @@ function volta.init()
         1.5,                        -- longer lifetime
         80,                         -- slower speed
         360,                        -- full spread
-        volta.vector2.new(0, -1),
+        volta.vector2.new(0, 1),
         "circle"
     )
 
@@ -102,11 +104,11 @@ function volta.update(dt)
 
     local moved = false
     if volta.input.isKeyDown("w") then
-        newY = newY - speed * dt
+        newY = newY + speed * dt
         moved = true
     end
     if volta.input.isKeyDown("s") then
-        newY = newY + speed * dt
+        newY = newY - speed * dt
         moved = true
     end
     if volta.input.isKeyDown("a") then
@@ -117,6 +119,13 @@ function volta.update(dt)
         newX = newX + speed * dt
         moved = true
     end
+
+    volta.graphics.setColor(volta.color.new(1, 0, 0)) -- Red color for visibility
+    local pos = volta.vector3.new(0, 0, -5) -- Move cube farther from camera
+    local size = volta.vector3.new(0.5, 0.5, 0.5) -- Smaller size
+    local cubeRotation = volta.vector3.new(45, rotation, 0)
+    rotation = rotation + 0.5
+    volta.graphics.drawCube(pos, size, cubeRotation)
 
     -- Update emitter position
     defaultPosition = vector2.new(newX, newY)
@@ -137,10 +146,10 @@ function volta.update(dt)
     local flicker = math.sin(time * 5) * 0.5 + 0.5 -- 0 to 1 range
 
     -- Update positions with sway
-    fire_base:setPosition(volta.vector2.new(base_x, 300))
-    fire_core:setPosition(volta.vector2.new(base_x, 300))
+    fire_base:setPosition(volta.vector2.new(base_x, 200))
+    fire_core:setPosition(volta.vector2.new(base_x, 200))
     fire_tips:setPosition(volta.vector2.new(base_x, 250 + sway * 0.5))
-    fire_embers:setPosition(volta.vector2.new(base_x, 200 + sway * 0.3))
+    fire_embers:setPosition(volta.vector2.new(base_x, 300 + sway * 0.3))
 
     -- Dynamic adjustments
     fire_base:setSpeed(120 + flicker * 20)
@@ -180,13 +189,13 @@ function volta.update(dt)
     volta.graphics.setColor(tweenedColor)
     volta.graphics.rectangle(true, defaultPosition, vector2.new(50, 50))
 
-    volta.graphics.drawLine(vector2.new(100, 100), vector2.new(500, 500), 10)
+    volta.graphics.drawLine(vector2.new(100, 500), vector2.new(500, 1000), 10)
 
     volta.graphics.setColor(volta.color.new(1, 1, 1))
     volta.graphics.drawImage("tree.png", treePos, vector2.new(200, 200))
 
     volta.graphics.setFont("Minecraft.ttf")
-    volta.graphics.drawText("Hello, World!", volta.vector2.new(1000, 150), 1.5) -- Text at (100,100), 1.5x scale
+    volta.graphics.drawText("Hello, World!", volta.vector2.new(1000, 700), 1.5) -- Text at (100,100), 1.5x scale
 end
 
 volta.input.keyPressed("up", function()

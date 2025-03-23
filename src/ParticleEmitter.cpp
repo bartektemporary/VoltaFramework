@@ -124,6 +124,8 @@ void ParticleEmitter::render(VoltaFramework* framework) {
     std::vector<float> vertexData;
     
     for (const auto& p : particles) {
+        if (p.life <= 0) continue;
+
         float alpha = p.life / p.maxLife;
         float glX, glY;
         framework->windowToGLCoords(p.position.x - p.size / 2, p.position.y - p.size / 2, &glX, &glY);
@@ -132,29 +134,43 @@ void ParticleEmitter::render(VoltaFramework* framework) {
 
         if (p.texture != 0) {
             vertexData.insert(vertexData.end(), {
-                glX, glY,     0.0f, 1.0f,
-                right, glY,   1.0f, 1.0f,
-                right, bottom, 1.0f, 0.0f,
-                glX, bottom,  0.0f, 0.0f
+                // Triangle 1
+                glX, glY,     0.0f, 0.0f,  // Top-left (texture bottom-left)
+                right, glY,   1.0f, 0.0f,  // Top-right (texture bottom-right)
+                right, bottom, 1.0f, 1.0f, // Bottom-right (texture top-right)
+                // Triangle 2
+                glX, glY,     0.0f, 0.0f,  // Top-left (texture bottom-left)
+                right, bottom, 1.0f, 1.0f, // Bottom-right (texture top-right)
+                glX, bottom,  0.0f, 1.0f   // Bottom-left (texture top-left)
             });
         } else {
             vertexData.insert(vertexData.end(), {
+                // Triangle 1
                 glX, glY,     0.0f, 0.0f,
                 right, glY,   0.0f, 0.0f,
+                right, bottom, 0.0f, 0.0f,
+                // Triangle 2
+                glX, glY,     0.0f, 0.0f,
                 right, bottom, 0.0f, 0.0f,
                 glX, bottom,  0.0f, 0.0f
             });
         }
     }
 
-    // Use the appropriate shader based on texture presence
+    if (vertexData.empty()) return;
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Alpha blending for distinct particles
+
     if (particles[0].texture != 0) {
-        glUseProgram(framework->imageShaderProgram); // Use image shader for textured particles
+        glUseProgram(framework->imageShaderProgram);
         glUniform3fv(framework->imageColorUniform, 1, framework->currentColor);
         glUniform1i(framework->imageTextureUniform, 0);
     } else {
-        glUseProgram(framework->shapeShaderProgram); // Use shape shader for untextured particles
-        glUniform3fv(framework->shapeColorUniform, 1, framework->currentColor);
+        glUseProgram(framework->shape2DShaderProgram);
+        glUniform3fv(framework->shape2DColorUniform, 1, framework->currentColor);
     }
 
     glBindVertexArray(framework->particleVAO);
@@ -181,14 +197,13 @@ void ParticleEmitter::render(VoltaFramework* framework) {
             glBindTexture(GL_TEXTURE_2D, currentTexture);
         }
 
-        glDrawArrays(GL_QUADS, offset * 4, batchSize * 4);
+        glDrawArrays(GL_TRIANGLES, offset * 6, batchSize * 6);
         offset += batchSize;
     }
 
-    // Minimal cleanup: only unbind VAO and texture
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
-    // Leave shader and vertex attributes active
+    glDisable(GL_BLEND);
 }
 
 void VoltaFramework::renderParticles(float dt) {

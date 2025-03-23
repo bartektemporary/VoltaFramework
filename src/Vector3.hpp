@@ -1,10 +1,16 @@
 #ifndef VECTOR3_HPP
 #define VECTOR3_HPP
 
-#include "VoltaFramework.hpp"
-
+#include <lua.hpp> // For lua_State*
 #define _USE_MATH_DEFINES
+#include <cmath>
 #include <math.h>
+#include <cstring>
+
+struct Vector3 {
+    float x, y, z;
+    Vector3(float x_ = 0.0f, float y_ = 0.0f, float z_ = 0.0f) : x(x_), y(y_), z(z_) {}
+};
 
 // Function declarations
 Vector3* checkVector3(lua_State* L, int index);

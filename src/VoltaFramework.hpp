@@ -12,6 +12,8 @@ namespace fs = std::filesystem;
 #include "Json.hpp"
 #include "Buffer.hpp"
 #include "Color.hpp"
+#include "Matrix.hpp"
+#include "Vector3.hpp"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -23,16 +25,8 @@ namespace fs = std::filesystem;
 #include <sqlite3.h>
 
 struct Vector2 {
-    float x;
-    float y;
+    float x, y;
     Vector2(float x_ = 0.0f, float y_ = 0.0f) : x(x_), y(y_) {}
-};
-
-struct Vector3 {
-    float x;
-    float y;
-    float z;
-    Vector3(float x_ = 0.0f, float y_ = 0.0f, float z_ = 0.0f) : x(x_), y(y_), z(z_) {}
 };
 
 struct Particle {
@@ -141,26 +135,36 @@ public:
     void setFont(const std::string& fontPath);
     void drawText(const std::string& text, float x, float y, float scale = 1.0f);
 
-    // Shader programs for different rendering tasks
-    GLuint shapeShaderProgram;  // For shapes (rectangles, circles, lines)
-    GLuint imageShaderProgram;  // For images (like tree.png)
-    GLuint textShaderProgram;   // For text rendering
-    // Uniforms for shape shader
-    GLint shapeColorUniform;
-    // Uniforms for image shader
-    GLint imageColorUniform;
-    GLint imageTextureUniform;
-    // Uniforms for text shader
-    GLint textColorUniform;
-    GLint textTextureUniform;
-    
-    GLuint shapeVAO, shapeVBO, shapeEBO;
-    GLuint textureVAO, textureVBO;
-    GLint colorUniform, useTextureUniform, textureUniform;
-    float currentColor[3];
+    // 2D rendering resources
+    GLuint shape2DShaderProgram;  // For 2D shapes (rectangles, circles, lines)
+    GLint shape2DColorUniform;
+    GLuint shape2DVAO, shape2DVBO, shape2DEBO;
+    Matrix4 projection2D;  // Orthographic projection for 2D
 
+    // 3D rendering resources
+    GLuint shape3DShaderProgram;  // For 3D shapes (e.g., cubes)
+    GLint shape3DColorUniform;
+    GLint shape3DProjectionUniform;
+    GLint shape3DViewUniform;
+    GLint shape3DModelUniform;
+    GLuint shape3DVAO, shape3DVBO, shape3DEBO;
+    Matrix4 projection3D;  // Perspective projection for 3D
+    Matrix4 view3D;        // View matrix for 3D
+    Matrix4 model;         // Model matrix for 3D
+
+    // Drawing methods
+    void drawRectangle(bool fill, const Vector2& position, const Vector2& size, float rotation);
+    void drawCircle(bool fill, const Vector2& center, float radius);
+    void drawLine(const Vector2& start, const Vector2& end, float lineWidth);
+    void drawCube(const Vector3& position, const Vector3& size, const Vector3& rotation);
+
+    // Initialization and cleanup
     void initOpenGL();
+    void initOpenGL2D();
+    void initOpenGL3D();
     void cleanupOpenGL();
+    void cleanupOpenGL2D();
+    void cleanupOpenGL3D();
 
     void windowToGLCoords(float winX, float winY, float* glX, float* glY);
 
@@ -204,6 +208,17 @@ public:
 
     std::unordered_map<std::string, sqlite3*> databaseCache;
 
+    // Existing shader programs for images and text
+    GLuint imageShaderProgram;  // For images
+    GLint imageColorUniform;
+    GLint imageTextureUniform;
+    GLuint textureVAO, textureVBO;
+    GLuint textShaderProgram;   // For text rendering
+    GLint textColorUniform;
+    GLint textTextureUniform;
+
+    float currentColor[3];
+
 private:
     lua_State* L;
     GLFWwindow* window;
@@ -245,7 +260,7 @@ private:
 extern VoltaFramework* g_frameworkInstance;
 VoltaFramework* getFramework(lua_State* L);
 
-// Existing Lua function declarations
+// Lua function declarations (unchanged except for those explicitly updated)
 int l_window_setTitle(lua_State* L);
 int l_window_getTitle(lua_State* L);
 int l_window_setSize(lua_State* L);
@@ -268,6 +283,7 @@ int l_loadFont(lua_State* L);
 int l_setFont(lua_State* L);
 int l_drawText(lua_State* L);
 int l_setFilter(lua_State* L);
+int l_drawCube(lua_State* L);
 int l_setCustomShader(lua_State* L);
 int l_setShader(lua_State* L);
 int l_useCustomShader(lua_State* L);
@@ -368,7 +384,6 @@ int l_vector2_angle(lua_State* L);
 int l_vector2_tween(lua_State* L);
 int l_vector2_tostring(lua_State* L);
 
-// New Vector3 Lua function declarations
 int l_vector3_new(lua_State* L);
 int l_vector3_add(lua_State* L);
 int l_vector3_subtract(lua_State* L);
