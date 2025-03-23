@@ -2,8 +2,8 @@
 #include <cstring>
 
 void VoltaFramework::registerLuaAPI() {
+    // Vector2 setup (unchanged)
     luaL_newmetatable(L, "Vector2");
-
     lua_pushcfunction(L, l_vector2_add);
     lua_setfield(L, -2, "__add");
     lua_pushcfunction(L, l_vector2_subtract);
@@ -45,7 +45,6 @@ void VoltaFramework::registerLuaAPI() {
     lua_pushcfunction(L, [](lua_State* L) {
         Vector2* vec = static_cast<Vector2*>(luaL_checkudata(L, 1, "Vector2"));
         const char* key = luaL_checkstring(L, 2);
-
         if (strcmp(key, "x") == 0) {
             lua_pushnumber(L, vec->x);
             return 1;
@@ -54,7 +53,6 @@ void VoltaFramework::registerLuaAPI() {
             lua_pushnumber(L, vec->y);
             return 1;
         }
-
         lua_getfield(L, LUA_REGISTRYINDEX, "Vector2Methods");
         lua_getfield(L, -1, key);
         lua_remove(L, -2);
@@ -69,12 +67,13 @@ void VoltaFramework::registerLuaAPI() {
     });
     lua_setfield(L, -3, "__newindex");
 
-    lua_pop(L, 1);
+    lua_pop(L, 1);  // Pop the Vector2 metatable
+    // Note: Keeping the extra pop to match Vector2 exactly
     lua_pop(L, 1);
 
+    // Vector3 setup (updated to match Vector2)
     luaL_newmetatable(L, "Vector3");
 
-    // Set metamethods
     lua_pushcfunction(L, l_vector3_add);
     lua_setfield(L, -2, "__add");
     lua_pushcfunction(L, l_vector3_subtract);
@@ -86,7 +85,6 @@ void VoltaFramework::registerLuaAPI() {
     lua_pushcfunction(L, l_vector3_tostring);
     lua_setfield(L, -2, "__tostring");
 
-    // Create methods table
     lua_newtable(L);
     lua_pushcfunction(L, l_vector3_add);
     lua_setfield(L, -2, "add");
@@ -111,15 +109,12 @@ void VoltaFramework::registerLuaAPI() {
     lua_pushcfunction(L, l_vector3_tween);
     lua_setfield(L, -2, "tween");
 
-    // Store methods table in registry for reuse
     lua_pushvalue(L, -1);
     lua_setfield(L, LUA_REGISTRYINDEX, "Vector3Methods");
 
-    // Set __index with a custom function to handle x, y, z
     lua_pushcfunction(L, [](lua_State* L) {
         Vector3* vec = static_cast<Vector3*>(luaL_checkudata(L, 1, "Vector3"));
         const char* key = luaL_checkstring(L, 2);
-
         if (strcmp(key, "x") == 0) {
             lua_pushnumber(L, vec->x);
             return 1;
@@ -132,24 +127,22 @@ void VoltaFramework::registerLuaAPI() {
             lua_pushnumber(L, vec->z);
             return 1;
         }
-
-        // Fallback to methods table
         lua_getfield(L, LUA_REGISTRYINDEX, "Vector3Methods");
         lua_getfield(L, -1, key);
-        lua_remove(L, -2);  // Remove the methods table, leaving the result
+        lua_remove(L, -2);
         return 1;
     });
-    lua_setfield(L, -2, "__index");
+    lua_setfield(L, -3, "__index");
 
-    // Set __newindex to prevent modification
     lua_pushcfunction(L, [](lua_State* L) {
         const char* key = luaL_checkstring(L, 2);
         luaL_error(L, "Cannot modify Vector3: field '%s' is read-only", key);
         return 0;
     });
-    lua_setfield(L, -2, "__newindex");
+    lua_setfield(L, -3, "__newindex");
 
-    lua_pop(L, 1);  // Pop the metatable
+    lua_pop(L, 1);  // Pop the Vector3 metatable
+    lua_pop(L, 1);  // Extra pop to match Vector2 exactly
 
     luaL_newmetatable(L, "Color");
 
