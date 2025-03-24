@@ -56,8 +56,8 @@ function volta.update(dt)
     camera:setPosition(player.pos)
 
     -- Update and render particles
-    emitter:setPosition(volta.vector2.new(2000, 2000)) -- Beyond (960, 540)
-    emitter:emit(10) -- Emit 5 particles per frame
+    emitter:setPosition(volta.vector2.new(100, 100)) -- Beyond (960, 540)
+    emitter:emit(5) -- Emit 5 particles per frame
     emitter:render()
 
     -- Draw screen-space UI elements

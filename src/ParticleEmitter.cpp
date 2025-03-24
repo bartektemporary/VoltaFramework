@@ -142,12 +142,6 @@ void ParticleEmitter::render(VoltaFramework* framework) {
         framework->cachedViewBounds = VoltaFramework::Rect(-FLT_MAX, FLT_MAX, -FLT_MAX, FLT_MAX);
     }
 
-    std::cout << "World mode: " << isWorldMode << ", Camera: " << (camera ? "active" : "null") 
-              << ", Zoom: " << zoom << ", CameraPos: (" << cameraPos.x << ", " << cameraPos.y << ")\n";
-    std::cout << "CachedViewBounds: (" << framework->cachedViewBounds.left << ", " 
-              << framework->cachedViewBounds.right << ", " << framework->cachedViewBounds.bottom << ", " 
-              << framework->cachedViewBounds.top << ")\n";
-
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -183,15 +177,6 @@ void ParticleEmitter::render(VoltaFramework* framework) {
                 p.position.y - halfSize,
                 p.position.y + halfSize
             );
-
-            std::cout << "Particle at (" << p.position.x << ", " << p.position.y << "), Size: " << p.size 
-                      << ", Bounds: (" << bounds.left << ", " << bounds.right << ", " 
-                      << bounds.bottom << ", " << bounds.top << ")\n";
-
-            if (!framework->isRectInView(bounds)) {
-                std::cout << "Particle culled at (" << p.position.x << ", " << p.position.y << ")\n";
-                continue;
-            }
 
             adjustedPos.x = (p.position.x - cameraPos.x) * zoom + framework->getWidth() / 2.0f;
             adjustedPos.y = (p.position.y - cameraPos.y) * zoom + framework->getHeight() / 2.0f;
