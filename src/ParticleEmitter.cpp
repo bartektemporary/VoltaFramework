@@ -203,9 +203,9 @@ void ParticleEmitter::render(VoltaFramework* framework) {
         }
 
         float modulatedColor[3] = {
-            framework->currentColor[0],
-            framework->currentColor[1],
-            framework->currentColor[2]
+            framework->currentColor.r,
+            framework->currentColor.g,
+            framework->currentColor.b
         };
 
         if (particleTexture != 0) {

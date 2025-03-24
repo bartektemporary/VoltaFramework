@@ -82,6 +82,7 @@
         "ljumptab.h": "c",
         "ltm.h": "c",
         "lvm.h": "c",
-        "lstring.h": "c"
+        "lstring.h": "c",
+        "functional": "cpp"
     }
 }

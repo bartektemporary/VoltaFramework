@@ -1,25 +1,107 @@
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio.h"
+#include "Audio.hpp"
 #include "VoltaFramework.hpp"
 #include <iostream>
 
+// Audio class implementation
+Audio::Audio(ma_engine* engine, const std::string& filename, float globalVolume) 
+    : initialized(false), originalVolume(1.0f) {
+    ma_result result = ma_sound_init_from_file(engine, filename.c_str(), 0, NULL, NULL, &sound);
+    if (result == MA_SUCCESS) {
+        initialized = true;
+        applyGlobalVolume(globalVolume);
+    } else {
+        std::cerr << "Failed to load audio file: " << filename << " (Error: " << result << ")" << std::endl;
+    }
+}
+
+Audio::Audio(Audio&& other) noexcept 
+    : sound(other.sound), initialized(other.initialized), originalVolume(other.originalVolume) {
+    // Zero out the moved-from object's sound to prevent double uninit
+    other.initialized = false;
+    // No need to uninit other.sound here; it’s safe as long as initialized is false
+}
+
+Audio::~Audio() {
+    if (initialized) {
+        ma_sound_uninit(&sound);
+    }
+}
+
+void Audio::play() {
+    if (initialized) {
+        ma_sound_start(&sound);
+    }
+}
+
+void Audio::stop() {
+    if (initialized) {
+        ma_sound_stop(&sound);
+    }
+}
+
+bool Audio::isPlaying() const {
+    return initialized && ma_sound_is_playing(&sound);
+}
+
+void Audio::setVolume(float volume) {
+    if (volume < 0.0f) volume = 0.0f;
+    if (volume > 1.0f) volume = 1.0f;
+    originalVolume = volume;
+    if (initialized) {
+        ma_sound_set_volume(&sound, volume); // Global volume applied separately
+    }
+}
+
+float Audio::getVolume() const {
+    return originalVolume;
+}
+
+void Audio::setLooped(bool looped) {
+    if (initialized) {
+        ma_sound_set_looping(&sound, looped);
+    }
+}
+
+bool Audio::isLooped() const {
+    return initialized && ma_sound_is_looping(&sound);
+}
+
+void Audio::applyGlobalVolume(float globalVolume) {
+    if (initialized) {
+        ma_sound_set_volume(&sound, originalVolume * globalVolume);
+    }
+}
+
+// Lua bindings helper
+static Audio* checkAudio(lua_State* L, int index) {
+    lua_getfield(L, index, "__audio");
+    Audio* audio = static_cast<Audio*>(lua_touserdata(L, -1));
+    lua_pop(L, 1);
+    if (!audio) luaL_error(L, "Invalid audio object");
+    return audio;
+}
+
+// Lua bindings (unchanged)
 int l_audio_loadAudio(lua_State* L) {
-    const char* filename {luaL_checkstring(L, 1)};
-    VoltaFramework* framework {getFramework(L)};
+    const char* filename = luaL_checkstring(L, 1);
+    VoltaFramework* framework = getFramework(L);
     if (!framework) {
         lua_pushnil(L);
         return 1;
     }
 
-    ma_sound* sound {framework->loadAudio(filename)};
-    if (!sound) {
+    Audio* audio = framework->loadAudio(filename);
+    if (!audio) {
         lua_pushnil(L);
         return 1;
     }
 
     lua_newtable(L);
-    lua_pushlightuserdata(L, sound);
-    lua_setfield(L, -2, "__sound");
+    lua_pushlightuserdata(L, audio);
+    lua_setfield(L, -2, "__audio");
+
     lua_pushcfunction(L, l_audio_play);
     lua_setfield(L, -2, "play");
     lua_pushcfunction(L, l_audio_stop);
@@ -35,91 +117,55 @@ int l_audio_loadAudio(lua_State* L) {
 }
 
 int l_audio_play(lua_State* L) {
-    lua_getfield(L, 1, "__sound");
-    ma_sound* sound {static_cast<ma_sound*>(lua_touserdata(L, -1))};
-    lua_pop(L, 1);
-
-    VoltaFramework* framework {getFramework(L)};
-    if (sound && framework) {
-        float currentVolume {ma_sound_get_volume(sound) / framework->getGlobalVolume()}; // Extract original volume
-        ma_sound_set_volume(sound, currentVolume * framework->getGlobalVolume()); // Apply global volume
-        ma_sound_start(sound);
-    } else {
-        std::cerr << "Invalid sound or framework object in play!" << std::endl;
-    }
+    Audio* audio = checkAudio(L, 1);
+    audio->play();
     return 0;
 }
 
 int l_audio_stop(lua_State* L) {
-    lua_getfield(L, 1, "__sound");
-    ma_sound* sound {static_cast<ma_sound*>(lua_touserdata(L, -1))};
-    lua_pop(L, 1);
-
-    if (sound) {
-        ma_sound_stop(sound);
-    }
+    Audio* audio = checkAudio(L, 1);
+    audio->stop();
     return 0;
 }
 
 int l_audio_setVolume(lua_State* L) {
-    lua_Number volume {luaL_checknumber(L, 2)};
-    if (volume < 0.0) volume = 0.0;
-    if (volume > 1.0) volume = 1.0;
+    Audio* audio = checkAudio(L, 1);
+    float volume = static_cast<float>(luaL_checknumber(L, 2));
+    if (volume < 0.0f) volume = 0.0f;
+    if (volume > 1.0f) volume = 1.0f;
 
-    lua_getfield(L, 1, "__sound");
-    ma_sound* sound {static_cast<ma_sound*>(lua_touserdata(L, -1))};
-    lua_pop(L, 1);
-
-    VoltaFramework* framework {getFramework(L)};
-    if (sound && framework) {
-        float effectiveVolume {static_cast<float>(volume * framework->getGlobalVolume())};
-        ma_sound_set_volume(sound, effectiveVolume);
-    }
-    return 0;
-}
-
-int l_audio_setLooped(lua_State* L) {
-    bool looped {lua_toboolean(L, 2) != 0};
-
-    lua_getfield(L, 1, "__sound");
-    ma_sound* sound {static_cast<ma_sound*>(lua_touserdata(L, -1))};
-    lua_pop(L, 1);
-
-    if (sound) {
-        ma_sound_set_looping(sound, looped);
+    VoltaFramework* framework = getFramework(L);
+    if (framework) {
+        audio->setVolume(volume);
+        audio->applyGlobalVolume(framework->getGlobalVolume());
     }
     return 0;
 }
 
 int l_audio_getVolume(lua_State* L) {
-    lua_getfield(L, 1, "__sound");
-    ma_sound* sound {static_cast<ma_sound*>(lua_touserdata(L, -1))};
-    lua_pop(L, 1);
-
-    VoltaFramework* framework {getFramework(L)};
-    if (sound && framework) {
-        float effectiveVolume {ma_sound_get_volume(sound)};
-        float globalVolume {framework->getGlobalVolume()};
-        // Return the volume without the global volume applied
-        float originalVolume {(globalVolume > 0.0f) ? effectiveVolume / globalVolume : effectiveVolume};
-        lua_pushnumber(L, originalVolume);
-        return 1;
-    }
-    lua_pushnumber(L, 0.0f);
+    Audio* audio = checkAudio(L, 1);
+    lua_pushnumber(L, audio->getVolume());
     return 1;
 }
 
+int l_audio_setLooped(lua_State* L) {
+    Audio* audio = checkAudio(L, 1);
+    bool looped = lua_toboolean(L, 2) != 0;
+    audio->setLooped(looped);
+    return 0;
+}
+
 int l_audio_setGlobalVolume(lua_State* L) {
-    lua_Number volume {luaL_checknumber(L, 1)};
-    VoltaFramework* framework {getFramework(L)};
+    float volume = static_cast<float>(luaL_checknumber(L, 1));
+    VoltaFramework* framework = getFramework(L);
     if (framework) {
-        framework->setGlobalVolume(static_cast<float>(volume));
+        framework->setGlobalVolume(volume);
     }
     return 0;
 }
 
 int l_audio_getGlobalVolume(lua_State* L) {
-    VoltaFramework* framework {getFramework(L)};
+    VoltaFramework* framework = getFramework(L);
     if (!framework) {
         std::cerr << "getGlobalVolume: Framework is null\n";
         lua_pushnumber(L, 0.0f);
@@ -129,44 +175,41 @@ int l_audio_getGlobalVolume(lua_State* L) {
     return 1;
 }
 
-ma_sound* VoltaFramework::loadAudio(const std::string& filename) {
-    if (audioCache.find(filename) != audioCache.end()) {
-        return &audioCache[filename];
+// Updated VoltaFramework::loadAudio
+Audio* VoltaFramework::loadAudio(const std::string& filename) {
+    auto it = audioCache.find(filename);
+    if (it != audioCache.end()) {
+        return it->second.get();
     }
 
     std::string fullPath = loadFile(filename);
     if (fullPath.empty()) {
         return nullptr;
     }
-    ma_sound* sound {&audioCache[filename]};
-    ma_result result {ma_sound_init_from_file(&engine, fullPath.c_str(), 0, NULL, NULL, sound)};
-    if (result != MA_SUCCESS) {
-        std::cerr << "Failed to load audio file: " << fullPath << " (Error: " << result << ")" << std::endl;
-        audioCache.erase(filename);
+
+    auto audio = std::make_unique<Audio>(&engine, fullPath, globalVolume);
+    if (!audio->initialized) {
         return nullptr;
     }
-    ma_sound_set_volume(sound, ma_sound_get_volume(sound) * globalVolume);
-    return sound;
+
+    auto [inserted_it, success] = audioCache.emplace(filename, std::move(audio));
+    return inserted_it->second.get();
 }
 
 void VoltaFramework::setGlobalVolume(float volume) {
     if (volume < 0.0f) volume = 0.0f;
     if (volume > 1.0f) volume = 1.0f;
-    
-    // If current volume is 0, reset individual sound volumes instead of scaling
+
     if (globalVolume == 0.0f) {
         for (auto& pair : audioCache) {
-            ma_sound* sound {&pair.second};
-            ma_sound_set_volume(sound, volume);
+            pair.second->setVolume(pair.second->getVolume()); // Reset original volume
+            pair.second->applyGlobalVolume(volume);
         }
     } else {
-        float scaleFactor {volume / globalVolume};
         for (auto& pair : audioCache) {
-            ma_sound* sound {&pair.second};
-            float currentVolume {ma_sound_get_volume(sound)};
-            ma_sound_set_volume(sound, currentVolume * scaleFactor);
+            pair.second->applyGlobalVolume(volume);
         }
     }
-    
+
     globalVolume = volume;
 }

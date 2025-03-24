@@ -1,43 +1,40 @@
 #include "VoltaFramework.hpp"
 
-int l_json_decode(lua_State* L) {
-    if (!lua_isstring(L, 1)) {
-        luaL_error(L, "Expected string argument for json.decode");
-        return 0;
-    }
-
-    const char* jsonStr = lua_tostring(L, 1);
+std::unique_ptr<json::Value> VoltaFramework::parseJson(const std::string& jsonStr) const {
     try {
-        std::unique_ptr<json::Value> value = json::parse(jsonStr);
-        VoltaFramework* framework = getFramework(L);
-        if (!framework) {
-            luaL_error(L, "Framework instance not found");
-            return 0;
-        }
-        framework->jsonToLua(L, *value);
-        return 1;
+        return json::parse(jsonStr);
     } catch (const json::JsonException& e) {
-        luaL_error(L, "JSON decode error: %s", e.what());
-        return 0;
+        std::cerr << "JSON parse error: " << e.what() << "\n";
+        return nullptr;
     }
 }
 
-int l_json_encode(lua_State* L) {
-    std::cout << "Starting json.encode\n";
-    VoltaFramework* framework = getFramework(L);
-    if (!framework) {
-        luaL_error(L, "Framework instance not found");
-        return 0;
-    }
+std::string VoltaFramework::stringifyJson(const json::Value& value) const {
+    return json::stringify(value);
+}
 
-    std::cout << "Converting Lua to JSON\n";
-    std::unique_ptr<json::Value> value(framework->luaToJson(L, 1));
-    std::cout << "Stringifying JSON\n";
-    std::string jsonStr = json::stringify(*value);
-    std::cout << "Pushing JSON string: " << jsonStr << "\n";
-    lua_pushstring(L, jsonStr.c_str());
-    std::cout << "json.encode completed\n";
-    return 1;
+std::unique_ptr<json::Value> VoltaFramework::createJsonNull() const {
+    return std::make_unique<json::Null>();
+}
+
+std::unique_ptr<json::Value> VoltaFramework::createJsonBoolean(bool value) const {
+    return std::make_unique<json::Boolean>(value);
+}
+
+std::unique_ptr<json::Value> VoltaFramework::createJsonNumber(double value) const {
+    return std::make_unique<json::Number>(value);
+}
+
+std::unique_ptr<json::Value> VoltaFramework::createJsonString(const std::string& value) const {
+    return std::make_unique<json::String>(value);
+}
+
+std::unique_ptr<json::Value> VoltaFramework::createJsonArray() const {
+    return std::make_unique<json::Array>();
+}
+
+std::unique_ptr<json::Value> VoltaFramework::createJsonObject() const {
+    return std::make_unique<json::Object>();
 }
 
 json::Value* VoltaFramework::luaToJson(lua_State* L, int index) {
@@ -128,4 +125,40 @@ void VoltaFramework::jsonToLua(lua_State* L, const json::Value& value) {
             break;
         }
     }
+}
+
+int l_json_decode(lua_State* L) {
+    if (!lua_isstring(L, 1)) {
+        luaL_error(L, "Expected string argument for json.decode");
+        return 0;
+    }
+
+    const char* jsonStr = lua_tostring(L, 1);
+    VoltaFramework* framework = getFramework(L);
+    if (!framework) {
+        luaL_error(L, "Framework instance not found");
+        return 0;
+    }
+
+    std::unique_ptr<json::Value> value = framework->parseJson(jsonStr);
+    if (!value) {
+        luaL_error(L, "Failed to parse JSON string");
+        return 0;
+    }
+
+    framework->jsonToLua(L, *value);
+    return 1;
+}
+
+int l_json_encode(lua_State* L) {
+    VoltaFramework* framework = getFramework(L);
+    if (!framework) {
+        luaL_error(L, "Framework instance not found");
+        return 0;
+    }
+
+    std::unique_ptr<json::Value> value(framework->luaToJson(L, 1));
+    std::string jsonStr = framework->stringifyJson(*value);
+    lua_pushstring(L, jsonStr.c_str());
+    return 1;
 }

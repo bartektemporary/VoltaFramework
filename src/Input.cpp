@@ -1,40 +1,88 @@
 #include "VoltaFramework.hpp"
 #include "Maps.hpp"
 
+bool VoltaFramework::isKeyDown(const std::string& key) const {
+    if (!window) return false;
+    std::string k = key;
+    for (char& c : k) c = std::tolower(c);
+    auto it = keyMap.find(k);
+    if (it == keyMap.end()) {
+        std::cerr << "isKeyDown: Unknown key '" << k << "'\n";
+        return false;
+    }
+    return glfwGetKey(window, it->second) == GLFW_PRESS;
+}
+
+bool VoltaFramework::isMouseButtonDown(const std::string& button) const {
+    if (!window) return false;
+    std::string btn = button;
+    for (char& c : btn) c = std::tolower(c);
+    int buttonCode = GLFW_MOUSE_BUTTON_LEFT;
+    if (btn == "left") buttonCode = GLFW_MOUSE_BUTTON_LEFT;
+    else if (btn == "right") buttonCode = GLFW_MOUSE_BUTTON_RIGHT;
+    else if (btn == "middle") buttonCode = GLFW_MOUSE_BUTTON_MIDDLE;
+    else {
+        std::cerr << "isMouseButtonDown: Unknown button '" << btn << "'\n";
+        return false;
+    }
+    return glfwGetMouseButton(window, buttonCode) == GLFW_PRESS;
+}
+
+void VoltaFramework::getMousePosition(double& x, double& y) const {
+    if (!window) {
+        x = y = 0.0;
+        return;
+    }
+    glfwGetCursorPos(window, &x, &y);
+}
+
+std::vector<std::string> VoltaFramework::getPressedKeys() const {
+    std::vector<std::string> pressedKeys;
+    if (!window) return pressedKeys;
+    for (const auto& pair : keyMap) {
+        if (glfwGetKey(window, pair.second) == GLFW_PRESS) {
+            pressedKeys.push_back(pair.first);
+        }
+    }
+    return pressedKeys;
+}
+
+std::vector<std::string> VoltaFramework::getPressedMouseButtons() const {
+    std::vector<std::string> pressedButtons;
+    if (!window) return pressedButtons;
+    const struct { int code; const char* name; } buttons[] = {
+        {GLFW_MOUSE_BUTTON_LEFT, "left"},
+        {GLFW_MOUSE_BUTTON_RIGHT, "right"},
+        {GLFW_MOUSE_BUTTON_MIDDLE, "middle"},
+        {0, nullptr}
+    };
+    for (int i = 0; buttons[i].name; i++) {
+        if (glfwGetMouseButton(window, buttons[i].code) == GLFW_PRESS) {
+            pressedButtons.push_back(buttons[i].name);
+        }
+    }
+    return pressedButtons;
+}
+
 int l_isKeyDown(lua_State* L) {
-    VoltaFramework* framework {getFramework(L)};
-    if (!framework || !framework->getWindow()) {
-        std::cerr << "isKeyDown: Framework or window is null\n";
+    VoltaFramework* framework = getFramework(L);
+    if (!framework) {
         lua_pushboolean(L, false);
         return 1;
     }
-    const char* key {luaL_checkstring(L, 1)};
-    std::string k {key};
-    
-    for (char& c : k) {
-        c = std::tolower(c);
-    }
-
-    int keyCode {GLFW_KEY_UNKNOWN};
-    auto it {keyMap.find(k)};
-    if (it != keyMap.end()) {
-        keyCode = it->second;
-    } else {
-        std::cerr << "isKeyDown: Unknown key '" << k << "'\n";
-    }
-
-    bool isDown {(keyCode != GLFW_KEY_UNKNOWN) && 
-                 (glfwGetKey(framework->getWindow(), keyCode) == GLFW_PRESS)};
-    lua_pushboolean(L, isDown);
+    const char* key = luaL_checkstring(L, 1);
+    std::string k = key;
+    for (char& c : k) c = std::tolower(c);
+    lua_pushboolean(L, framework->isKeyDown(k));
     return 1;
 }
 
 int l_input_keyPressed(lua_State* L) {
-    const char* key {luaL_checkstring(L, 1)};
-    VoltaFramework* framework {getFramework(L)};
+    const char* key = luaL_checkstring(L, 1);
+    VoltaFramework* framework = getFramework(L);
     if (framework && lua_isfunction(L, 2)) {
         lua_pushvalue(L, 2);
-        int ref {luaL_ref(L, LUA_REGISTRYINDEX)};
+        int ref = luaL_ref(L, LUA_REGISTRYINDEX);
         framework->registerKeyPressCallback(key, ref);
     } else {
         std::cerr << "Invalid callback function for key: " << key << std::endl;
@@ -44,92 +92,56 @@ int l_input_keyPressed(lua_State* L) {
 
 int l_input_getPressedKeys(lua_State* L) {
     VoltaFramework* framework = getFramework(L);
-    if (!framework || !framework->getWindow()) {
-        std::cerr << "getPressedKeys: Framework or window is null\n";
-        // Return an empty table
+    if (!framework) {
         lua_newtable(L);
         return 1;
     }
 
-    // Create a new table to store pressed keys
+    auto pressedKeys = framework->getPressedKeys();
     lua_newtable(L);
-    int index = 1;
-
-    // Iterate through the keyMap (assuming keyMap from Maps.hpp maps string names to GLFW key codes)
-    for (const auto& pair : keyMap) {
-        int keyCode = pair.second;
-        if (glfwGetKey(framework->getWindow(), keyCode) == GLFW_PRESS) {
-            // Push the index
-            lua_pushnumber(L, index);
-            // Push the key name
-            lua_pushstring(L, pair.first.c_str());
-            // Set the value in the table
-            lua_settable(L, -3);
-            index++;
-        }
+    for (size_t i = 0; i < pressedKeys.size(); ++i) {
+        lua_pushnumber(L, i + 1); // Lua tables are 1-indexed
+        lua_pushstring(L, pressedKeys[i].c_str());
+        lua_settable(L, -3);
     }
-
     return 1;
 }
 
 int l_input_isMouseButtonDown(lua_State* L) {
-    VoltaFramework* framework {getFramework(L)};
-    if (!framework || !framework->getWindow()) {
-        std::cerr << "isMouseButtonDown: Framework or window is null\n";
+    VoltaFramework* framework = getFramework(L);
+    if (!framework) {
         lua_pushboolean(L, false);
         return 1;
     }
-
-    const char* button {luaL_checkstring(L, 1)};
-    std::string btn {button};
-    for (char& c : btn) {
-        c = std::tolower(c);
-    }
-
-    int buttonCode {GLFW_MOUSE_BUTTON_LEFT};
-    if (btn == "left") {
-        buttonCode = GLFW_MOUSE_BUTTON_LEFT;
-    } else if (btn == "right") {
-        buttonCode = GLFW_MOUSE_BUTTON_RIGHT;
-    } else if (btn == "middle") {
-        buttonCode = GLFW_MOUSE_BUTTON_MIDDLE;
-    } else {
-        std::cerr << "isMouseButtonDown: Unknown mouse button '" << btn << "'\n";
-    }
-
-    bool isDown {glfwGetMouseButton(framework->getWindow(), buttonCode) == GLFW_PRESS};
-    lua_pushboolean(L, isDown);
+    const char* button = luaL_checkstring(L, 1);
+    std::string btn = button;
+    for (char& c : btn) c = std::tolower(c);
+    lua_pushboolean(L, framework->isMouseButtonDown(btn));
     return 1;
 }
 
 int l_input_getMousePosition(lua_State* L) {
-    VoltaFramework* framework {getFramework(L)};
-    if (!framework || !framework->getWindow()) {
-        std::cerr << "getMousePosition: Framework or window is null\n";
+    VoltaFramework* framework = getFramework(L);
+    if (!framework) {
         lua_pushnil(L);
         lua_pushnil(L);
         return 2;
     }
-
-    double xpos {}, ypos {};
-    glfwGetCursorPos(framework->getWindow(), &xpos, &ypos);
-    
-    lua_pushnumber(L, xpos);
-    lua_pushnumber(L, ypos);
+    double x, y;
+    framework->getMousePosition(x, y);
+    lua_pushnumber(L, x);
+    lua_pushnumber(L, y);
     return 2;
 }
 
 int l_input_mouseButtonPressed(lua_State* L) {
-    const char* button {luaL_checkstring(L, 1)};
-    VoltaFramework* framework {getFramework(L)};
+    const char* button = luaL_checkstring(L, 1);
+    VoltaFramework* framework = getFramework(L);
     if (framework && lua_isfunction(L, 2)) {
-        std::string btn {button};
-        for (char& c : btn) {
-            c = std::tolower(c);
-        }
-        
+        std::string btn = button;
+        for (char& c : btn) c = std::tolower(c);
         lua_pushvalue(L, 2);
-        int ref {luaL_ref(L, LUA_REGISTRYINDEX)};
+        int ref = luaL_ref(L, LUA_REGISTRYINDEX);
         framework->registerMouseButtonPressCallback(btn, ref);
     } else {
         std::cerr << "Invalid callback function for mouse button: " << button << std::endl;
@@ -139,44 +151,18 @@ int l_input_mouseButtonPressed(lua_State* L) {
 
 int l_input_getPressedMouseButtons(lua_State* L) {
     VoltaFramework* framework = getFramework(L);
-    if (!framework || !framework->getWindow()) {
-        std::cerr << "getPressedMouseButtons: Framework or window is null\n";
-        // Return an empty table
+    if (!framework) {
         lua_newtable(L);
         return 1;
     }
 
-    // Create a new table to store pressed mouse buttons
+    auto pressedButtons = framework->getPressedMouseButtons();
     lua_newtable(L);
-    int index = 1;
-
-    // Define mouse button mappings
-    struct ButtonMapping {
-        int buttonCode;
-        const char* name;
-    };
-
-    const ButtonMapping buttons[] = {
-        {GLFW_MOUSE_BUTTON_LEFT, "left"},
-        {GLFW_MOUSE_BUTTON_RIGHT, "right"},
-        {GLFW_MOUSE_BUTTON_MIDDLE, "middle"},
-        // Add more buttons if needed (GLFW_MOUSE_BUTTON_4, etc.)
-        {0, nullptr} // Sentinel
-    };
-
-    // Check each mouse button
-    for (int i = 0; buttons[i].name != nullptr; i++) {
-        if (glfwGetMouseButton(framework->getWindow(), buttons[i].buttonCode) == GLFW_PRESS) {
-            // Push the index
-            lua_pushnumber(L, index);
-            // Push the button name
-            lua_pushstring(L, buttons[i].name);
-            // Set the value in the table
-            lua_settable(L, -3);
-            index++;
-        }
+    for (size_t i = 0; i < pressedButtons.size(); ++i) {
+        lua_pushnumber(L, i + 1);
+        lua_pushstring(L, pressedButtons[i].c_str());
+        lua_settable(L, -3);
     }
-
     return 1;
 }
 
@@ -235,27 +221,6 @@ int l_input_getGamepadButtonPressed(lua_State* L) {
     return 0;
 }
 
-void VoltaFramework::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    VoltaFramework* framework {g_frameworkInstance};
-    if (!framework || action != GLFW_PRESS) return;
-
-    auto it {framework->keyPressCallbackRefs.find(key)};
-    if (it != framework->keyPressCallbackRefs.end()) {
-        for (int ref : it->second) {
-            lua_rawgeti(framework->L, LUA_REGISTRYINDEX, ref);
-            if (lua_isfunction(framework->L, -1)) {
-                if (lua_pcall(framework->L, 0, 0, 0) != LUA_OK) {
-                    std::cerr << "Key press callback error for key " << key << ": " << lua_tostring(framework->L, -1) << ", stack top: " << lua_gettop(framework->L) << std::endl;
-                    lua_pop(framework->L, 1); // Clean up error message
-                }
-            } else {
-                std::cerr << "Invalid callback for key " << key << ", stack top: " << lua_gettop(framework->L) << std::endl;
-            }
-            lua_settop(framework->L, 0); // Reset stack to avoid corruption
-        }
-    }
-}
-
 void VoltaFramework::registerKeyPressCallback(const std::string& key, int ref) {
     auto it {keyMap.find(key)};
     if (it != keyMap.end()) {
@@ -281,62 +246,18 @@ void VoltaFramework::registerMouseButtonPressCallback(const std::string& button,
     mouseButtonCallbackRefs[buttonCode].push_back(ref);
 }
 
-void VoltaFramework::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-    VoltaFramework* framework {g_frameworkInstance};
-    if (!framework || action != GLFW_PRESS || !framework->L) return;
-
-    auto it {framework->mouseButtonCallbackRefs.find(button)};
-    if (it != framework->mouseButtonCallbackRefs.end()) {
-        for (int ref : it->second) {
-            lua_rawgeti(framework->L, LUA_REGISTRYINDEX, ref);
-            if (lua_isfunction(framework->L, -1)) {
-                if (lua_pcall(framework->L, 0, 0, 0) != LUA_OK) {
-                    std::cerr << "Mouse button callback error for button " << button 
-                              << ": " << lua_tostring(framework->L, -1) << std::endl;
-                    lua_pop(framework->L, 1);
-                }
-            } else {
-                std::cerr << "Invalid callback reference for button " << button << std::endl;
-                lua_pop(framework->L, 1);
-            }
-        }
-        lua_settop(framework->L, 0); // Clear stack after all callbacks
-    }
+bool VoltaFramework::isGamepadConnected(int gamepadId) const {
+    auto it = gamepadStates.find(gamepadId);
+    return it != gamepadStates.end() && it->second;
 }
 
-void VoltaFramework::joystickCallback(int jid, int event) {
-    VoltaFramework* framework = g_frameworkInstance;
-    if (!framework || !framework->L) return;
-
-    if (event == GLFW_CONNECTED && glfwJoystickIsGamepad(jid)) {
-        framework->gamepadStates[jid] = true;
-        // Trigger connected callbacks
-        for (int ref : framework->gamepadConnectedCallbackRefs) {
-            lua_rawgeti(framework->L, LUA_REGISTRYINDEX, ref);
-            if (lua_isfunction(framework->L, -1)) {
-                lua_pushinteger(framework->L, jid);
-                if (lua_pcall(framework->L, 1, 0, 0) != LUA_OK) {
-                    std::cerr << "Gamepad connected callback error: " << lua_tostring(framework->L, -1) << std::endl;
-                    lua_pop(framework->L, 1);
-                }
-            }
-            lua_settop(framework->L, 0);
-        }
-    } else if (event == GLFW_DISCONNECTED) {
-        framework->gamepadStates[jid] = false;
-        // Trigger disconnected callbacks
-        for (int ref : framework->gamepadDisconnectedCallbackRefs) {
-            lua_rawgeti(framework->L, LUA_REGISTRYINDEX, ref);
-            if (lua_isfunction(framework->L, -1)) {
-                lua_pushinteger(framework->L, jid);
-                if (lua_pcall(framework->L, 1, 0, 0) != LUA_OK) {
-                    std::cerr << "Gamepad disconnected callback error: " << lua_tostring(framework->L, -1) << std::endl;
-                    lua_pop(framework->L, 1);
-                }
-            }
-            lua_settop(framework->L, 0);
-        }
+bool VoltaFramework::isGamepadButtonDown(int gamepadId, int button) const {
+    if (!isGamepadConnected(gamepadId)) return false;
+    GLFWgamepadstate state;
+    if (glfwGetGamepadState(gamepadId, &state)) {
+        return state.buttons[button] == GLFW_PRESS;
     }
+    return false;
 }
 
 void VoltaFramework::registerGamepadConnectedCallback(int ref) {
@@ -351,16 +272,139 @@ void VoltaFramework::registerGamepadButtonPressedCallback(int button, int ref) {
     gamepadButtonPressedCallbackRefs[button].push_back(ref);
 }
 
-bool VoltaFramework::isGamepadConnected(int gamepadId) const {
-    auto it = gamepadStates.find(gamepadId);
-    return it != gamepadStates.end() && it->second;
+void VoltaFramework::registerCppKeyPressCallback(const std::string& key, std::function<void()> callback) {
+    auto it = keyMap.find(key);
+    if (it != keyMap.end()) {
+        cppKeyPressCallbacks[it->second].push_back(std::move(callback));
+    } else {
+        std::cerr << "registerCppKeyPressCallback: Unknown key '" << key << "'\n";
+    }
 }
 
-bool VoltaFramework::isGamepadButtonDown(int gamepadId, int button) const {
-    if (!isGamepadConnected(gamepadId)) return false;
-    GLFWgamepadstate state;
-    if (glfwGetGamepadState(gamepadId, &state)) {
-        return state.buttons[button] == GLFW_PRESS;
+void VoltaFramework::registerCppMouseButtonPressCallback(const std::string& button, std::function<void()> callback) {
+    int buttonCode = GLFW_MOUSE_BUTTON_LEFT;
+    if (button == "left") buttonCode = GLFW_MOUSE_BUTTON_LEFT;
+    else if (button == "right") buttonCode = GLFW_MOUSE_BUTTON_RIGHT;
+    else if (button == "middle") buttonCode = GLFW_MOUSE_BUTTON_MIDDLE;
+    else {
+        std::cerr << "registerCppMouseButtonPressCallback: Unknown button '" << button << "'\n";
+        return;
     }
-    return false;
+    cppMouseButtonPressCallbacks[buttonCode].push_back(std::move(callback));
+}
+
+void VoltaFramework::registerCppGamepadConnectedCallback(std::function<void(int)> callback) {
+    cppGamepadConnectedCallbacks.push_back(std::move(callback));
+}
+
+void VoltaFramework::registerCppGamepadDisconnectedCallback(std::function<void(int)> callback) {
+    cppGamepadDisconnectedCallbacks.push_back(std::move(callback));
+}
+
+void VoltaFramework::registerCppGamepadButtonPressedCallback(int button, std::function<void(int)> callback) {
+    cppGamepadButtonPressedCallbacks[button].push_back(std::move(callback));
+}
+
+void VoltaFramework::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    if (!g_frameworkInstance || action != GLFW_PRESS) return;
+
+    // Lua callbacks
+    auto luaIt = g_frameworkInstance->keyPressCallbackRefs.find(key);
+    if (luaIt != g_frameworkInstance->keyPressCallbackRefs.end()) {
+        for (int ref : luaIt->second) {
+            lua_rawgeti(g_frameworkInstance->L, LUA_REGISTRYINDEX, ref);
+            if (lua_isfunction(g_frameworkInstance->L, -1)) {
+                if (lua_pcall(g_frameworkInstance->L, 0, 0, 0) != LUA_OK) {
+                    std::cerr << "Key press callback error for key " << key << ": " << lua_tostring(g_frameworkInstance->L, -1) << "\n";
+                    lua_pop(g_frameworkInstance->L, 1);
+                }
+            } else {
+                lua_pop(g_frameworkInstance->L, 1);
+            }
+        }
+        lua_settop(g_frameworkInstance->L, 0);
+    }
+
+    // C++ callbacks
+    auto cppIt = g_frameworkInstance->cppKeyPressCallbacks.find(key);
+    if (cppIt != g_frameworkInstance->cppKeyPressCallbacks.end()) {
+        for (auto& callback : cppIt->second) {
+            if (callback) callback();
+        }
+    }
+}
+
+void VoltaFramework::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    if (!g_frameworkInstance || action != GLFW_PRESS || !g_frameworkInstance->L) return;
+
+    // Lua callbacks
+    auto luaIt = g_frameworkInstance->mouseButtonCallbackRefs.find(button);
+    if (luaIt != g_frameworkInstance->mouseButtonCallbackRefs.end()) {
+        for (int ref : luaIt->second) {
+            lua_rawgeti(g_frameworkInstance->L, LUA_REGISTRYINDEX, ref);
+            if (lua_isfunction(g_frameworkInstance->L, -1)) {
+                if (lua_pcall(g_frameworkInstance->L, 0, 0, 0) != LUA_OK) {
+                    std::cerr << "Mouse button callback error for button " << button << ": " << lua_tostring(g_frameworkInstance->L, -1) << "\n";
+                    lua_pop(g_frameworkInstance->L, 1);
+                }
+            } else {
+                lua_pop(g_frameworkInstance->L, 1);
+            }
+        }
+        lua_settop(g_frameworkInstance->L, 0);
+    }
+
+    // C++ callbacks
+    auto cppIt = g_frameworkInstance->cppMouseButtonPressCallbacks.find(button);
+    if (cppIt != g_frameworkInstance->cppMouseButtonPressCallbacks.end()) {
+        for (auto& callback : cppIt->second) {
+            if (callback) callback();
+        }
+    }
+}
+
+void VoltaFramework::joystickCallback(int jid, int event) {
+    if (!g_frameworkInstance || !g_frameworkInstance->L) return;
+
+    if (event == GLFW_CONNECTED && glfwJoystickIsGamepad(jid)) {
+        g_frameworkInstance->gamepadStates[jid] = true;
+
+        // Lua connected callbacks
+        for (int ref : g_frameworkInstance->gamepadConnectedCallbackRefs) {
+            lua_rawgeti(g_frameworkInstance->L, LUA_REGISTRYINDEX, ref);
+            if (lua_isfunction(g_frameworkInstance->L, -1)) {
+                lua_pushinteger(g_frameworkInstance->L, jid);
+                if (lua_pcall(g_frameworkInstance->L, 1, 0, 0) != LUA_OK) {
+                    std::cerr << "Gamepad connected callback error: " << lua_tostring(g_frameworkInstance->L, -1) << "\n";
+                    lua_pop(g_frameworkInstance->L, 1);
+                }
+            }
+            lua_settop(g_frameworkInstance->L, 0);
+        }
+
+        // C++ connected callbacks
+        for (auto& callback : g_frameworkInstance->cppGamepadConnectedCallbacks) {
+            if (callback) callback(jid);
+        }
+    } else if (event == GLFW_DISCONNECTED) {
+        g_frameworkInstance->gamepadStates[jid] = false;
+
+        // Lua disconnected callbacks
+        for (int ref : g_frameworkInstance->gamepadDisconnectedCallbackRefs) {
+            lua_rawgeti(g_frameworkInstance->L, LUA_REGISTRYINDEX, ref);
+            if (lua_isfunction(g_frameworkInstance->L, -1)) {
+                lua_pushinteger(g_frameworkInstance->L, jid);
+                if (lua_pcall(g_frameworkInstance->L, 1, 0, 0) != LUA_OK) {
+                    std::cerr << "Gamepad disconnected callback error: " << lua_tostring(g_frameworkInstance->L, -1) << "\n";
+                    lua_pop(g_frameworkInstance->L, 1);
+                }
+            }
+            lua_settop(g_frameworkInstance->L, 0);
+        }
+
+        // C++ disconnected callbacks
+        for (auto& callback : g_frameworkInstance->cppGamepadDisconnectedCallbacks) {
+            if (callback) callback(jid);
+        }
+    }
 }

@@ -1,191 +1,22 @@
 #include "Vector3.hpp"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
+// Helper function to check Vector3 userdata
 Vector3* checkVector3(lua_State* L, int index) {
     return static_cast<Vector3*>(luaL_checkudata(L, index, "Vector3"));
 }
 
-int l_vector3_new(lua_State* L) {
-    float x = static_cast<float>(luaL_checknumber(L, 1));
-    float y = static_cast<float>(luaL_checknumber(L, 2));
-    float z = static_cast<float>(luaL_checknumber(L, 3));
-    
-    Vector3* vec = static_cast<Vector3*>(lua_newuserdata(L, sizeof(Vector3)));
-    vec->x = x;
-    vec->y = y;
-    vec->z = z;
-    
-    luaL_getmetatable(L, "Vector3");
-    if (lua_isnil(L, -1)) {
-        lua_pop(L, 1);
-        luaL_error(L, "Vector3 metatable not found");
-        return 0;
-    }
-    lua_setmetatable(L, -2);
-
-    return 1;
-}
-
-int l_vector3_add(lua_State* L) {
-    Vector3* a = checkVector3(L, 1);
-    Vector3* b = checkVector3(L, 2);
-    
+// Push a new Vector3 to Lua stack
+static void pushVector3(lua_State* L, const Vector3& vec) {
     Vector3* result = static_cast<Vector3*>(lua_newuserdata(L, sizeof(Vector3)));
-    result->x = a->x + b->x;
-    result->y = a->y + b->y;
-    result->z = a->z + b->z;
-    
+    *result = vec;
     luaL_getmetatable(L, "Vector3");
     lua_setmetatable(L, -2);
-    return 1;
 }
 
-int l_vector3_subtract(lua_State* L) {
-    Vector3* a = checkVector3(L, 1);
-    Vector3* b = checkVector3(L, 2);
-    
-    Vector3* result = static_cast<Vector3*>(lua_newuserdata(L, sizeof(Vector3)));
-    result->x = a->x - b->x;
-    result->y = a->y - b->y;
-    result->z = a->z - b->z;
-    
-    luaL_getmetatable(L, "Vector3");
-    lua_setmetatable(L, -2);
-    return 1;
-}
-
-int l_vector3_multiply(lua_State* L) {
-    Vector3* a = checkVector3(L, 1);
-    if (lua_isnumber(L, 2)) {
-        float scalar = static_cast<float>(lua_tonumber(L, 2));
-        Vector3* result = static_cast<Vector3*>(lua_newuserdata(L, sizeof(Vector3)));
-        result->x = a->x * scalar;
-        result->y = a->y * scalar;
-        result->z = a->z * scalar;
-        luaL_getmetatable(L, "Vector3");
-        lua_setmetatable(L, -2);
-        return 1;
-    }
-    Vector3* b = checkVector3(L, 2);
-    Vector3* result = static_cast<Vector3*>(lua_newuserdata(L, sizeof(Vector3)));
-    result->x = a->x * b->x;
-    result->y = a->y * b->y;
-    result->z = a->z * b->z;
-    
-    luaL_getmetatable(L, "Vector3");
-    lua_setmetatable(L, -2);
-    return 1;
-}
-
-int l_vector3_divide(lua_State* L) {
-    Vector3* a = checkVector3(L, 1);
-    if (lua_isnumber(L, 2)) {
-        float scalar = static_cast<float>(lua_tonumber(L, 2));
-        if (scalar == 0) luaL_error(L, "Division by zero");
-        Vector3* result = static_cast<Vector3*>(lua_newuserdata(L, sizeof(Vector3)));
-        result->x = a->x / scalar;
-        result->y = a->y / scalar;
-        result->z = a->z / scalar;
-        luaL_getmetatable(L, "Vector3");
-        lua_setmetatable(L, -2);
-        return 1;
-    }
-    Vector3* b = checkVector3(L, 2);
-    if (b->x == 0 || b->y == 0 || b->z == 0) luaL_error(L, "Division by zero");
-    Vector3* result = static_cast<Vector3*>(lua_newuserdata(L, sizeof(Vector3)));
-    result->x = a->x / b->x;
-    result->y = a->y / b->y;
-    result->z = a->z / b->z;
-    
-    luaL_getmetatable(L, "Vector3");
-    lua_setmetatable(L, -2);
-    return 1;
-}
-
-int l_vector3_magnitude(lua_State* L) {
-    Vector3* vec = checkVector3(L, 1);
-    float mag = sqrt(vec->x * vec->x + vec->y * vec->y + vec->z * vec->z);
-    lua_pushnumber(L, mag);
-    return 1;
-}
-
-int l_vector3_normalize(lua_State* L) {
-    Vector3* vec = checkVector3(L, 1);
-    float mag = sqrt(vec->x * vec->x + vec->y * vec->y + vec->z * vec->z);
-    if (mag == 0) {
-        lua_pushnil(L);
-        return 1;
-    }
-    Vector3* result = static_cast<Vector3*>(lua_newuserdata(L, sizeof(Vector3)));
-    result->x = vec->x / mag;
-    result->y = vec->y / mag;
-    result->z = vec->z / mag;
-    
-    luaL_getmetatable(L, "Vector3");
-    lua_setmetatable(L, -2);
-    return 1;
-}
-
-int l_vector3_dot(lua_State* L) {
-    Vector3* a = checkVector3(L, 1);
-    Vector3* b = checkVector3(L, 2);
-    float dot = a->x * b->x + a->y * b->y + a->z * b->z;
-    lua_pushnumber(L, dot);
-    return 1;
-}
-
-int l_vector3_lerp(lua_State* L) {
-    Vector3* a = checkVector3(L, 1);
-    Vector3* b = checkVector3(L, 2);
-    float t = static_cast<float>(luaL_checknumber(L, 3));
-    
-    Vector3* result = static_cast<Vector3*>(lua_newuserdata(L, sizeof(Vector3)));
-    result->x = a->x + (b->x - a->x) * t;
-    result->y = a->y + (b->y - a->y) * t;
-    result->z = a->z + (b->z - a->z) * t;
-    
-    luaL_getmetatable(L, "Vector3");
-    lua_setmetatable(L, -2);
-    return 1;
-}
-
-int l_vector3_distance(lua_State* L) {
-    Vector3* a = checkVector3(L, 1);
-    Vector3* b = checkVector3(L, 2);
-    float dx = b->x - a->x;
-    float dy = b->y - a->y;
-    float dz = b->z - a->z;
-    float dist = sqrt(dx * dx + dy * dy + dz * dz);
-    lua_pushnumber(L, dist);
-    return 1;
-}
-
-int l_vector3_angle(lua_State* L) {
-    Vector3* a = checkVector3(L, 1);
-    Vector3* b = checkVector3(L, 2);
-    float dot = a->x * b->x + a->y * b->y + a->z * b->z;
-    float magA = sqrt(a->x * a->x + a->y * a->y + a->z * a->z);
-    float magB = sqrt(b->x * b->x + b->y * b->y + b->z * b->z);
-    if (magA == 0 || magB == 0) {
-        lua_pushnumber(L, 0);
-        return 1;
-    }
-    float cosTheta = dot / (magA * magB);
-    if (cosTheta > 1.0f) cosTheta = 1.0f;
-    if (cosTheta < -1.0f) cosTheta = -1.0f;
-    float angle = acos(cosTheta) * 180.0f / M_PI;
-    lua_pushnumber(L, angle);
-    return 1;
-}
-
-int l_vector3_tostring(lua_State* L) {
-    Vector3* vec = checkVector3(L, 1);
-    char buffer[96];
-    snprintf(buffer, sizeof(buffer), "Vector3(%.2f, %.2f, %.2f)", vec->x, vec->y, vec->z);
-    lua_pushstring(L, buffer);
-    return 1;
-}
-
-// Easing functions (reused from Vector2.cpp)
+// Easing functions (unchanged)
 static float easeLinear(float t) { return t; }
 static float easeSineIn(float t) { return 1.0f - std::cos(t * M_PI / 2.0f); }
 static float easeSineOut(float t) { return std::sin(t * M_PI / 2.0f); }
@@ -218,82 +49,172 @@ static float easeElasticIn(float t) { if (t == 0.0f) return 0.0f; if (t == 1.0f)
 static float easeElasticOut(float t) { if (t == 0.0f) return 0.0f; if (t == 1.0f) return 1.0f; const float p = 0.3f; const float a = 1.0f; return a * std::pow(2.0f, -10.0f * t) * std::sin((t - p / (2.0f * M_PI) * std::asin(1.0f / a)) * (2.0f * M_PI) / p) + 1.0f; }
 static float easeElasticInOut(float t) { if (t == 0.0f) return 0.0f; if (t == 1.0f) return 1.0f; const float p = 0.3f * 1.5f; const float a = 1.0f; float t_adj = t * 2.0f; if (t_adj < 1.0f) return -0.5f * a * std::pow(2.0f, 10.0f * (t_adj - 1.0f)) * std::sin((t_adj - 1.0f - p / (2.0f * M_PI) * std::asin(1.0f / a)) * (2.0f * M_PI) / p); t_adj -= 1.0f; return 0.5f * a * std::pow(2.0f, -10.0f * t_adj) * std::sin((t_adj - p / (2.0f * M_PI) * std::asin(1.0f / a)) * (2.0f * M_PI) / p) + 1.0f; }
 
-int l_vector3_tween(lua_State* L) {
-    Vector3* self = checkVector3(L, 1);
-    Vector3* target = checkVector3(L, 2);
-    float t = static_cast<float>(luaL_checknumber(L, 3));
-    const char* direction = luaL_checkstring(L, 4);
-    const char* style = luaL_checkstring(L, 5);
-
-    // Clamp t between 0 and 1
+// Vector3 tween implementation
+Vector3 Vector3::tween(const Vector3& target, float t, const char* direction, const char* style) const {
     t = std::max(0.0f, std::min(1.0f, t));
-
-    // Easing function selection based on style and direction
     float easedT = 0.0f;
+
     if (strcmp(style, "linear") == 0) {
         easedT = easeLinear(t);
     } else if (strcmp(style, "sine") == 0) {
         if (strcmp(direction, "in") == 0) easedT = easeSineIn(t);
         else if (strcmp(direction, "out") == 0) easedT = easeSineOut(t);
         else if (strcmp(direction, "inout") == 0) easedT = easeSineInOut(t);
-        else luaL_error(L, "Invalid direction: %s", direction);
+        else throw std::runtime_error("Invalid direction");
     } else if (strcmp(style, "quad") == 0) {
         if (strcmp(direction, "in") == 0) easedT = easeQuadIn(t);
         else if (strcmp(direction, "out") == 0) easedT = easeQuadOut(t);
         else if (strcmp(direction, "inout") == 0) easedT = easeQuadInOut(t);
-        else luaL_error(L, "Invalid direction: %s", direction);
+        else throw std::runtime_error("Invalid direction");
     } else if (strcmp(style, "cubic") == 0) {
         if (strcmp(direction, "in") == 0) easedT = easeCubicIn(t);
         else if (strcmp(direction, "out") == 0) easedT = easeCubicOut(t);
         else if (strcmp(direction, "inout") == 0) easedT = easeCubicInOut(t);
-        else luaL_error(L, "Invalid direction: %s", direction);
+        else throw std::runtime_error("Invalid direction");
     } else if (strcmp(style, "quart") == 0) {
         if (strcmp(direction, "in") == 0) easedT = easeQuartIn(t);
         else if (strcmp(direction, "out") == 0) easedT = easeQuartOut(t);
         else if (strcmp(direction, "inout") == 0) easedT = easeQuartInOut(t);
-        else luaL_error(L, "Invalid direction: %s", direction);
+        else throw std::runtime_error("Invalid direction");
     } else if (strcmp(style, "quint") == 0) {
         if (strcmp(direction, "in") == 0) easedT = easeQuintIn(t);
         else if (strcmp(direction, "out") == 0) easedT = easeQuintOut(t);
         else if (strcmp(direction, "inout") == 0) easedT = easeQuintInOut(t);
-        else luaL_error(L, "Invalid direction: %s", direction);
+        else throw std::runtime_error("Invalid direction");
     } else if (strcmp(style, "exponential") == 0) {
         if (strcmp(direction, "in") == 0) easedT = easeExponentialIn(t);
         else if (strcmp(direction, "out") == 0) easedT = easeExponentialOut(t);
         else if (strcmp(direction, "inout") == 0) easedT = easeExponentialInOut(t);
-        else luaL_error(L, "Invalid direction: %s", direction);
+        else throw std::runtime_error("Invalid direction");
     } else if (strcmp(style, "circular") == 0) {
         if (strcmp(direction, "in") == 0) easedT = easeCircularIn(t);
         else if (strcmp(direction, "out") == 0) easedT = easeCircularOut(t);
         else if (strcmp(direction, "inout") == 0) easedT = easeCircularInOut(t);
-        else luaL_error(L, "Invalid direction: %s", direction);
+        else throw std::runtime_error("Invalid direction");
     } else if (strcmp(style, "back") == 0) {
         if (strcmp(direction, "in") == 0) easedT = easeBackIn(t);
         else if (strcmp(direction, "out") == 0) easedT = easeBackOut(t);
         else if (strcmp(direction, "inout") == 0) easedT = easeBackInOut(t);
-        else luaL_error(L, "Invalid direction: %s", direction);
+        else throw std::runtime_error("Invalid direction");
     } else if (strcmp(style, "bounce") == 0) {
         if (strcmp(direction, "in") == 0) easedT = easeBounceIn(t);
         else if (strcmp(direction, "out") == 0) easedT = easeBounceOut(t);
         else if (strcmp(direction, "inout") == 0) easedT = easeBounceInOut(t);
-        else luaL_error(L, "Invalid direction: %s", direction);
+        else throw std::runtime_error("Invalid direction");
     } else if (strcmp(style, "elastic") == 0) {
         if (strcmp(direction, "in") == 0) easedT = easeElasticIn(t);
         else if (strcmp(direction, "out") == 0) easedT = easeElasticOut(t);
         else if (strcmp(direction, "inout") == 0) easedT = easeElasticInOut(t);
-        else luaL_error(L, "Invalid direction: %s", direction);
+        else throw std::runtime_error("Invalid direction");
     } else {
-        luaL_error(L, "Invalid easing style: %s", style);
-        return 0;
+        throw std::runtime_error("Invalid easing style");
     }
 
-    // Create result Vector3
-    Vector3* result = static_cast<Vector3*>(lua_newuserdata(L, sizeof(Vector3)));
-    result->x = self->x + (target->x - self->x) * easedT;
-    result->y = self->y + (target->y - self->y) * easedT;
-    result->z = self->z + (target->z - self->z) * easedT;
-    
-    luaL_getmetatable(L, "Vector3");
-    lua_setmetatable(L, -2);
+    return Vector3(x + (target.x - x) * easedT, y + (target.y - y) * easedT, z + (target.z - z) * easedT);
+}
+
+// Lua bindings
+int l_vector3_new(lua_State* L) {
+    float x = static_cast<float>(luaL_checknumber(L, 1));
+    float y = static_cast<float>(luaL_checknumber(L, 2));
+    float z = static_cast<float>(luaL_checknumber(L, 3));
+    pushVector3(L, Vector3(x, y, z));
+    return 1;
+}
+
+int l_vector3_add(lua_State* L) {
+    Vector3* a = checkVector3(L, 1);
+    Vector3* b = checkVector3(L, 2);
+    pushVector3(L, *a + *b);
+    return 1;
+}
+
+int l_vector3_subtract(lua_State* L) {
+    Vector3* a = checkVector3(L, 1);
+    Vector3* b = checkVector3(L, 2);
+    pushVector3(L, *a - *b);
+    return 1;
+}
+
+int l_vector3_multiply(lua_State* L) {
+    Vector3* a = checkVector3(L, 1);
+    if (lua_isnumber(L, 2)) {
+        float scalar = static_cast<float>(lua_tonumber(L, 2));
+        pushVector3(L, *a * scalar);
+    } else {
+        Vector3* b = checkVector3(L, 2);
+        pushVector3(L, *a * *b);
+    }
+    return 1;
+}
+
+int l_vector3_divide(lua_State* L) {
+    Vector3* a = checkVector3(L, 1);
+    if (lua_isnumber(L, 2)) {
+        float scalar = static_cast<float>(lua_tonumber(L, 2));
+        if (scalar == 0) luaL_error(L, "Division by zero");
+        pushVector3(L, *a / scalar);
+    } else {
+        Vector3* b = checkVector3(L, 2);
+        if (b->x == 0 || b->y == 0 || b->z == 0) luaL_error(L, "Division by zero");
+        pushVector3(L, *a / *b);
+    }
+    return 1;
+}
+
+int l_vector3_magnitude(lua_State* L) {
+    Vector3* vec = checkVector3(L, 1);
+    lua_pushnumber(L, vec->magnitude());
+    return 1;
+}
+
+int l_vector3_normalize(lua_State* L) {
+    Vector3* vec = checkVector3(L, 1);
+    pushVector3(L, vec->normalized());
+    return 1;
+}
+
+int l_vector3_dot(lua_State* L) {
+    Vector3* a = checkVector3(L, 1);
+    Vector3* b = checkVector3(L, 2);
+    lua_pushnumber(L, a->dot(*b));
+    return 1;
+}
+
+int l_vector3_lerp(lua_State* L) {
+    Vector3* a = checkVector3(L, 1);
+    Vector3* b = checkVector3(L, 2);
+    float t = static_cast<float>(luaL_checknumber(L, 3));
+    pushVector3(L, a->lerp(*b, t));
+    return 1;
+}
+
+int l_vector3_distance(lua_State* L) {
+    Vector3* a = checkVector3(L, 1);
+    Vector3* b = checkVector3(L, 2);
+    lua_pushnumber(L, a->distance(*b));
+    return 1;
+}
+
+int l_vector3_angle(lua_State* L) {
+    Vector3* a = checkVector3(L, 1);
+    Vector3* b = checkVector3(L, 2);
+    lua_pushnumber(L, a->angle(*b));
+    return 1;
+}
+
+int l_vector3_tostring(lua_State* L) {
+    Vector3* vec = checkVector3(L, 1);
+    lua_pushstring(L, vec->toString().c_str());
+    return 1;
+}
+
+int l_vector3_tween(lua_State* L) {
+    Vector3* self = checkVector3(L, 1);
+    Vector3* target = checkVector3(L, 2);
+    float t = static_cast<float>(luaL_checknumber(L, 3));
+    const char* direction = luaL_checkstring(L, 4);
+    const char* style = luaL_checkstring(L, 5);
+    pushVector3(L, self->tween(*target, t, direction, style));
     return 1;
 }

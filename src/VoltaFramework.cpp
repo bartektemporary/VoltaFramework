@@ -3,7 +3,23 @@
 #include <cstring>
 #include "Maps.hpp"
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <dlfcn.h>
+#endif
+
 VoltaFramework* g_frameworkInstance {nullptr};
+
+class DefaultGame : public GameBase {
+    public:
+        void init(VoltaFramework* framework) override {
+            std::cout << "Default C++ Game Initialized\n";
+        }
+        void update(VoltaFramework* framework, float dt) override {
+            // Empty default update
+        }
+    };
 
 VoltaFramework::VoltaFramework() : 
     L{nullptr}, 
@@ -14,6 +30,7 @@ VoltaFramework::VoltaFramework() :
     y{100}, 
     startTime{0.0},
     usingCustomShader(false),
+    cppGame{nullptr},
     ftLibrary{nullptr},
     ftFace{nullptr},
     textVAO{0},
@@ -21,7 +38,8 @@ VoltaFramework::VoltaFramework() :
     textureVAO{0},
     textureVBO{0},
     particleVAO{0},
-    particleVBO{0}
+    particleVBO{0},
+    globalVolume(1.0f)
 {
     L = luaL_newstate();
     if (!L) {
@@ -90,9 +108,7 @@ VoltaFramework::VoltaFramework() :
         exit(1);
     }
 
-    currentColor[0] = 1.0f;
-    currentColor[1] = 1.0f;
-    currentColor[2] = 1.0f;
+    currentColor = Color(1, 1, 1);
 
     registerLuaAPI();
 
@@ -111,8 +127,11 @@ VoltaFramework::VoltaFramework() :
 
 VoltaFramework::~VoltaFramework() {
     lua_close(L);
+    if (cppGame) {
+        delete cppGame;
+        cppGame = nullptr;
+    }
     g_frameworkInstance = nullptr;
-    audioCache.clear();
     for (auto& pair : keyPressCallbackRefs) {
         for (int ref : pair.second) {
             luaL_unref(L, LUA_REGISTRYINDEX, ref);
@@ -139,10 +158,18 @@ VoltaFramework::~VoltaFramework() {
             luaL_unref(L, LUA_REGISTRYINDEX, ref);
         }
     }
+
     gamepadConnectedCallbackRefs.clear();
     gamepadDisconnectedCallbackRefs.clear();
     gamepadButtonPressedCallbackRefs.clear();
     gamepadStates.clear();
+
+    cppKeyPressCallbacks.clear();
+    cppMouseButtonPressCallbacks.clear();
+    cppGamepadConnectedCallbacks.clear();
+    cppGamepadDisconnectedCallbacks.clear();
+    cppGamepadButtonPressedCallbacks.clear();
+
     textureCache.clear();
     FreeImage_DeInitialise();
     cleanupOpenGL();
@@ -152,9 +179,8 @@ VoltaFramework::~VoltaFramework() {
         }
     }
     customEventCallbackRefs.clear();
-    for (auto& pair : audioCache) {
-        ma_sound_uninit(&pair.second);
-    }
+    audioCache.clear();
+    ma_engine_uninit(&engine);
     for (auto& pair : databaseCache) {
         sqlite3_close(pair.second);
     }
@@ -166,7 +192,6 @@ VoltaFramework::~VoltaFramework() {
     if (ftLibrary) {
         FT_Done_FreeType(ftLibrary);
     }
-    ma_engine_uninit(&engine);
     if (window) {
         glfwDestroyWindow(window);
     }
@@ -176,11 +201,10 @@ VoltaFramework::~VoltaFramework() {
 std::string VoltaFramework::loadFile(const std::string& filename, bool asText) {
     fs::path fullPath;
 
-    // Check if the filename contains a separator
     if (filename.find('/') != std::string::npos || filename.find('\\') != std::string::npos) {
-        fullPath = fs::path(filename); // Use as-is if it contains separators
+        fullPath = fs::path(filename);
     } else {
-        fullPath = fs::path("assets") / filename; // Prepend "assets/" for simple filenames
+        fullPath = fs::path("assets") / filename;
     }
 
     fullPath = fullPath.lexically_normal();
@@ -206,26 +230,45 @@ std::string VoltaFramework::loadFile(const std::string& filename, bool asText) {
 }
 
 void VoltaFramework::run() {
-    loadLuaScript("scripts/main.lua");
+    bool hasLua = fs::exists("scripts/main.lua");
+    bool hasCpp = fs::exists("src/main.cpp");
 
-    // Get the 'volta' table
-    lua_getglobal(L, "volta");
-    if (lua_istable(L, -1)) {
-        // Get the 'init' function from the 'volta' table
-        lua_getfield(L, -1, "init");
-        if (lua_isfunction(L, -1)) {
-            if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
-                std::cerr << "Init Error: " << lua_tostring(L, -1) << std::endl;
+    // Load Lua script if present
+    if (hasLua) {
+        loadLuaScript("scripts/main.lua");
+    }
+
+    // Only attempt to load C++ game dynamically if no game is set
+    // and dynamic loading is intended (for now, we skip this since we're static)
+    if (hasCpp && !cppGame) {
+        // For static builds, cppGame should already be set by main().
+        // We'll leave loadCppGame() for dynamic loading in the future.
+        std::cout << "C++ game detected, assuming set by main()\n";
+    }
+
+    // Initialize Lua if present
+    if (hasLua) {
+        lua_getglobal(L, "volta");
+        if (lua_istable(L, -1)) {
+            lua_getfield(L, -1, "init");
+            if (lua_isfunction(L, -1)) {
+                if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
+                    std::cerr << "Init Error (Lua): " << lua_tostring(L, -1) << std::endl;
+                    lua_pop(L, 1);
+                }
+            } else {
                 lua_pop(L, 1);
             }
         } else {
-            std::cerr << "Warning: volta.init is not a function or not defined\n";
-            lua_pop(L, 1); // Pop the non-function value
+            std::cerr << "Error: 'volta' table not found in Lua environment\n";
         }
-    } else {
-        std::cerr << "Error: 'volta' table not found in Lua environment\n";
+        lua_pop(L, 1);
     }
-    lua_pop(L, 1); // Pop the 'volta' table
+
+    // Initialize C++ game if present
+    if (cppGame) {
+        cppGame->init(this);
+    }
 
     double lastTime = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
@@ -288,9 +331,43 @@ void VoltaFramework::update(float dt) {
         cachedViewBounds = Rect(-FLT_MAX, FLT_MAX, -FLT_MAX, FLT_MAX); // No culling
     }
 
-    currentColor[0] = 1.0f;
-    currentColor[1] = 1.0f;
-    currentColor[2] = 1.0f;
+    // Poll gamepad button presses
+    for (auto& state : gamepadStates) {
+        int jid = state.first;
+        if (!state.second) continue; // Skip disconnected gamepads
+        GLFWgamepadstate gpState;
+        if (glfwGetGamepadState(jid, &gpState)) {
+            for (auto& btnPair : gamepadButtonPressedCallbackRefs) {
+                int button = btnPair.first;
+                static std::unordered_map<int, bool> lastButtonStates; // Track previous state
+                bool isPressed = gpState.buttons[button] == GLFW_PRESS;
+                if (isPressed && !lastButtonStates[button]) {
+                    // Lua callbacks
+                    for (int ref : btnPair.second) {
+                        lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
+                        if (lua_isfunction(L, -1)) {
+                            lua_pushinteger(L, jid);
+                            if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+                                std::cerr << "Gamepad button callback error: " << lua_tostring(L, -1) << "\n";
+                                lua_pop(L, 1);
+                            }
+                        }
+                        lua_settop(L, 0);
+                    }
+                    // C++ callbacks
+                    auto cppIt = cppGamepadButtonPressedCallbacks.find(button);
+                    if (cppIt != cppGamepadButtonPressedCallbacks.end()) {
+                        for (auto& callback : cppIt->second) {
+                            if (callback) callback(jid);
+                        }
+                    }
+                }
+                lastButtonStates[button] = isPressed; // Update last state
+            }
+        }
+    }
+
+    currentColor = Color(1, 1, 1);
     currentShaderName = "";
     usingCustomShader = false;
 
@@ -300,18 +377,37 @@ void VoltaFramework::update(float dt) {
         if (lua_isfunction(L, -1)) {
             lua_pushnumber(L, dt);
             if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
-                std::cerr << "Update Error: " << lua_tostring(L, -1) << std::endl;
+                std::cerr << "Update Error (Lua): " << lua_tostring(L, -1) << std::endl;
                 lua_pop(L, 1);
             }
         } else {
             lua_pop(L, 1);
         }
-    } else {
+    } else if (fs::exists("scripts/main.lua")) {
         std::cerr << "Error: 'volta' table not found in Lua environment\n";
     }
     lua_pop(L, 1);
 
+    if (cppGame) {
+        cppGame->update(this, dt);
+    }
+
     renderParticles(dt);
+}
+
+bool VoltaFramework::loadCppGame() {
+    if (fs::exists("src/main.cpp")) {
+        // For static linking, assume main.cpp defines a game class or use a default
+        // Here, we'll use a default game for simplicity unless overridden
+        cppGame = new DefaultGame();  // Replace with your game class if defined
+        return true;
+    }
+    return false;
+}
+
+double VoltaFramework::getRunningTime() const {
+    double currentTime = glfwGetTime();
+    return currentTime - startTime;
 }
 
 int l_getRunningTime(lua_State* L) {
@@ -320,9 +416,7 @@ int l_getRunningTime(lua_State* L) {
         lua_pushnumber(L, 0.0);
         return 1;
     }
-    double currentTime = glfwGetTime();
-    double elapsedTime = currentTime - framework->startTime;
-    lua_pushnumber(L, elapsedTime);
+    lua_pushnumber(L, framework->getRunningTime());
     return 1;
 }
 

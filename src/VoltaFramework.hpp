@@ -8,15 +8,16 @@
 #include <string>
 #include <filesystem>
 #include <float.h>
+#include <functional>
 namespace fs = std::filesystem;
 
 #include "Json.hpp"
 #include "Buffer.hpp"
-#include "Color.hpp"
 #include "Matrix.hpp"
 #include "Vector2.hpp"
 #include "Vector3.hpp"
 #include "Camera2D.hpp"
+#include "Audio.hpp"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -26,6 +27,36 @@ namespace fs = std::filesystem;
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <sqlite3.h>
+
+struct Color {
+    float r, g, b;
+
+    Color(float r_ = 0.0f, float g_ = 0.0f, float b_ = 0.0f) 
+        : r(fminf(fmaxf(r_, 0.0f), 1.0f)), 
+          g(fminf(fmaxf(g_, 0.0f), 1.0f)), 
+          b(fminf(fmaxf(b_, 0.0f), 1.0f)) {}
+
+    static Color create(float r, float g, float b);
+    static Color fromRGB(float r, float g, float b);
+    static Color fromHSV(float h, float s, float v);
+    static Color fromHex(const std::string& hex);
+
+    std::string toHex() const;
+    void toHSV(float& h, float& s, float& v) const;
+    void toRGB(float& r, float& g, float& b) const;
+    Color lerp(const Color& target, float alpha) const;
+    Color tween(const Color& target, float alpha, const std::string& direction, const std::string& style) const;
+
+private:
+    float easeLinear(float t) const;
+    float easeSine(float t, const std::string& direction) const;
+    float easeQuad(float t, const std::string& direction) const;
+    float easeBack(float t, const std::string& direction) const;
+    float easeElastic(float t, const std::string& direction) const;
+    float easeBounce(float t, const std::string& direction) const;
+};
+
+Color* checkColor(lua_State* L, int index);
 
 struct Particle {
     Vector2 position;
@@ -37,6 +68,13 @@ struct Particle {
 };
 
 class VoltaFramework;
+
+class GameBase {
+public:
+    virtual ~GameBase() = default;
+    virtual void init(VoltaFramework* framework) {}  // Called once at startup
+    virtual void update(VoltaFramework* framework, float dt) {}  // Called every frame
+};
 
 enum class EmitterShape {
     Circle,
@@ -83,7 +121,11 @@ public:
     VoltaFramework();
     ~VoltaFramework();
     void run();
-    double startTime;
+
+    // C++ game integration
+    void setGame(GameBase* game) { cppGame = game; }
+    GameBase* getGame() const { return cppGame; }
+
     GLFWwindow* getWindow() const { return window; }
 
     std::string loadFile(const std::string& filename, bool asText = false);
@@ -102,17 +144,9 @@ public:
     void setState(int newState) { state = newState; }
 
     GLuint loadTexture(const std::string& filename);
-    void setFilterMode(GLenum newMode) { filterMode = newMode; }
-
-    ma_sound* loadAudio(const std::string& filename);
-    void setGlobalVolume(float volume);
-    float getGlobalVolume() const { return globalVolume; }
 
     void registerKeyPressCallback(const std::string& key, int ref);
     void registerMouseButtonPressCallback(const std::string& button, int ref);
-
-    void jsonToLua(lua_State* L, const json::Value& value);
-    json::Value* luaToJson(lua_State* L, int index);
 
     std::unordered_map<Buffer*, std::unique_ptr<Buffer>> bufferCache;
 
@@ -169,11 +203,82 @@ public:
     Matrix4 view3D;        // View matrix for 3D
     Matrix4 model;         // Model matrix for 3D
 
-    // Drawing methods
+    // Main methods
+    double startTime;
+    double getRunningTime() const;
+
+    // Color methods
+    Color currentColor;
+    Color getColor() const { return currentColor; }
+
+    // Graphics methods
     void drawRectangle(bool fill, const Vector2& position, const Vector2& size, float rotation);
     void drawCircle(bool fill, const Vector2& center, float radius);
     void drawLine(const Vector2& start, const Vector2& end, float lineWidth);
+    void drawImage(const std::string& filename, const Vector2& position, const Vector2& size, float rotation = 0.0f);
+    void setFilterMode(GLenum mode);
+    void setColor(const Color& color);
+    void setColor(float r, float g, float b);
+    GLuint compileShader(GLenum type, const char* source);
+    GLuint createShaderProgram(const char* vertexSource, const char* fragmentSource);
+    bool createCustomShader(const std::string& shaderName, const std::string& vertexSource, const std::string& fragmentSource);
+    bool createCustomShaderFromFiles(const std::string& shaderName, const std::string& vertexFile, const std::string& fragmentFile);
+    void setShaderUniform(const std::string& name, float value);
+    void setShaderUniform(const std::string& name, const Vector2& value);
     void drawCube(const Vector3& position, const Vector3& size, const Vector3& rotation);
+
+    // Window methods
+    std::string getWindowTitle() const;
+    void setWindowTitle(const std::string& title);
+    void setWindowSize(int width, int height);
+    void getWindowSize(int& width, int& height) const;
+    void setWindowPosition(int x, int y);
+    void getWindowPosition(int& x, int& y) const;
+    void setWindowResizable(bool resizable);
+    void setFullscreen(bool enable);
+    void setWindowState(const std::string& state);
+    std::string getWindowState() const;
+    void setWindowIcon(const std::string& filename);
+    void setVsync(bool enable);
+
+    // Input methods
+    bool isKeyDown(const std::string& key) const;
+    bool isMouseButtonDown(const std::string& button) const;
+    void getMousePosition(double& x, double& y) const;
+    std::vector<std::string> getPressedKeys() const;
+    std::vector<std::string> getPressedMouseButtons() const;
+
+    // JSON methods
+    void jsonToLua(lua_State* L, const json::Value& value);
+    json::Value* luaToJson(lua_State* L, int index);
+    std::unique_ptr<json::Value> parseJson(const std::string& jsonStr) const;
+    std::string stringifyJson(const json::Value& value) const;
+
+    // Helper methods to create JSON values in C++
+    std::unique_ptr<json::Value> createJsonNull() const;
+    std::unique_ptr<json::Value> createJsonBoolean(bool value) const;
+    std::unique_ptr<json::Value> createJsonNumber(double value) const;
+    std::unique_ptr<json::Value> createJsonString(const std::string& value) const;
+    std::unique_ptr<json::Value> createJsonArray() const;
+    std::unique_ptr<json::Value> createJsonObject() const;
+
+    void registerCppKeyPressCallback(const std::string& key, std::function<void()> callback);
+    void registerCppMouseButtonPressCallback(const std::string& button, std::function<void()> callback);
+    void registerCppGamepadConnectedCallback(std::function<void(int)> callback);
+    void registerCppGamepadDisconnectedCallback(std::function<void(int)> callback);
+    void registerCppGamepadButtonPressedCallback(int button, std::function<void(int)> callback);
+
+    // Audio methods
+    Audio* loadAudio(const std::string& filename);
+    void setGlobalVolume(float volume);
+    float getGlobalVolume() const { return globalVolume; }
+
+    // Math Utility Methods
+    float lerp(float a, float b, float t) const;
+    float noise1d(float x) const;
+    float noise2d(float x, float y) const;
+    float noise3d(float x, float y, float z) const;
+    float tween(float start, float end, float t, const std::string& direction, const std::string& style) const;
 
     // Initialization and cleanup
     void initOpenGL();
@@ -199,8 +304,6 @@ public:
     void registerGamepadDisconnectedCallback(int ref);
     void registerGamepadButtonPressedCallback(int button, int ref);
 
-    bool createCustomShader(const std::string& shaderName, const std::string& vertexSource, const std::string& fragmentSource);
-    bool createCustomShaderFromFiles(const std::string& shaderName, const std::string& vertexFile, const std::string& fragmentFile);
     void setShader(const std::string& shaderName);
     void clearCustomShader(const std::string& shaderName);
     void clearAllCustomShaders();
@@ -218,11 +321,6 @@ public:
     std::string currentShaderName;
     bool usingCustomShader;
 
-    GLuint compileShader(GLenum type, const char* source);
-    GLuint createShaderProgram(const char* vertexSource, const char* fragmentSource);
-    void setShaderUniform(const std::string& name, float value);
-    void setShaderUniform(const std::string& name, const Vector2& value);
-
     std::unordered_map<std::string, sqlite3*> databaseCache;
 
     // Existing shader programs for images and text
@@ -234,9 +332,8 @@ public:
     GLint textColorUniform;
     GLint textTextureUniform;
 
-    float currentColor[3];
-
 private:
+    GameBase* cppGame = nullptr;
     lua_State* L;
     GLFWwindow* window;
     int width;
@@ -246,7 +343,7 @@ private:
     int state;
 
     std::unordered_map<std::string, GLuint> textureCache;
-    std::unordered_map<std::string, ma_sound> audioCache;
+    std::unordered_map<std::string, std::unique_ptr<Audio>> audioCache;
     GLenum filterMode;
     ma_engine engine;
     float globalVolume;
@@ -257,6 +354,7 @@ private:
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
     void loadLuaScript(const std::string& filename);
+    bool loadCppGame();
     void update(float dt);
     void registerLuaAPI();
 
@@ -273,6 +371,12 @@ private:
     std::vector<int> gamepadConnectedCallbackRefs;
     std::vector<int> gamepadDisconnectedCallbackRefs;
     std::unordered_map<int, std::vector<int>> gamepadButtonPressedCallbackRefs;
+
+    std::unordered_map<int, std::vector<std::function<void()>>> cppKeyPressCallbacks;
+    std::unordered_map<int, std::vector<std::function<void()>>> cppMouseButtonPressCallbacks;
+    std::vector<std::function<void(int)>> cppGamepadConnectedCallbacks;
+    std::vector<std::function<void(int)>> cppGamepadDisconnectedCallbacks;
+    std::unordered_map<int, std::vector<std::function<void(int)>>> cppGamepadButtonPressedCallbacks;
 
     static void joystickCallback(int jid, int event);
 };
@@ -402,6 +506,17 @@ int l_camera2d_move(lua_State* L);
 int l_camera2d_zoomBy(lua_State* L);
 int l_camera2d_rotateBy(lua_State* L);
 int l_camera2d_tostring(lua_State* L);
+
+int l_color_create(lua_State* L);
+int l_color_fromRGB(lua_State* L);
+int l_color_newHSV(lua_State* L);
+int l_color_newHex(lua_State* L);
+int l_color_tostring(lua_State* L);
+int l_color_toHex(lua_State* L);
+int l_color_toHSV(lua_State* L);
+int l_color_toRGB(lua_State* L);
+int l_color_lerp(lua_State* L);
+int l_color_tween(lua_State* L);
 
 int l_vector2_new(lua_State* L);
 int l_vector2_add(lua_State* L);

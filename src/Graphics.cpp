@@ -37,8 +37,8 @@ void VoltaFramework::drawRectangle(bool fill, const Vector2& position, const Vec
     vertices[3].x = -hw; vertices[3].y = hh;
 
     if (rotation != 0) {
-        float cosR = cosf(rotation);
-        float sinR = sinf(rotation);
+        float cosR = cosf(rotation * M_PI / 180.0f); // Convert degrees to radians
+        float sinR = sinf(rotation * M_PI / 180.0f);
         for (int i = 0; i < 4; i++) {
             float x = vertices[i].x;
             float y = vertices[i].y;
@@ -63,7 +63,7 @@ void VoltaFramework::drawRectangle(bool fill, const Vector2& position, const Vec
     glEnableVertexAttribArray(0);
 
     glUseProgram(shape2DShaderProgram);
-    glUniform3fv(shape2DColorUniform, 1, currentColor);
+    glUniform3f(shape2DColorUniform, currentColor.r, currentColor.g, currentColor.b);
 
     if (fill) {
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -111,7 +111,7 @@ void VoltaFramework::drawCircle(bool fill, const Vector2& position, float radius
     const int segments = 32;
     Vector2 vertices[segments];
     for (int i = 0; i < segments; i++) {
-        float angle = (float)i / segments * 2.0f * 3.14159f;
+        float angle = (float)i / segments * 2.0f * M_PI;
         vertices[i].x = cosf(angle) * radius + adjustedPosition.x;
         vertices[i].y = sinf(angle) * radius + adjustedPosition.y;
         float glX, glY;
@@ -127,7 +127,7 @@ void VoltaFramework::drawCircle(bool fill, const Vector2& position, float radius
     glEnableVertexAttribArray(0);
 
     glUseProgram(shape2DShaderProgram);
-    glUniform3fv(shape2DColorUniform, 1, currentColor);
+    glUniform3f(shape2DColorUniform, currentColor.r, currentColor.g, currentColor.b);
 
     if (fill) {
         glDrawArrays(GL_TRIANGLE_FAN, 0, segments);
@@ -191,7 +191,6 @@ void VoltaFramework::drawLine(const Vector2& start, const Vector2& end, float li
     float perpX = -ny;
     float perpY = nx;
 
-    // Increase line width for visibility (e.g., 5 pixels)
     float halfWidth = lineWidth * 2.5f; // Scale up to 5 for lineWidth=2
     float vertices[] = {
         adjustedStart.x - perpX * halfWidth, adjustedStart.y - perpY * halfWidth, // Bottom-left
@@ -200,7 +199,6 @@ void VoltaFramework::drawLine(const Vector2& start, const Vector2& end, float li
         adjustedEnd.x - perpX * halfWidth, adjustedEnd.y - perpY * halfWidth      // Bottom-right
     };
 
-    // Convert to NDC
     float glVertices[8];
     for (int i = 0; i < 4; i++) {
         windowToGLCoords(vertices[i * 2], vertices[i * 2 + 1], &glVertices[i * 2], &glVertices[i * 2 + 1]);
@@ -213,12 +211,13 @@ void VoltaFramework::drawLine(const Vector2& start, const Vector2& end, float li
     glEnableVertexAttribArray(0);
 
     glUseProgram(shape2DShaderProgram);
-    glUniform3fv(shape2DColorUniform, 1, currentColor);
+    glUniform3f(shape2DColorUniform, currentColor.r, currentColor.g, currentColor.b);
 
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
     glBindVertexArray(0);
 }
+
 
 int l_drawLine(lua_State* L) {
     Vector2* start = checkVector2(L, 1);
@@ -239,29 +238,21 @@ int l_drawLine(lua_State* L) {
     return 0;
 }
 
-int l_drawImage(lua_State* L) {
-    const char* filename = luaL_checkstring(L, 1);
-    Vector2* position = static_cast<Vector2*>(luaL_checkudata(L, 2, "Vector2"));
-    Vector2* size = static_cast<Vector2*>(luaL_checkudata(L, 3, "Vector2"));
-    lua_Number rotation = luaL_optnumber(L, 4, 0.0);
+void VoltaFramework::drawImage(const std::string& filename, const Vector2& position, const Vector2& size, float rotation) {
+    Vector2 adjustedPosition = position;
+    if (positionMode == PositionMode::World && currentCamera != nullptr) {
+        Vector2 cameraPos = currentCamera->getPosition();
+        adjustedPosition.x = position.x - cameraPos.x + width / 2.0f;
+        adjustedPosition.y = position.y - cameraPos.y + height / 2.0f;
 
-    VoltaFramework* framework = getFramework(L);
-    if (!framework || !framework->getWindow()) return 0;
-
-    Vector2 adjustedPosition = *position;
-    if (framework->getPositionMode() == VoltaFramework::PositionMode::World && framework->getCamera2D() != nullptr) {
-        Vector2 cameraPos = framework->getCamera2D()->getPosition();
-        adjustedPosition.x = position->x - cameraPos.x + framework->getWidth() / 2.0f;
-        adjustedPosition.y = position->y - cameraPos.y + framework->getHeight() / 2.0f;
-
-        float halfW = size->x / 2.0f;
-        float halfH = size->y / 2.0f;
-        VoltaFramework::Rect bounds(position->x - halfW, position->x + halfW, position->y - halfH, position->y + halfH);
-        if (!framework->isRectInView(bounds)) return 0;
+        float halfW = size.x / 2.0f;
+        float halfH = size.y / 2.0f;
+        Rect bounds(position.x - halfW, position.x + halfW, position.y - halfH, position.y + halfH);
+        if (!isRectInView(bounds)) return;
     }
 
-    float halfWidth = size->x / 2.0f;
-    float halfHeight = size->y / 2.0f;
+    float halfWidth = size.x / 2.0f;
+    float halfHeight = size.y / 2.0f;
     float rad = -rotation * M_PI / 180.0f;
     float cosR = cosf(rad);
     float sinR = sinf(rad);
@@ -280,7 +271,7 @@ int l_drawImage(lua_State* L) {
         float rotatedX = x * cosR - y * sinR;
         float rotatedY = x * sinR + y * cosR;
         float glX, glY;
-        framework->windowToGLCoords(adjustedPosition.x + rotatedX, adjustedPosition.y + rotatedY, &glX, &glY);
+        windowToGLCoords(adjustedPosition.x + rotatedX, adjustedPosition.y + rotatedY, &glX, &glY);
         rotatedVertices.push_back(glX);
         rotatedVertices.push_back(glY);
     }
@@ -293,26 +284,51 @@ int l_drawImage(lua_State* L) {
     };
 
     std::string fullPath = std::string("assets/") + filename;
-    GLuint textureID = framework->loadTexture(fullPath);
-    if (textureID == 0) return 0;
+    GLuint textureID = loadTexture(fullPath);
+    if (textureID == 0) return;
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glUseProgram(framework->imageShaderProgram);
-    glUniform3fv(framework->imageColorUniform, 1, framework->currentColor);
-    glUniform1i(framework->imageTextureUniform, 0);
+    glUseProgram(imageShaderProgram);
+    glUniform3f(imageColorUniform, currentColor.r, currentColor.g, currentColor.b);
+    glUniform1i(imageTextureUniform, 0);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureID);
-    glBindVertexArray(framework->textureVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, framework->textureVBO);
+    glBindVertexArray(textureVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, textureVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
-    glDisable(GL_BLEND); // Reset blending
+    glDisable(GL_BLEND);
+}
+
+int l_drawImage(lua_State* L) {
+    const char* filename = luaL_checkstring(L, 1);
+    Vector2* position = static_cast<Vector2*>(luaL_checkudata(L, 2, "Vector2"));
+    Vector2* size = static_cast<Vector2*>(luaL_checkudata(L, 3, "Vector2"));
+    lua_Number rotation = luaL_optnumber(L, 4, 0.0);
+
+    VoltaFramework* framework = getFramework(L);
+    if (!framework || !framework->getWindow()) {
+        std::cerr << "l_drawImage: Framework or window is null\n";
+        return 0;
+    }
+
+    framework->drawImage(filename, *position, *size, static_cast<float>(rotation));
     return 0;
+}
+
+// Set Color (overload for Color struct)
+void VoltaFramework::setColor(const Color& color) {
+    currentColor = color;
+}
+
+// Ensure setColor(float, float, float) exists (if not already present)
+void VoltaFramework::setColor(float r, float g, float b) {
+    currentColor = Color(r, g, b);
 }
 
 int l_setColor(lua_State* L) {
@@ -324,18 +340,30 @@ int l_setColor(lua_State* L) {
 
     if (lua_isuserdata(L, 1)) {
         Color* color = checkColor(L, 1);
-        framework->currentColor[0] = color->r;
-        framework->currentColor[1] = color->g;
-        framework->currentColor[2] = color->b;
+        framework->setColor(*color);
     } else {
         lua_Number r = luaL_checknumber(L, 1);
         lua_Number g = luaL_checknumber(L, 2);
         lua_Number b = luaL_checknumber(L, 3);
-        framework->currentColor[0] = static_cast<float>(r);
-        framework->currentColor[1] = static_cast<float>(g);
-        framework->currentColor[2] = static_cast<float>(b);
+        framework->setColor(static_cast<float>(r), static_cast<float>(g), static_cast<float>(b));
     }
     return 0;
+}
+
+void VoltaFramework::setFilterMode(GLenum mode) {
+    if (mode != GL_NEAREST && mode != GL_LINEAR) {
+        std::cerr << "Invalid filter mode. Use GL_NEAREST or GL_LINEAR.\n";
+        return;
+    }
+    filterMode = mode;
+
+    // Optionally update existing textures in the cache
+    for (auto& pair : textureCache) {
+        glBindTexture(GL_TEXTURE_2D, pair.second);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filterMode);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filterMode);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
 }
 
 int l_setFilter(lua_State* L) {
@@ -577,22 +605,6 @@ bool VoltaFramework::createCustomShader(const std::string& shaderName, const std
     return true;
 }
 
-bool VoltaFramework::createCustomShaderFromFiles(const std::string& shaderName, const std::string& vertexFile, const std::string& fragmentFile) {
-    std::string vertexSource = loadFile(vertexFile, true);
-    if (vertexSource.empty()) {
-        std::cerr << "Failed to load vertex shader file: " << vertexFile << "\n";
-        return false;
-    }
-
-    std::string fragmentSource = loadFile(fragmentFile, true);
-    if (fragmentSource.empty()) {
-        std::cerr << "Failed to load fragment shader file: " << fragmentFile << "\n";
-        return false;
-    }
-
-    return createCustomShader(shaderName, vertexSource, fragmentSource);
-}
-
 void VoltaFramework::setShader(const std::string& shaderName) {
     if (customShaders.find(shaderName) != customShaders.end()) {
         currentShaderName = shaderName;
@@ -758,10 +770,22 @@ GLuint VoltaFramework::createShaderProgram(const char* vertexSource, const char*
     return program;
 }
 
+bool VoltaFramework::createCustomShaderFromFiles(const std::string& shaderName, const std::string& vertexFile, const std::string& fragmentFile) {
+    std::string vertexSource = loadFile(vertexFile, true);
+    std::string fragmentSource = loadFile(fragmentFile, true);
+
+    if (vertexSource.empty() || fragmentSource.empty()) {
+        std::cerr << "Failed to load shader files: " << vertexFile << " or " << fragmentFile << "\n";
+        return false;
+    }
+
+    return createCustomShader(shaderName, vertexSource, fragmentSource);
+}
+
 void VoltaFramework::setShaderUniform(const std::string& name, float value) {
     if (usingCustomShader && !currentShaderName.empty()) {
         GLuint program = customShaders[currentShaderName].program;
-        glUseProgram(program); // Ensure the shader is active
+        glUseProgram(program);
         GLint location = glGetUniformLocation(program, name.c_str());
         if (location != -1) {
             glUniform1f(location, value);
@@ -879,16 +903,37 @@ void VoltaFramework::drawText(const std::string& text, float x, float y, float s
         adjustedPosition.x = x - cameraPos.x + width / 2.0f;
         adjustedPosition.y = y - cameraPos.y + height / 2.0f;
 
-        float textWidth = text.length() * 20 * scale;
-        float textHeight = 24 * scale;
-        Rect bounds(x, x + textWidth, y - textHeight, y);
+        // Calculate exact bounds
+        float minX = x, maxX = x;
+        float minY = y, maxY = y;
+        float cursorX = x;
+        for (char c : text) {
+            if (c == '\n') {
+                cursorX = x;
+                minY -= (characters['A'].size.y + 10) * scale;
+                continue;
+            }
+            auto it = characters.find(c);
+            if (it == characters.end()) continue;
+            Character& ch = it->second;
+            float left = cursorX + ch.bearing.x * scale;
+            float right = left + ch.size.x * scale;
+            float bottom = y - (ch.size.y - ch.bearing.y) * scale;
+            float top = bottom + ch.size.y * scale;
+            minX = std::min(minX, left);
+            maxX = std::max(maxX, right);
+            minY = std::min(minY, bottom);
+            maxY = std::max(maxY, top);
+            cursorX += ch.advance * scale;
+        }
+        Rect bounds(minX, maxX, minY, maxY);
         if (!isRectInView(bounds)) return;
     }
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glUseProgram(textShaderProgram);
-    glUniform3fv(textColorUniform, 1, currentColor);
+    glUniform3f(shape2DColorUniform, currentColor.r, currentColor.g, currentColor.b);
     glUniform1i(textTextureUniform, 0);
 
     glBindVertexArray(textVAO);
@@ -1114,7 +1159,7 @@ void VoltaFramework::drawCube(const Vector3& position, const Vector3& size, cons
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glUseProgram(shape3DShaderProgram);
-    glUniform3fv(shape3DColorUniform, 1, currentColor);
+    glUniform3f(shape3DColorUniform, currentColor.r, currentColor.g, currentColor.b);
     glUniformMatrix4fv(shape3DProjectionUniform, 1, GL_FALSE, projection3D.m);
     glUniformMatrix4fv(shape3DViewUniform, 1, GL_FALSE, view3D.m);
     glUniformMatrix4fv(shape3DModelUniform, 1, GL_FALSE, model.m);

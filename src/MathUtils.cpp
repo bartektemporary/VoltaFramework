@@ -5,30 +5,8 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
-int l_math_clamp(lua_State* L) {
-    double n {luaL_checknumber(L, 1)};
-    double minValue {luaL_checknumber(L, 2)};
-    double maxValue {luaL_checknumber(L, 3)};
-    double result {fmin(fmax(n, minValue), maxValue)};
-    lua_pushnumber(L, result);
-    return 1;
-}
-
-int l_math_round(lua_State* L) {
-    double n {luaL_checknumber(L, 1)};
-    lua_Integer i {luaL_optinteger(L, 2, 0)};
-    double m {pow(10.0, static_cast<double>(i))};
-    double result {floor(n * m + 0.5) / m};
-    lua_pushnumber(L, result);
-    return 1;
-}
-
 static float fade(float t) {
     return t * t * t * (t * (t * 6 - 15) + 10);
-}
-
-static float lerp(float a, float b, float t) {
-    return a + t * (b - a);
 }
 
 static float grad(int hash, float x, float y, float z) {
@@ -53,126 +31,197 @@ static const unsigned char p[] {
     138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180
 };
 
+float VoltaFramework::lerp(float a, float b, float t) const {
+    return a + t * (b - a);
+}
+
+float VoltaFramework::noise1d(float x) const {
+    int X = static_cast<int>(std::floor(x)) & 255;
+    x -= std::floor(x);
+    float u = fade(x);
+    int a = p[X];
+    int b = p[(X + 1) & 255];
+    float result = lerp(grad(a, x, 0, 0), grad(b, x - 1, 0, 0), u);
+    return result * 0.5f + 0.5f; // Normalize to [0, 1]
+}
+
+float VoltaFramework::noise2d(float x, float y) const {
+    int X = static_cast<int>(std::floor(x)) & 255;
+    int Y = static_cast<int>(std::floor(y)) & 255;
+    x -= std::floor(x);
+    y -= std::floor(y);
+    float u = fade(x);
+    float v = fade(y);
+    int A = p[X] + Y;
+    int AA = p[A & 255];
+    int AB = p[(A + 1) & 255];
+    int B = p[(X + 1) & 255] + Y;
+    int BA = p[B & 255];
+    int BB = p[(B + 1) & 255];
+    float result = lerp(
+        lerp(grad(AA, x, y, 0), grad(BA, x - 1, y, 0), u),
+        lerp(grad(AB, x, y - 1, 0), grad(BB, x - 1, y - 1, 0), u),
+        v
+    );
+    return result * 0.5f + 0.5f; // Normalize to [0, 1]
+}
+
+float VoltaFramework::noise3d(float x, float y, float z) const {
+    int X = static_cast<int>(std::floor(x)) & 255;
+    int Y = static_cast<int>(std::floor(y)) & 255;
+    int Z = static_cast<int>(std::floor(z)) & 255;
+    x -= std::floor(x);
+    y -= std::floor(y);
+    z -= std::floor(z);
+    float u = fade(x);
+    float v = fade(y);
+    float w = fade(z);
+    int A = p[X] + Y;
+    int AA = p[A & 255] + Z;
+    int AB = p[(A + 1) & 255] + Z;
+    int B = p[(X + 1) & 255] + Y;
+    int BA = p[B & 255] + Z;
+    int BB = p[(B + 1) & 255] + Z;
+    float result = lerp(
+        lerp(
+            lerp(grad(p[AA & 255], x, y, z), grad(p[BA & 255], x - 1, y, z), u),
+            lerp(grad(p[AB & 255], x, y - 1, z), grad(p[BB & 255], x - 1, y - 1, z), u),
+            v
+        ),
+        lerp(
+            lerp(grad(p[(AA + 1) & 255], x, y, z - 1), grad(p[(BA + 1) & 255], x - 1, y, z - 1), u),
+            lerp(grad(p[(AB + 1) & 255], x, y - 1, z - 1), grad(p[(BB + 1) & 255], x - 1, y - 1, z - 1), u),
+            v
+        ),
+        w
+    );
+    return result * 0.5f + 0.5f; // Normalize to [0, 1]
+}
+
+float VoltaFramework::tween(float start, float end, float t, const std::string& direction, const std::string& style) const {
+    t = std::fmin(std::fmax(t, 0.0f), 1.0f);
+
+    float eased = 0.0f;
+    if (style == "linear") {
+        eased = easeLinear(t);
+    } else if (style == "sine") {
+        eased = easeSine(t);
+    } else if (style == "quad") {
+        eased = easeQuad(t);
+    } else if (style == "cubic") {
+        eased = easeCubic(t);
+    } else if (style == "quart") {
+        eased = easeQuart(t);
+    } else if (style == "quint") {
+        eased = easeQuint(t);
+    } else if (style == "exponential") {
+        eased = easeExponential(t);
+    } else if (style == "circular") {
+        eased = easeCircular(t);
+    } else if (style == "back") {
+        eased = easeBack(t);
+    } else if (style == "bounce") {
+        eased = easeBounce(t);
+    } else if (style == "elastic") {
+        eased = easeElastic(t);
+    } else {
+        throw std::invalid_argument("Invalid easing style: " + style);
+    }
+
+    eased = applyEasingDirection(t, eased, direction.c_str());
+    return start + (end - start) * eased;
+}
+
+int l_math_clamp(lua_State* L) {
+    double n {luaL_checknumber(L, 1)};
+    double minValue {luaL_checknumber(L, 2)};
+    double maxValue {luaL_checknumber(L, 3)};
+    double result {fmin(fmax(n, minValue), maxValue)};
+    lua_pushnumber(L, result);
+    return 1;
+}
+
+int l_math_round(lua_State* L) {
+    double n {luaL_checknumber(L, 1)};
+    lua_Integer i {luaL_optinteger(L, 2, 0)};
+    double m {pow(10.0, static_cast<double>(i))};
+    double result {floor(n * m + 0.5) / m};
+    lua_pushnumber(L, result);
+    return 1;
+}
+
 int l_math_lerp(lua_State* L) {
-    lua_Number a {luaL_checknumber(L, 1)};
-    lua_Number b {luaL_checknumber(L, 2)};
-    lua_Number t {luaL_checknumber(L, 3)};
-    lua_pushnumber(L, lerp(static_cast<float>(a), static_cast<float>(b), static_cast<float>(t)));
+    VoltaFramework* framework = getFramework(L);
+    if (!framework) {
+        luaL_error(L, "Framework instance not found");
+        return 0;
+    }
+    lua_Number a = luaL_checknumber(L, 1);
+    lua_Number b = luaL_checknumber(L, 2);
+    lua_Number t = luaL_checknumber(L, 3);
+    lua_pushnumber(L, framework->lerp(static_cast<float>(a), static_cast<float>(b), static_cast<float>(t)));
     return 1;
 }
 
 int l_math_noise1d(lua_State* L) {
-    lua_Number x {luaL_checknumber(L, 1)};
-    int X {static_cast<int>(floor(x)) & 255};
-    x -= floor(x);
-    float u {fade(static_cast<float>(x))};
-    int a {p[X]};
-    int b {p[(X + 1) & 255]};
-    float result {lerp(grad(a, static_cast<float>(x), 0, 0), grad(b, static_cast<float>(x - 1), 0, 0), u)};
-    lua_pushnumber(L, result * 0.5 + 0.5);
+    VoltaFramework* framework = getFramework(L);
+    if (!framework) {
+        luaL_error(L, "Framework instance not found");
+        return 0;
+    }
+    lua_Number x = luaL_checknumber(L, 1);
+    lua_pushnumber(L, framework->noise1d(static_cast<float>(x)));
     return 1;
 }
 
 int l_math_noise2d(lua_State* L) {
-    lua_Number x {luaL_checknumber(L, 1)};
-    lua_Number y {luaL_checknumber(L, 2)};
-    int X {static_cast<int>(floor(x)) & 255};
-    int Y {static_cast<int>(floor(y)) & 255};
-    x -= floor(x);
-    y -= floor(y);
-    float u {fade(static_cast<float>(x))};
-    float v {fade(static_cast<float>(y))};
-    int A {p[X] + Y};
-    int AA {p[A & 255]};
-    int AB {p[(A + 1) & 255]};
-    int B {p[(X + 1) & 255] + Y};
-    int BA {p[B & 255]};
-    int BB {p[(B + 1) & 255]};
-    float result {lerp(
-        lerp(grad(AA, static_cast<float>(x), static_cast<float>(y), 0), grad(BA, static_cast<float>(x - 1), static_cast<float>(y), 0), u),
-        lerp(grad(AB, static_cast<float>(x), static_cast<float>(y - 1), 0), grad(BB, static_cast<float>(x - 1), static_cast<float>(y - 1), 0), u),
-        v
-    )};
-    lua_pushnumber(L, result * 0.5 + 0.5);
+    VoltaFramework* framework = getFramework(L);
+    if (!framework) {
+        luaL_error(L, "Framework instance not found");
+        return 0;
+    }
+    lua_Number x = luaL_checknumber(L, 1);
+    lua_Number y = luaL_checknumber(L, 2);
+    lua_pushnumber(L, framework->noise2d(static_cast<float>(x), static_cast<float>(y)));
     return 1;
 }
 
 int l_math_noise3d(lua_State* L) {
-    lua_Number x {luaL_checknumber(L, 1)};
-    lua_Number y {luaL_checknumber(L, 2)};
-    lua_Number z {luaL_checknumber(L, 3)};
-    int X {static_cast<int>(floor(x)) & 255};
-    int Y {static_cast<int>(floor(y)) & 255};
-    int Z {static_cast<int>(floor(z)) & 255};
-    x -= floor(x);
-    y -= floor(y);
-    z -= floor(z);
-    float u {fade(static_cast<float>(x))};
-    float v {fade(static_cast<float>(y))};
-    float w {fade(static_cast<float>(z))};
-    int A {p[X] + Y};
-    int AA {p[A & 255] + Z};
-    int AB {p[(A + 1) & 255] + Z};
-    int B {p[(X + 1) & 255] + Y};
-    int BA {p[B & 255] + Z};
-    int BB {p[(B + 1) & 255] + Z};
-    float result {lerp(
-        lerp(
-            lerp(grad(p[AA & 255], static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)), grad(p[BA & 255], static_cast<float>(x - 1), static_cast<float>(y), static_cast<float>(z)), u),
-            lerp(grad(p[AB & 255], static_cast<float>(x), static_cast<float>(y - 1), static_cast<float>(z)), grad(p[BB & 255], static_cast<float>(x - 1), static_cast<float>(y - 1), static_cast<float>(z)), u),
-            v
-        ),
-        lerp(
-            lerp(grad(p[(AA + 1) & 255], static_cast<float>(x), static_cast<float>(y), static_cast<float>(z - 1)), grad(p[(BA + 1) & 255], static_cast<float>(x - 1), static_cast<float>(y), static_cast<float>(z - 1)), u),
-            lerp(grad(p[(AB + 1) & 255], static_cast<float>(x), static_cast<float>(y - 1), static_cast<float>(z - 1)), grad(p[(BB + 1) & 255], static_cast<float>(x - 1), static_cast<float>(y - 1), static_cast<float>(z - 1)), u),
-            v
-        ),
-        w
-    )};
-    lua_pushnumber(L, result * 0.5 + 0.5);
+    VoltaFramework* framework = getFramework(L);
+    if (!framework) {
+        luaL_error(L, "Framework instance not found");
+        return 0;
+    }
+    lua_Number x = luaL_checknumber(L, 1);
+    lua_Number y = luaL_checknumber(L, 2);
+    lua_Number z = luaL_checknumber(L, 3);
+    lua_pushnumber(L, framework->noise3d(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)));
     return 1;
 }
 
 int l_math_tween(lua_State* L) {
+    VoltaFramework* framework = getFramework(L);
+    if (!framework) {
+        luaL_error(L, "Framework instance not found");
+        return 0;
+    }
     lua_Number start = luaL_checknumber(L, 1);
     lua_Number end = luaL_checknumber(L, 2);
     lua_Number t = luaL_checknumber(L, 3);
     const char* direction = luaL_checkstring(L, 4);
     const char* style = luaL_checkstring(L, 5);
-
-    t = fmin(fmax(t, 0.0), 1.0);
-
-    float eased = 0.0f;
-    if (strcmp(style, "linear") == 0) {
-        eased = easeLinear(static_cast<float>(t));
-    } else if (strcmp(style, "sine") == 0) {
-        eased = easeSine(static_cast<float>(t));
-    } else if (strcmp(style, "quad") == 0) {
-        eased = easeQuad(static_cast<float>(t));
-    } else if (strcmp(style, "cubic") == 0) {
-        eased = easeCubic(static_cast<float>(t));
-    } else if (strcmp(style, "quart") == 0) {
-        eased = easeQuart(static_cast<float>(t));
-    } else if (strcmp(style, "quint") == 0) {
-        eased = easeQuint(static_cast<float>(t));
-    } else if (strcmp(style, "exponential") == 0) {
-        eased = easeExponential(static_cast<float>(t));
-    } else if (strcmp(style, "circular") == 0) {
-        eased = easeCircular(static_cast<float>(t));
-    } else if (strcmp(style, "back") == 0) {
-        eased = easeBack(static_cast<float>(t));
-    } else if (strcmp(style, "bounce") == 0) {
-        eased = easeBounce(static_cast<float>(t));
-    } else if (strcmp(style, "elastic") == 0) {
-        eased = easeElastic(static_cast<float>(t));
-    } else {
-        luaL_error(L, "Invalid easing style: %s", style);
+    try {
+        float result = framework->tween(
+            static_cast<float>(start),
+            static_cast<float>(end),
+            static_cast<float>(t),
+            direction,
+            style
+        );
+        lua_pushnumber(L, result);
+        return 1;
+    } catch (const std::invalid_argument& e) {
+        luaL_error(L, "Tween error: %s", e.what());
         return 0;
     }
-
-    eased = applyEasingDirection(static_cast<float>(t), eased, direction);
-
-    lua_Number result = start + (end - start) * static_cast<lua_Number>(eased);
-    lua_pushnumber(L, result);
-    return 1;
 }

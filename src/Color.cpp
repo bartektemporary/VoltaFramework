@@ -4,6 +4,8 @@
 #include <iomanip>
 #include <sstream>
 #include <iostream>
+#define _USE_MATH_DEFINES
+#include <cmath>
 
 Color* checkColor(lua_State* L, int index) {
     return static_cast<Color*>(luaL_checkudata(L, index, "Color"));
