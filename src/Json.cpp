@@ -1,6 +1,6 @@
 #include "VoltaFramework.hpp"
 
-std::unique_ptr<json::Value> VoltaFramework::parseJson(const std::string& jsonStr) const {
+std::unique_ptr<json::Value> VoltaFramework::decodeJson(const std::string& jsonStr) const {
     try {
         return json::parse(jsonStr);
     } catch (const json::JsonException& e) {
@@ -9,7 +9,7 @@ std::unique_ptr<json::Value> VoltaFramework::parseJson(const std::string& jsonSt
     }
 }
 
-std::string VoltaFramework::stringifyJson(const json::Value& value) const {
+std::string VoltaFramework::encodeJson(const json::Value& value) const {
     return json::stringify(value);
 }
 
@@ -140,7 +140,7 @@ int l_json_decode(lua_State* L) {
         return 0;
     }
 
-    std::unique_ptr<json::Value> value = framework->parseJson(jsonStr);
+    std::unique_ptr<json::Value> value = framework->decodeJson(jsonStr);
     if (!value) {
         luaL_error(L, "Failed to parse JSON string");
         return 0;
@@ -158,7 +158,7 @@ int l_json_encode(lua_State* L) {
     }
 
     std::unique_ptr<json::Value> value(framework->luaToJson(L, 1));
-    std::string jsonStr = framework->stringifyJson(*value);
+    std::string jsonStr = framework->encodeJson(*value);
     lua_pushstring(L, jsonStr.c_str());
     return 1;
 }

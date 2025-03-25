@@ -8,6 +8,7 @@
 #include <string>
 #include <filesystem>
 #include <float.h>
+#include <variant>
 #include <functional>
 namespace fs = std::filesystem;
 
@@ -172,9 +173,6 @@ public:
         World    // Positions are in world coordinates
     };
 
-    void setPositionMode(PositionMode mode) { positionMode = mode; }
-    PositionMode getPositionMode() const { return positionMode; }
-
     struct Rect {
         float left, right, bottom, top;
         Rect(float l, float r, float b, float t) : left(l), right(r), bottom(b), top(t) {}
@@ -226,6 +224,8 @@ public:
     void setShaderUniform(const std::string& name, float value);
     void setShaderUniform(const std::string& name, const Vector2& value);
     void drawCube(const Vector3& position, const Vector3& size, const Vector3& rotation);
+    void setPositionMode(PositionMode mode) { positionMode = mode; }
+    PositionMode getPositionMode() const { return positionMode; }
 
     // Window methods
     std::string getWindowTitle() const;
@@ -251,9 +251,9 @@ public:
     // JSON methods
     void jsonToLua(lua_State* L, const json::Value& value);
     json::Value* luaToJson(lua_State* L, int index);
-    std::unique_ptr<json::Value> parseJson(const std::string& jsonStr) const;
-    std::string stringifyJson(const json::Value& value) const;
-
+    std::unique_ptr<json::Value> decodeJson(const std::string& jsonStr) const;
+    std::string encodeJson(const json::Value& value) const;
+    
     // Helper methods to create JSON values in C++
     std::unique_ptr<json::Value> createJsonNull() const;
     std::unique_ptr<json::Value> createJsonBoolean(bool value) const;
@@ -261,6 +261,16 @@ public:
     std::unique_ptr<json::Value> createJsonString(const std::string& value) const;
     std::unique_ptr<json::Value> createJsonArray() const;
     std::unique_ptr<json::Value> createJsonObject() const;
+
+    // SQLite C++ API
+    sqlite3* openDatabase(const std::string& filename, std::string& errorMsg);
+    bool closeDatabase(sqlite3* db, std::string& errorMsg);
+    bool executeSQL(sqlite3* db, const std::string& sql, std::string& errorMsg);
+    sqlite3_stmt* prepareStatement(sqlite3* db, const std::string& sql, std::string& errorMsg);
+    int stepStatement(sqlite3_stmt* stmt, std::string& errorMsg);
+    bool finalizeStatement(sqlite3_stmt* stmt, std::string& errorMsg);
+    bool bindValue(sqlite3_stmt* stmt, int index, const std::variant<std::monostate, int64_t, double, std::string>& value, std::string& errorMsg);
+    std::variant<std::monostate, int64_t, double, std::string> getColumnValue(sqlite3_stmt* stmt, int index, std::string& errorMsg);
 
     void registerCppKeyPressCallback(const std::string& key, std::function<void()> callback);
     void registerCppMouseButtonPressCallback(const std::string& button, std::function<void()> callback);
