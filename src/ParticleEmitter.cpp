@@ -1,12 +1,13 @@
 #include "VoltaFramework.hpp"
-#include "Vector2.hpp"
+#include <cmath>
 #include <random>
 
-ParticleEmitter::ParticleEmitter(Vector2 position, float particleLife, float speed, float spread, Vector2 direction, 
-                               EmitterShape shape, float width, float height, GLuint texture)
-    : position(position), particleLife(particleLife), speed(speed), spread(spread), direction(direction), 
+std::mt19937 ParticleEmitter::gen(std::random_device{}());
+
+ParticleEmitter::ParticleEmitter(Vector2 position, float particleLife, float speed, float spread, Vector2 direction,
+                                 EmitterShape shape, float width, float height, GLuint texture)
+    : position(position), particleLife(particleLife), speed(speed), spread(spread), direction(direction),
       shape(shape), width(width), height(height), particleTexture(texture) {
-    // Existing normalization logic
     if (shape == EmitterShape::Cone || shape == EmitterShape::Line) {
         float mag = sqrtf(direction.x * direction.x + direction.y * direction.y);
         if (mag > 0) {
@@ -18,9 +19,17 @@ ParticleEmitter::ParticleEmitter(Vector2 position, float particleLife, float spe
     }
 }
 
+void ParticleEmitter::setDirection(Vector2 dir) {
+    float mag = sqrtf(dir.x * dir.x + dir.y * dir.y);
+    if (mag > 0) {
+        direction.x = dir.x / mag;
+        direction.y = dir.y / mag;
+    } else {
+        direction = {1.0f, 0.0f};
+    }
+}
+
 void ParticleEmitter::emit(int count) {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
     std::uniform_real_distribution<float> lifeDist(particleLife * 0.8f, particleLife * 1.2f);
 
     if (shape == EmitterShape::Circle) {
@@ -34,11 +43,10 @@ void ParticleEmitter::emit(int count) {
             p.life = life;
             p.maxLife = life;
             p.size = 20.0f;
-            p.texture = particleTexture;  // Use cached texture ID
+            p.texture = particleTexture;
             particles.push_back(p);
         }
     } else if (shape == EmitterShape::Cone) {
-        // Existing Cone logic (unchanged)
         std::uniform_real_distribution<float> angleDist(-spread / 2.0f, spread / 2.0f);
         float baseAngle = atan2f(direction.y, direction.x);
         for (int i = 0; i < count; i++) {
@@ -51,10 +59,10 @@ void ParticleEmitter::emit(int count) {
             p.life = life;
             p.maxLife = life;
             p.size = 20.0f;
+            p.texture = particleTexture;
             particles.push_back(p);
         }
     } else if (shape == EmitterShape::Rectangle) {
-        // Existing Rectangle logic (unchanged)
         std::uniform_real_distribution<float> xDist(-width / 2.0f, width / 2.0f);
         std::uniform_real_distribution<float> yDist(-height / 2.0f, height / 2.0f);
         for (int i = 0; i < count; i++) {
@@ -72,34 +80,27 @@ void ParticleEmitter::emit(int count) {
             p.life = life;
             p.maxLife = life;
             p.size = 20.0f;
+            p.texture = particleTexture;
             particles.push_back(p);
         }
     } else if (shape == EmitterShape::Line) {
-        // New Line shape logic (single-side emission)
-        std::uniform_real_distribution<float> tDist(-width / 2.0f, width / 2.0f); // Width determines the length of the line
+        std::uniform_real_distribution<float> tDist(-width / 2.0f, width / 2.0f);
         std::uniform_real_distribution<float> angleDist(-spread / 2.0f, spread / 2.0f);
-
-        // The line extends along the direction vector, centered at position
         for (int i = 0; i < count; i++) {
-            float t = tDist(gen); // Position along the line
+            float t = tDist(gen);
             float angleOffset = angleDist(gen) * (M_PI / 180.0f);
-
-            // Calculate the particle's starting position along the line
             float offsetX = direction.x * t;
             float offsetY = direction.y * t;
             Particle p;
             p.position = {position.x + offsetX, position.y + offsetY};
-
-            // Calculate the base angle perpendicular to the line
-            float baseAngle = atan2f(direction.y, direction.x) + (M_PI / 2.0f); // Perpendicular to the direction
+            float baseAngle = atan2f(direction.y, direction.x) + (M_PI / 2.0f);
             float angle = baseAngle + angleOffset;
-
-            // Set velocity based on the angle (single direction)
             p.velocity = {cosf(angle) * speed, sinf(angle) * speed};
             float life = lifeDist(gen);
             p.life = life;
             p.maxLife = life;
             p.size = 20.0f;
+            p.texture = particleTexture;
             particles.push_back(p);
         }
     }
@@ -128,15 +129,12 @@ void ParticleEmitter::render(VoltaFramework* framework) {
     if (zoom <= 0.0f) zoom = 1.0f;
     float rotation = camera ? camera->getRotation() : 0.0f;
 
-    // Manually set cachedViewBounds here for testing
     if (camera) {
         float halfWidth = (framework->getWidth() / 2.0f) / zoom;
         float halfHeight = (framework->getHeight() / 2.0f) / zoom;
         framework->cachedViewBounds = VoltaFramework::Rect(
-            cameraPos.x - halfWidth,
-            cameraPos.x + halfWidth,
-            cameraPos.y - halfHeight,
-            cameraPos.y + halfHeight
+            cameraPos.x - halfWidth, cameraPos.x + halfWidth,
+            cameraPos.y - halfHeight, cameraPos.y + halfHeight
         );
     } else {
         framework->cachedViewBounds = VoltaFramework::Rect(-FLT_MAX, FLT_MAX, -FLT_MAX, FLT_MAX);
@@ -144,7 +142,6 @@ void ParticleEmitter::render(VoltaFramework* framework) {
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 
     GLuint shaderProgram = (particleTexture != 0) ? framework->imageShaderProgram : framework->shape2DShaderProgram;
     glUseProgram(shaderProgram);
@@ -171,13 +168,6 @@ void ParticleEmitter::render(VoltaFramework* framework) {
         Vector2 adjustedPos = p.position;
         if (isWorldMode && camera) {
             float halfSize = p.size / 2.0f;
-            VoltaFramework::Rect bounds(
-                p.position.x - halfSize,
-                p.position.x + halfSize,
-                p.position.y - halfSize,
-                p.position.y + halfSize
-            );
-
             adjustedPos.x = (p.position.x - cameraPos.x) * zoom + framework->getWidth() / 2.0f;
             adjustedPos.y = (p.position.y - cameraPos.y) * zoom + framework->getHeight() / 2.0f;
         }
@@ -186,10 +176,8 @@ void ParticleEmitter::render(VoltaFramework* framework) {
         float hh = (p.size / 2.0f) * zoom;
 
         Vector2 vertices[4];
-        vertices[0].x = -hw; vertices[0].y = -hh;
-        vertices[1].x =  hw; vertices[1].y = -hh;
-        vertices[2].x =  hw; vertices[2].y =  hh;
-        vertices[3].x = -hw; vertices[3].y =  hh;
+        vertices[0] = {-hw, -hh}; vertices[1] = {hw, -hh};
+        vertices[2] = {hw, hh};   vertices[3] = {-hw, hh};
 
         if (rotation != 0) {
             float cosR = cosf(rotation * M_PI / 180.0f);
@@ -202,12 +190,7 @@ void ParticleEmitter::render(VoltaFramework* framework) {
             }
         }
 
-        float modulatedColor[3] = {
-            framework->currentColor.r,
-            framework->currentColor.g,
-            framework->currentColor.b
-        };
-
+        float modulatedColor[3] = {framework->currentColor.r, framework->currentColor.g, framework->currentColor.b};
         if (particleTexture != 0) {
             glUniform3fv(framework->imageColorUniform, 1, modulatedColor);
             float vertexData[16];
@@ -244,12 +227,7 @@ void ParticleEmitter::render(VoltaFramework* framework) {
     glDisable(GL_BLEND);
 }
 
-void VoltaFramework::renderParticles(float dt) {
-    for (auto& emitter : particleEmitters) {
-        emitter.update(dt);
-    }
-}
-
+// Lua API Functions
 int l_particleEmitter_new(lua_State* L) {
     Vector2* pos = checkVector2(L, 1);
     float particleLife = static_cast<float>(luaL_checknumber(L, 2));
@@ -259,11 +237,9 @@ int l_particleEmitter_new(lua_State* L) {
     EmitterShape shape = EmitterShape::Cone;
     float width = 100.0f;
     float height = 100.0f;
+    GLuint texture = 0;
 
-    if (lua_gettop(L) >= 5 && !lua_isnil(L, 5)) {
-        Vector2* dir = checkVector2(L, 5);
-        direction = *dir;
-    }
+    if (lua_gettop(L) >= 5 && !lua_isnil(L, 5)) direction = *checkVector2(L, 5);
     if (lua_gettop(L) >= 6 && !lua_isnil(L, 6)) {
         const char* shapeStr = luaL_checkstring(L, 6);
         if (strcmp(shapeStr, "circle") == 0) shape = EmitterShape::Circle;
@@ -274,22 +250,19 @@ int l_particleEmitter_new(lua_State* L) {
     }
     if (lua_gettop(L) >= 7 && !lua_isnil(L, 7)) width = static_cast<float>(luaL_checknumber(L, 7));
     if (lua_gettop(L) >= 8 && !lua_isnil(L, 8)) height = static_cast<float>(luaL_checknumber(L, 8));
+    if (lua_gettop(L) >= 9 && !lua_isnil(L, 9)) {
+        const char* texturePath = luaL_checkstring(L, 9);
+        VoltaFramework* framework = getFramework(L);
+        texture = framework->loadTexture(texturePath);
+        if (texture == 0) luaL_error(L, "Failed to load texture: %s", texturePath);
+    }
 
     VoltaFramework* framework = getFramework(L);
-    if (!framework) {
-        luaL_error(L, "Framework not found");
-        return 0;
-    }
+    if (!framework) luaL_error(L, "Framework not found");
 
-    // Reserve space to prevent reallocation
-    if (framework->particleEmitters.capacity() < framework->particleEmitters.size() + 1) {
-        framework->particleEmitters.reserve(framework->particleEmitters.size() + 10); // Reserve extra space
-    }
-
-    framework->particleEmitters.emplace_back(*pos, particleLife, speed, spread, direction, shape, width, height);
+    framework->particleEmitters.emplace_back(*pos, particleLife, speed, spread, direction, shape, width, height, texture);
     ParticleEmitter* emitterPtr = &framework->particleEmitters.back();
-    
-    // Push the pointer as userdata with the metatable
+
     ParticleEmitter** ud = static_cast<ParticleEmitter**>(lua_newuserdata(L, sizeof(ParticleEmitter*)));
     *ud = emitterPtr;
     luaL_getmetatable(L, "ParticleEmitter");
@@ -297,261 +270,161 @@ int l_particleEmitter_new(lua_State* L) {
     return 1;
 }
 
-int l_particleEmitter_setSize(lua_State* L) {
-    ParticleEmitter* emitter = static_cast<ParticleEmitter*>(luaL_checkudata(L, 1, "ParticleEmitter"));
-    if (!emitter) {
-        luaL_argerror(L, 1, "ParticleEmitter expected");
-        return 0;
-    }
-    float width = static_cast<float>(luaL_checknumber(L, 2));
-    float height = static_cast<float>(luaL_checknumber(L, 3));
-    if (width < 0 || height < 0) {
-        luaL_error(L, "Width and height must be non-negative");
-        return 0;
-    }
-    emitter->setSize(width, height);
-    return 0;
-}
-
-int l_particleEmitter_getSize(lua_State* L) {
-    ParticleEmitter* emitter = static_cast<ParticleEmitter*>(luaL_checkudata(L, 1, "ParticleEmitter"));
-    if (!emitter) {
-        luaL_argerror(L, 1, "ParticleEmitter expected");
-        return 0;
-    }
-    lua_pushnumber(L, emitter->getWidth());
-    lua_pushnumber(L, emitter->getHeight());
-    return 2; // Return width and height
-}
-
-int l_particleEmitter_setShape(lua_State* L) {
-    ParticleEmitter* emitter = static_cast<ParticleEmitter*>(luaL_checkudata(L, 1, "ParticleEmitter"));
-    if (!emitter) {
-        luaL_argerror(L, 1, "ParticleEmitter expected");
-        return 0;
-    }
-    const char* shapeStr = luaL_checkstring(L, 2);
-    if (strcmp(shapeStr, "circle") == 0) {
-        emitter->setShape(EmitterShape::Circle);
-    } else if (strcmp(shapeStr, "cone") == 0) {
-        emitter->setShape(EmitterShape::Cone);
-    } else if (strcmp(shapeStr, "rectangle") == 0) {
-        emitter->setShape(EmitterShape::Rectangle);
-    } else if (strcmp(shapeStr, "line") == 0) {
-        emitter->setShape(EmitterShape::Line);
-    } else {
-        luaL_error(L, "Invalid emitter shape: %s (expected 'circle', 'cone', 'rectangle', or 'line')", shapeStr);
-        return 0;
-    }
-    return 0;
-}
-
-int l_particleEmitter_getShape(lua_State* L) {
-    ParticleEmitter* emitter = static_cast<ParticleEmitter*>(luaL_checkudata(L, 1, "ParticleEmitter"));
-    if (!emitter) {
-        luaL_argerror(L, 1, "ParticleEmitter expected");
-        return 0;
-    }
-    switch (emitter->getShape()) {
-        case EmitterShape::Circle:
-            lua_pushstring(L, "circle");
-            break;
-        case EmitterShape::Cone:
-            lua_pushstring(L, "cone");
-            break;
-        case EmitterShape::Rectangle:
-            lua_pushstring(L, "rectangle");
-            break;
-        case EmitterShape::Line:
-            lua_pushstring(L, "line");
-            break;
-        default:
-            lua_pushstring(L, "unknown");
-    }
-    return 1;
-}
-
-int l_particleEmitter_setDirection(lua_State* L) {
-    ParticleEmitter* emitter = static_cast<ParticleEmitter*>(luaL_checkudata(L, 1, "ParticleEmitter"));
-    if (!emitter) {
-        luaL_argerror(L, 1, "ParticleEmitter expected");
-        return 0;
-    }
-    Vector2* direction = checkVector2(L, 2);
-    float mag = sqrtf(direction->x * direction->x + direction->y * direction->y);
-    if (mag > 0) {
-        emitter->direction.x = direction->x / mag;
-        emitter->direction.y = direction->y / mag;
-    } else {
-        emitter->direction = {1.0f, 0.0f}; // Default to right if zero vector
-    }
-    return 0;
-}
-
-int l_particleEmitter_getDirection(lua_State* L) {
-    ParticleEmitter* emitter = static_cast<ParticleEmitter*>(luaL_checkudata(L, 1, "ParticleEmitter"));
-    if (!emitter) {
-        luaL_argerror(L, 1, "ParticleEmitter expected");
-        return 0;
-    }
-    Vector2* direction = new Vector2{emitter->direction.x, emitter->direction.y};
-    lua_pushlightuserdata(L, direction);
-    luaL_getmetatable(L, "Vector2");
-    lua_setmetatable(L, -2);
-    return 1;
-}
-
 int l_particleEmitter_emit(lua_State* L) {
     ParticleEmitter** emitterPtr = static_cast<ParticleEmitter**>(luaL_checkudata(L, 1, "ParticleEmitter"));
-    if (!emitterPtr || !*emitterPtr) {
-        luaL_argerror(L, 1, "ParticleEmitter expected");
-        return 0;
-    }
     int count = static_cast<int>(luaL_checkinteger(L, 2));
-    if (count < 0) {
-        luaL_argerror(L, 2, "Count must be non-negative");
-        return 0;
-    }
+    if (!emitterPtr || !*emitterPtr) luaL_argerror(L, 1, "ParticleEmitter expected");
+    if (count < 0) luaL_argerror(L, 2, "Count must be non-negative");
     (*emitterPtr)->emit(count);
     return 0;
 }
 
 int l_particleEmitter_render(lua_State* L) {
     ParticleEmitter** emitterPtr = static_cast<ParticleEmitter**>(luaL_checkudata(L, 1, "ParticleEmitter"));
-    if (!emitterPtr || !*emitterPtr) {
-        luaL_argerror(L, 1, "ParticleEmitter expected");
-        return 0;
-    }
+    if (!emitterPtr || !*emitterPtr) luaL_argerror(L, 1, "ParticleEmitter expected");
     VoltaFramework* framework = getFramework(L);
-    if (!framework) {
-        luaL_error(L, "Framework not found");
-        return 0;
-    }
+    if (!framework) luaL_error(L, "Framework not found");
     (*emitterPtr)->render(framework);
     return 0;
 }
 
-int l_particleEmitter_setLifetime(lua_State* L) {
-    ParticleEmitter* emitter = static_cast<ParticleEmitter*>(luaL_checkudata(L, 1, "ParticleEmitter"));
-    if (!emitter) {
-        luaL_argerror(L, 1, "ParticleEmitter expected");
-        return 0;
-    }
-    float lifetime = static_cast<float>(luaL_checknumber(L, 2));
-    if (lifetime < 0) {
-        luaL_argerror(L, 2, "Lifetime must be non-negative");
-        return 0;
-    }
-    emitter->particleLife = lifetime;
-    return 0;  // No return values
-}
-
-int l_particleEmitter_setSpeed(lua_State* L) {
-    ParticleEmitter* emitter = static_cast<ParticleEmitter*>(luaL_checkudata(L, 1, "ParticleEmitter"));
-    if (!emitter) {
-        luaL_argerror(L, 1, "ParticleEmitter expected");
-        return 0;
-    }
-    float speed = static_cast<float>(luaL_checknumber(L, 2));
-    if (speed < 0) {
-        luaL_argerror(L, 2, "Speed must be non-negative");
-        return 0;
-    }
-    emitter->speed = speed;
-    return 0;  // No return values
-}
-
-int l_particleEmitter_setSpread(lua_State* L) {
-    ParticleEmitter* emitter = static_cast<ParticleEmitter*>(luaL_checkudata(L, 1, "ParticleEmitter"));
-    if (!emitter) {
-        luaL_argerror(L, 1, "ParticleEmitter expected");
-        return 0;
-    }
-    float spread = static_cast<float>(luaL_checknumber(L, 2));
-    if (spread < 0) {
-        luaL_argerror(L, 2, "Spread must be non-negative");
-        return 0;
-    }
-    emitter->spread = spread;
-    return 0;  // No return values
-}
-
-int l_particleEmitter_getLifetime(lua_State* L) {
-    ParticleEmitter* emitter = static_cast<ParticleEmitter*>(luaL_checkudata(L, 1, "ParticleEmitter"));
-    if (!emitter) {
-        luaL_argerror(L, 1, "ParticleEmitter expected");
-        return 0;
-    }
-    lua_pushnumber(L, emitter->particleLife);
-    return 1;  // Return 1 value (the lifetime)
-}
-
-int l_particleEmitter_getSpeed(lua_State* L) {
-    ParticleEmitter* emitter = static_cast<ParticleEmitter*>(luaL_checkudata(L, 1, "ParticleEmitter"));
-    if (!emitter) {
-        luaL_argerror(L, 1, "ParticleEmitter expected");
-        return 0;
-    }
-    lua_pushnumber(L, emitter->speed);
-    return 1;  // Return 1 value (the speed)
-}
-
-int l_particleEmitter_getSpread(lua_State* L) {
-    ParticleEmitter* emitter = static_cast<ParticleEmitter*>(luaL_checkudata(L, 1, "ParticleEmitter"));
-    if (!emitter) {
-        luaL_argerror(L, 1, "ParticleEmitter expected");
-        return 0;
-    }
-    lua_pushnumber(L, emitter->spread);
-    return 1;  // Return 1 value (the spread)
-}
-
 int l_particleEmitter_setPosition(lua_State* L) {
     ParticleEmitter** emitterPtr = static_cast<ParticleEmitter**>(luaL_checkudata(L, 1, "ParticleEmitter"));
-    if (!emitterPtr || !*emitterPtr) {
-        luaL_argerror(L, 1, "ParticleEmitter expected");
-        return 0;
-    }
-    Vector2* position = checkVector2(L, 2);
-    (*emitterPtr)->setPosition(*position);
+    Vector2* pos = checkVector2(L, 2);
+    if (!emitterPtr || !*emitterPtr) luaL_argerror(L, 1, "ParticleEmitter expected");
+    (*emitterPtr)->setPosition(*pos);
     return 0;
 }
 
 int l_particleEmitter_getPosition(lua_State* L) {
-    ParticleEmitter* emitter = static_cast<ParticleEmitter*>(luaL_checkudata(L, 1, "ParticleEmitter"));
-    if (!emitter) {
-        luaL_argerror(L, 1, "ParticleEmitter expected");
-        return 0;
-    }
-    Vector2 pos = emitter->getPosition();
+    ParticleEmitter** emitterPtr = static_cast<ParticleEmitter**>(luaL_checkudata(L, 1, "ParticleEmitter"));
+    if (!emitterPtr || !*emitterPtr) luaL_argerror(L, 1, "ParticleEmitter expected");
+    Vector2 pos = (*emitterPtr)->getPosition();
     Vector2* newPos = new Vector2{pos.x, pos.y};
     lua_pushlightuserdata(L, newPos);
     luaL_getmetatable(L, "Vector2");
     lua_setmetatable(L, -2);
-    return 1; // Return the Vector2 position
+    return 1;
+}
+
+int l_particleEmitter_setLifetime(lua_State* L) {
+    ParticleEmitter** emitterPtr = static_cast<ParticleEmitter**>(luaL_checkudata(L, 1, "ParticleEmitter"));
+    float lifetime = static_cast<float>(luaL_checknumber(L, 2));
+    if (!emitterPtr || !*emitterPtr) luaL_argerror(L, 1, "ParticleEmitter expected");
+    if (lifetime < 0) luaL_argerror(L, 2, "Lifetime must be non-negative");
+    (*emitterPtr)->setParticleLife(lifetime);
+    return 0;
+}
+
+int l_particleEmitter_getLifetime(lua_State* L) {
+    ParticleEmitter** emitterPtr = static_cast<ParticleEmitter**>(luaL_checkudata(L, 1, "ParticleEmitter"));
+    if (!emitterPtr || !*emitterPtr) luaL_argerror(L, 1, "ParticleEmitter expected");
+    lua_pushnumber(L, (*emitterPtr)->getParticleLife());
+    return 1;
+}
+
+int l_particleEmitter_setSpeed(lua_State* L) {
+    ParticleEmitter** emitterPtr = static_cast<ParticleEmitter**>(luaL_checkudata(L, 1, "ParticleEmitter"));
+    float speed = static_cast<float>(luaL_checknumber(L, 2));
+    if (!emitterPtr || !*emitterPtr) luaL_argerror(L, 1, "ParticleEmitter expected");
+    if (speed < 0) luaL_argerror(L, 2, "Speed must be non-negative");
+    (*emitterPtr)->setSpeed(speed);
+    return 0;
+}
+
+int l_particleEmitter_getSpeed(lua_State* L) {
+    ParticleEmitter** emitterPtr = static_cast<ParticleEmitter**>(luaL_checkudata(L, 1, "ParticleEmitter"));
+    if (!emitterPtr || !*emitterPtr) luaL_argerror(L, 1, "ParticleEmitter expected");
+    lua_pushnumber(L, (*emitterPtr)->getSpeed());
+    return 1;
+}
+
+int l_particleEmitter_setSpread(lua_State* L) {
+    ParticleEmitter** emitterPtr = static_cast<ParticleEmitter**>(luaL_checkudata(L, 1, "ParticleEmitter"));
+    float spread = static_cast<float>(luaL_checknumber(L, 2));
+    if (!emitterPtr || !*emitterPtr) luaL_argerror(L, 1, "ParticleEmitter expected");
+    if (spread < 0) luaL_argerror(L, 2, "Spread must be non-negative");
+    (*emitterPtr)->setSpread(spread);
+    return 0;
+}
+
+int l_particleEmitter_getSpread(lua_State* L) {
+    ParticleEmitter** emitterPtr = static_cast<ParticleEmitter**>(luaL_checkudata(L, 1, "ParticleEmitter"));
+    if (!emitterPtr || !*emitterPtr) luaL_argerror(L, 1, "ParticleEmitter expected");
+    lua_pushnumber(L, (*emitterPtr)->getSpread());
+    return 1;
+}
+
+int l_particleEmitter_setDirection(lua_State* L) {
+    ParticleEmitter** emitterPtr = static_cast<ParticleEmitter**>(luaL_checkudata(L, 1, "ParticleEmitter"));
+    Vector2* dir = checkVector2(L, 2);
+    if (!emitterPtr || !*emitterPtr) luaL_argerror(L, 1, "ParticleEmitter expected");
+    (*emitterPtr)->setDirection(*dir);
+    return 0;
+}
+
+int l_particleEmitter_getDirection(lua_State* L) {
+    ParticleEmitter** emitterPtr = static_cast<ParticleEmitter**>(luaL_checkudata(L, 1, "ParticleEmitter"));
+    if (!emitterPtr || !*emitterPtr) luaL_argerror(L, 1, "ParticleEmitter expected");
+    Vector2 dir = (*emitterPtr)->getDirection();
+    Vector2* newDir = new Vector2{dir.x, dir.y};
+    lua_pushlightuserdata(L, newDir);
+    luaL_getmetatable(L, "Vector2");
+    lua_setmetatable(L, -2);
+    return 1;
+}
+
+int l_particleEmitter_setShape(lua_State* L) {
+    ParticleEmitter** emitterPtr = static_cast<ParticleEmitter**>(luaL_checkudata(L, 1, "ParticleEmitter"));
+    const char* shapeStr = luaL_checkstring(L, 2);
+    if (!emitterPtr || !*emitterPtr) luaL_argerror(L, 1, "ParticleEmitter expected");
+    if (strcmp(shapeStr, "circle") == 0) (*emitterPtr)->setShape(EmitterShape::Circle);
+    else if (strcmp(shapeStr, "cone") == 0) (*emitterPtr)->setShape(EmitterShape::Cone);
+    else if (strcmp(shapeStr, "rectangle") == 0) (*emitterPtr)->setShape(EmitterShape::Rectangle);
+    else if (strcmp(shapeStr, "line") == 0) (*emitterPtr)->setShape(EmitterShape::Line);
+    else luaL_error(L, "Invalid emitter shape: %s", shapeStr);
+    return 0;
+}
+
+int l_particleEmitter_getShape(lua_State* L) {
+    ParticleEmitter** emitterPtr = static_cast<ParticleEmitter**>(luaL_checkudata(L, 1, "ParticleEmitter"));
+    if (!emitterPtr || !*emitterPtr) luaL_argerror(L, 1, "ParticleEmitter expected");
+    switch ((*emitterPtr)->getShape()) {
+        case EmitterShape::Circle: lua_pushstring(L, "circle"); break;
+        case EmitterShape::Cone: lua_pushstring(L, "cone"); break;
+        case EmitterShape::Rectangle: lua_pushstring(L, "rectangle"); break;
+        case EmitterShape::Line: lua_pushstring(L, "line"); break;
+        default: lua_pushstring(L, "unknown");
+    }
+    return 1;
+}
+
+int l_particleEmitter_setSize(lua_State* L) {
+    ParticleEmitter** emitterPtr = static_cast<ParticleEmitter**>(luaL_checkudata(L, 1, "ParticleEmitter"));
+    float width = static_cast<float>(luaL_checknumber(L, 2));
+    float height = static_cast<float>(luaL_checknumber(L, 3));
+    if (!emitterPtr || !*emitterPtr) luaL_argerror(L, 1, "ParticleEmitter expected");
+    if (width < 0 || height < 0) luaL_error(L, "Width and height must be non-negative");
+    (*emitterPtr)->setSize(width, height);
+    return 0;
+}
+
+int l_particleEmitter_getSize(lua_State* L) {
+    ParticleEmitter** emitterPtr = static_cast<ParticleEmitter**>(luaL_checkudata(L, 1, "ParticleEmitter"));
+    if (!emitterPtr || !*emitterPtr) luaL_argerror(L, 1, "ParticleEmitter expected");
+    lua_pushnumber(L, (*emitterPtr)->getWidth());
+    lua_pushnumber(L, (*emitterPtr)->getHeight());
+    return 2;
 }
 
 int l_particleEmitter_setTexture(lua_State* L) {
     ParticleEmitter** emitterPtr = static_cast<ParticleEmitter**>(luaL_checkudata(L, 1, "ParticleEmitter"));
-    if (!emitterPtr || !*emitterPtr) {
-        luaL_argerror(L, 1, "ParticleEmitter expected");
-        return 0;
-    }
-    
+    if (!emitterPtr || !*emitterPtr) luaL_argerror(L, 1, "ParticleEmitter expected");
     VoltaFramework* framework = getFramework(L);
-    if (!framework) {
-        luaL_error(L, "Framework not found");
-        return 0;
-    }
-
+    if (!framework) luaL_error(L, "Framework not found");
     const char* filename = luaL_checkstring(L, 2);
     GLuint texture = framework->loadTexture(filename);
-    
-    if (texture == 0) {
-        luaL_error(L, "Failed to load texture '%s' - check file path or format", filename);
-        return 0;
-    }
-    
+    if (texture == 0) luaL_error(L, "Failed to load texture: %s", filename);
     (*emitterPtr)->setParticleTexture(texture);
     return 0;
 }

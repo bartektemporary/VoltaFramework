@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <float.h>
 #include <variant>
+#include <random>
 #include <functional>
 namespace fs = std::filesystem;
 
@@ -58,6 +59,14 @@ private:
 };
 
 Color* checkColor(lua_State* L, int index);
+class VoltaFramework;
+
+class GameBase {
+public:
+    virtual ~GameBase() = default;
+    virtual void init(VoltaFramework* framework) {}  // Called once at startup
+    virtual void update(VoltaFramework* framework, float dt) {}  // Called every frame
+};
 
 struct Particle {
     Vector2 position;
@@ -68,14 +77,6 @@ struct Particle {
     GLuint texture = 0;
 };
 
-class VoltaFramework;
-
-class GameBase {
-public:
-    virtual ~GameBase() = default;
-    virtual void init(VoltaFramework* framework) {}  // Called once at startup
-    virtual void update(VoltaFramework* framework, float dt) {}  // Called every frame
-};
 
 enum class EmitterShape {
     Circle,
@@ -85,37 +86,46 @@ enum class EmitterShape {
 };
 
 class ParticleEmitter {
-public:
-    ParticleEmitter(Vector2 position, float particleLife, float speed, float spread, Vector2 direction = {1.0f, 0.0f}, 
-        EmitterShape shape = EmitterShape::Cone, float width = 100.0f, float height = 100.0f, GLuint texture = 0);
-    void emit(int count);
-    void update(float dt);
-    void render(VoltaFramework* framework);
+    public:
+        ParticleEmitter(Vector2 position, float particleLife, float speed, float spread, Vector2 direction,
+                        EmitterShape shape, float width, float height, GLuint texture = 0);
     
-    void setPosition(Vector2 newPos) { position = newPos; }
-    Vector2 getPosition() const { return position; }
-    void setShape(EmitterShape newShape) { shape = newShape; }
-    EmitterShape getShape() const { return shape; }
-    void setSize(float newWidth, float newHeight) { width = newWidth; height = newHeight; }
-    float getWidth() const { return width; }
-    float getHeight() const { return height; }
+        void emit(int count);
+        void update(float dt);
+        void render(VoltaFramework* framework);
     
-    float particleLife;
-    float speed;
-    float spread;
-    Vector2 direction;
-
-    void setParticleTexture(GLuint texture) { particleTexture = texture; }
-    GLuint getParticleTexture() const { return particleTexture; }
+        void setPosition(Vector2 pos) { position = pos; }
+        Vector2 getPosition() const { return position; }
+        void setParticleLife(float life) { particleLife = life > 0 ? life : 0; }
+        float getParticleLife() const { return particleLife; }
+        void setSpeed(float s) { speed = s > 0 ? s : 0; }
+        float getSpeed() const { return speed; }
+        void setSpread(float s) { spread = s > 0 ? s : 0; }
+        float getSpread() const { return spread; }
+        void setDirection(Vector2 dir);
+        Vector2 getDirection() const { return direction; }
+        void setShape(EmitterShape s) { shape = s; }
+        EmitterShape getShape() const { return shape; }
+        void setSize(float w, float h) { width = w > 0 ? w : 0; height = h > 0 ? h : 0; }
+        float getWidth() const { return width; }
+        float getHeight() const { return height; }
+        void setParticleTexture(GLuint tex) { particleTexture = tex; }
+        GLuint getParticleTexture() const { return particleTexture; }
     
-private:
-    Vector2 position;
-    std::vector<Particle> particles;
-    EmitterShape shape;
-    float width;
-    float height;
-    GLuint particleTexture;
-};
+    private:
+        Vector2 position;
+        float particleLife;
+        float speed;
+        float spread;
+        Vector2 direction;
+        EmitterShape shape;
+        float width;
+        float height;
+        GLuint particleTexture;
+        std::vector<Particle> particles;
+    
+        static std::mt19937 gen; // Static random generator
+    };
 
 class VoltaFramework {
 public:

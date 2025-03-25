@@ -9,6 +9,12 @@
 #include <dlfcn.h>
 #endif
 
+void VoltaFramework::renderParticles(float dt) {
+    for (auto& emitter : particleEmitters) {
+        emitter.update(dt);
+    }
+}
+
 VoltaFramework* g_frameworkInstance {nullptr};
 
 class DefaultGame : public GameBase {
