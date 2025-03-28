@@ -1,11 +1,12 @@
 #ifndef CAMERA2D_HPP
 #define CAMERA2D_HPP
 
-#include "VoltaFramework.hpp"
+#include "VoltaFramework.hpp" // Includes Vector2.hpp and lua.hpp
 #include "Matrix.hpp"
 
 class Camera2D {
 public:
+    // Constructors
     Camera2D();
     Camera2D(const Vector2& position, float zoom = 1.0f, float rotation = 0.0f);
 
@@ -25,6 +26,9 @@ public:
     void zoomBy(float factor);
     void rotateBy(float degrees);
 
+    // Additional C++ API method
+    std::string toString() const; // Added to match Lua's tostring
+
 private:
     Vector2 position; // Already using Vector2
     float zoom;
@@ -34,15 +38,15 @@ private:
     Matrix4 viewMatrix;
 };
 
-// Lua function declarations
+// Lua function declarations (unchanged)
 int l_camera2d_new(lua_State* L);
 int l_camera2d_getPosition(lua_State* L);
-int l_camera2d_setPosition(lua_State* L); // Update to handle Vector2
+int l_camera2d_setPosition(lua_State* L);
 int l_camera2d_getZoom(lua_State* L);
 int l_camera2d_setZoom(lua_State* L);
 int l_camera2d_getRotation(lua_State* L);
 int l_camera2d_setRotation(lua_State* L);
-int l_camera2d_move(lua_State* L); // Update to handle Vector2
+int l_camera2d_move(lua_State* L);
 int l_camera2d_zoomBy(lua_State* L);
 int l_camera2d_rotateBy(lua_State* L);
 int l_camera2d_tostring(lua_State* L);

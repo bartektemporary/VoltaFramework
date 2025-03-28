@@ -1,6 +1,7 @@
 #include "VoltaFramework.hpp"
 #include "Camera2D.hpp"
 #include <cmath>
+#include <cstring> // For snprintf
 
 Camera2D::Camera2D() : position(0.0f, 0.0f), zoom(1.0f), rotation(0.0f) {
     updateViewMatrix();
@@ -60,6 +61,14 @@ void Camera2D::updateViewMatrix() {
     viewMatrix = scaleMat * rotateMat * translateMat; // Scale -> Rotate -> Translate
 }
 
+// New C++ API method
+std::string Camera2D::toString() const {
+    char buffer[128];
+    snprintf(buffer, sizeof(buffer), "Camera2D(pos: (%.2f, %.2f), zoom: %.2f, rotation: %.2f)",
+             position.x, position.y, zoom, rotation);
+    return std::string(buffer);
+}
+
 // Lua bindings
 
 Camera2D* checkCamera2D(lua_State* L, int index) {
@@ -99,8 +108,7 @@ int l_camera2d_getPosition(lua_State* L) {
     Camera2D* camera = checkCamera2D(L, 1);
     Vector2 pos = camera->getPosition();
     Vector2* result = static_cast<Vector2*>(lua_newuserdata(L, sizeof(Vector2)));
-    result->x = pos.x;
-    result->y = pos.y;
+    *result = pos; // Use assignment operator
     luaL_getmetatable(L, "Vector2");
     lua_setmetatable(L, -2);
     return 1;
@@ -162,10 +170,7 @@ int l_camera2d_rotateBy(lua_State* L) {
 
 int l_camera2d_tostring(lua_State* L) {
     Camera2D* camera = checkCamera2D(L, 1);
-    char buffer[128];
-    snprintf(buffer, sizeof(buffer), "Camera2D(pos: (%.2f, %.2f), zoom: %.2f, rotation: %.2f)",
-             camera->getPosition().x, camera->getPosition().y, camera->getZoom(), camera->getRotation());
-    lua_pushstring(L, buffer);
+    lua_pushstring(L, camera->toString().c_str()); // Use new C++ API method
     return 1;
 }
 
