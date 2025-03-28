@@ -14,7 +14,7 @@ struct Vector3 {
     // Constructors
     Vector3(float x_ = 0.0f, float y_ = 0.0f, float z_ = 0.0f) : x(x_), y(y_), z(z_) {}
 
-    // Arithmetic operators
+    // Arithmetic operators (already present)
     Vector3 operator+(const Vector3& other) const { return Vector3(x + other.x, y + other.y, z + other.z); }
     Vector3 operator-(const Vector3& other) const { return Vector3(x - other.x, y - other.y, z - other.z); }
     Vector3 operator*(float scalar) const { return Vector3(x * scalar, y * scalar, z * scalar); }
@@ -28,7 +28,7 @@ struct Vector3 {
         return Vector3(x / other.x, y / other.y, z / other.z);
     }
 
-    // Compound assignment operators
+    // Compound assignment operators (already present)
     Vector3& operator+=(const Vector3& other) { x += other.x; y += other.y; z += other.z; return *this; }
     Vector3& operator-=(const Vector3& other) { x -= other.x; y -= other.y; z -= other.z; return *this; }
     Vector3& operator*=(float scalar) { x *= scalar; y *= scalar; z *= scalar; return *this; }
@@ -37,7 +37,7 @@ struct Vector3 {
         x /= scalar; y /= scalar; z /= scalar; return *this;
     }
 
-    // Utility methods
+    // Existing utility methods (kept as-is)
     float magnitude() const { return std::sqrt(x * x + y * y + z * z); }
     Vector3 normalized() const {
         float mag = magnitude();
@@ -68,11 +68,20 @@ struct Vector3 {
         return std::string(buffer);
     }
 
-    // Tween method with easing
+    // Tween method with easing (already declared, implemented in Vector3.cpp)
     Vector3 tween(const Vector3& target, float t, const char* direction, const char* style) const;
+
+    // New C++ API methods to match Lua bindings
+    Vector3 add(const Vector3& other) const { return *this + other; }
+    Vector3 subtract(const Vector3& other) const { return *this - other; }
+    Vector3 multiply(float scalar) const { return *this * scalar; }
+    Vector3 multiply(const Vector3& other) const { return *this * other; }
+    Vector3 divide(float scalar) const { return *this / scalar; }
+    Vector3 divide(const Vector3& other) const { return *this / other; }
+    Vector3 normalize() const { return normalized(); } // Alias for consistency with Lua naming
 };
 
-// Lua function declarations
+// Lua function declarations (unchanged)
 Vector3* checkVector3(lua_State* L, int index);
 int l_vector3_new(lua_State* L);
 int l_vector3_add(lua_State* L);
