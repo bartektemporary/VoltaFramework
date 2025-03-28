@@ -16,7 +16,7 @@ static void pushVector3(lua_State* L, const Vector3& vec) {
     lua_setmetatable(L, -2);
 }
 
-// Easing functions (unchanged)
+// Easing functions
 static float easeLinear(float t) { return t; }
 static float easeSineIn(float t) { return 1.0f - std::cos(t * M_PI / 2.0f); }
 static float easeSineOut(float t) { return std::sin(t * M_PI / 2.0f); }
@@ -125,14 +125,14 @@ int l_vector3_new(lua_State* L) {
 int l_vector3_add(lua_State* L) {
     Vector3* a = checkVector3(L, 1);
     Vector3* b = checkVector3(L, 2);
-    pushVector3(L, *a + *b);
+    pushVector3(L, a->add(*b));
     return 1;
 }
 
 int l_vector3_subtract(lua_State* L) {
     Vector3* a = checkVector3(L, 1);
     Vector3* b = checkVector3(L, 2);
-    pushVector3(L, *a - *b);
+    pushVector3(L, a->subtract(*b));
     return 1;
 }
 
@@ -140,10 +140,10 @@ int l_vector3_multiply(lua_State* L) {
     Vector3* a = checkVector3(L, 1);
     if (lua_isnumber(L, 2)) {
         float scalar = static_cast<float>(lua_tonumber(L, 2));
-        pushVector3(L, *a * scalar);
+        pushVector3(L, a->multiply(scalar));
     } else {
         Vector3* b = checkVector3(L, 2);
-        pushVector3(L, *a * *b);
+        pushVector3(L, a->multiply(*b));
     }
     return 1;
 }
@@ -153,11 +153,11 @@ int l_vector3_divide(lua_State* L) {
     if (lua_isnumber(L, 2)) {
         float scalar = static_cast<float>(lua_tonumber(L, 2));
         if (scalar == 0) luaL_error(L, "Division by zero");
-        pushVector3(L, *a / scalar);
+        pushVector3(L, a->divide(scalar));
     } else {
         Vector3* b = checkVector3(L, 2);
         if (b->x == 0 || b->y == 0 || b->z == 0) luaL_error(L, "Division by zero");
-        pushVector3(L, *a / *b);
+        pushVector3(L, a->divide(*b));
     }
     return 1;
 }

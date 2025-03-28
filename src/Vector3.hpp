@@ -1,7 +1,7 @@
 #ifndef VECTOR3_HPP
 #define VECTOR3_HPP
 
-#include <lua.hpp> // For lua_State*
+#include <lua.hpp>
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <cstring>
@@ -11,33 +11,24 @@
 struct Vector3 {
     float x, y, z;
 
-    // Constructors
+    // Constructor (immutable after creation)
     Vector3(float x_ = 0.0f, float y_ = 0.0f, float z_ = 0.0f) : x(x_), y(y_), z(z_) {}
 
-    // Arithmetic operators (already present)
-    Vector3 operator+(const Vector3& other) const { return Vector3(x + other.x, y + other.y, z + other.z); }
-    Vector3 operator-(const Vector3& other) const { return Vector3(x - other.x, y - other.y, z - other.z); }
-    Vector3 operator*(float scalar) const { return Vector3(x * scalar, y * scalar, z * scalar); }
-    Vector3 operator*(const Vector3& other) const { return Vector3(x * other.x, y * other.y, z * other.z); }
-    Vector3 operator/(float scalar) const {
+    // Arithmetic operations (return new instances)
+    Vector3 add(const Vector3& other) const { return Vector3(x + other.x, y + other.y, z + other.z); }
+    Vector3 subtract(const Vector3& other) const { return Vector3(x - other.x, y - other.y, z - other.z); }
+    Vector3 multiply(float scalar) const { return Vector3(x * scalar, y * scalar, z * scalar); }
+    Vector3 multiply(const Vector3& other) const { return Vector3(x * other.x, y * other.y, z * other.z); }
+    Vector3 divide(float scalar) const {
         if (scalar == 0) throw std::runtime_error("Division by zero");
         return Vector3(x / scalar, y / scalar, z / scalar);
     }
-    Vector3 operator/(const Vector3& other) const {
+    Vector3 divide(const Vector3& other) const {
         if (other.x == 0 || other.y == 0 || other.z == 0) throw std::runtime_error("Division by zero");
         return Vector3(x / other.x, y / other.y, z / other.z);
     }
 
-    // Compound assignment operators (already present)
-    Vector3& operator+=(const Vector3& other) { x += other.x; y += other.y; z += other.z; return *this; }
-    Vector3& operator-=(const Vector3& other) { x -= other.x; y -= other.y; z -= other.z; return *this; }
-    Vector3& operator*=(float scalar) { x *= scalar; y *= scalar; z *= scalar; return *this; }
-    Vector3& operator/=(float scalar) {
-        if (scalar == 0) throw std::runtime_error("Division by zero");
-        x /= scalar; y /= scalar; z /= scalar; return *this;
-    }
-
-    // Existing utility methods (kept as-is)
+    // Utility methods (all const, return new instances where applicable)
     float magnitude() const { return std::sqrt(x * x + y * y + z * z); }
     Vector3 normalized() const {
         float mag = magnitude();
@@ -68,20 +59,11 @@ struct Vector3 {
         return std::string(buffer);
     }
 
-    // Tween method with easing (already declared, implemented in Vector3.cpp)
+    // Tween method (returns new instance)
     Vector3 tween(const Vector3& target, float t, const char* direction, const char* style) const;
-
-    // New C++ API methods to match Lua bindings
-    Vector3 add(const Vector3& other) const { return *this + other; }
-    Vector3 subtract(const Vector3& other) const { return *this - other; }
-    Vector3 multiply(float scalar) const { return *this * scalar; }
-    Vector3 multiply(const Vector3& other) const { return *this * other; }
-    Vector3 divide(float scalar) const { return *this / scalar; }
-    Vector3 divide(const Vector3& other) const { return *this / other; }
-    Vector3 normalize() const { return normalized(); } // Alias for consistency with Lua naming
 };
 
-// Lua function declarations (unchanged)
+// Lua function declarations
 Vector3* checkVector3(lua_State* L, int index);
 int l_vector3_new(lua_State* L);
 int l_vector3_add(lua_State* L);

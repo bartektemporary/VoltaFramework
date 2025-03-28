@@ -1,43 +1,33 @@
 #ifndef VECTOR2_HPP
 #define VECTOR2_HPP
 
-#include <lua.hpp> // Include Lua directly for bindings
+#include <lua.hpp>
 #include <cmath>
 #include <cstring>
 #include <string>
 #include <stdexcept>
 
-// Define Vector2 with C++ functionality
 struct Vector2 {
     float x, y;
 
-    // Constructors
+    // Constructor (immutable after creation)
     Vector2(float x_ = 0.0f, float y_ = 0.0f) : x(x_), y(y_) {}
 
-    // Arithmetic operators
-    Vector2 operator+(const Vector2& other) const { return Vector2(x + other.x, y + other.y); }
-    Vector2 operator-(const Vector2& other) const { return Vector2(x - other.x, y - other.y); }
-    Vector2 operator*(float scalar) const { return Vector2(x * scalar, y * scalar); }
-    Vector2 operator*(const Vector2& other) const { return Vector2(x * other.x, y * other.y); }
-    Vector2 operator/(float scalar) const {
+    // Arithmetic operations (return new instances)
+    Vector2 add(const Vector2& other) const { return Vector2(x + other.x, y + other.y); }
+    Vector2 subtract(const Vector2& other) const { return Vector2(x - other.x, y - other.y); }
+    Vector2 multiply(float scalar) const { return Vector2(x * scalar, y * scalar); }
+    Vector2 multiply(const Vector2& other) const { return Vector2(x * other.x, y * other.y); }
+    Vector2 divide(float scalar) const {
         if (scalar == 0) throw std::runtime_error("Division by zero");
         return Vector2(x / scalar, y / scalar);
     }
-    Vector2 operator/(const Vector2& other) const {
+    Vector2 divide(const Vector2& other) const {
         if (other.x == 0 || other.y == 0) throw std::runtime_error("Division by zero");
         return Vector2(x / other.x, y / other.y);
     }
 
-    // Compound assignment operators
-    Vector2& operator+=(const Vector2& other) { x += other.x; y += other.y; return *this; }
-    Vector2& operator-=(const Vector2& other) { x -= other.x; y -= other.y; return *this; }
-    Vector2& operator*=(float scalar) { x *= scalar; y *= scalar; return *this; }
-    Vector2& operator/=(float scalar) {
-        if (scalar == 0) throw std::runtime_error("Division by zero");
-        x /= scalar; y /= scalar; return *this;
-    }
-
-    // Utility methods
+    // Utility methods (all const, return new instances where applicable)
     float magnitude() const { return std::sqrt(x * x + y * y); }
     Vector2 normalized() const {
         float mag = magnitude();
@@ -67,7 +57,7 @@ struct Vector2 {
         return std::string(buffer);
     }
 
-    // Tween method with easing (forward declaration for implementation in .cpp)
+    // Tween method (returns new instance)
     Vector2 tween(const Vector2& target, float t, const char* direction, const char* style) const;
 };
 
