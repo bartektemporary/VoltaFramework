@@ -3,12 +3,6 @@
 #include <cstring>
 #include "Maps.hpp"
 
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <dlfcn.h>
-#endif
-
 void VoltaFramework::renderParticles(float dt) {
     for (auto& emitter : particleEmitters) {
         emitter.update(dt);
@@ -25,7 +19,7 @@ class DefaultGame : public GameBase {
         void update(VoltaFramework* framework, float dt) override {
             // Empty default update
         }
-    };
+};
 
 VoltaFramework::VoltaFramework() : 
     L{nullptr}, 

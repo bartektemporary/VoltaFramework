@@ -1,2 +1,4 @@
 build/
 !include/build/
+!include/freetype-2.13.3/build
+!include/glfw-3.4/build

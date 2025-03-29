@@ -1,0 +1,9 @@
+C:/Users/barte/Desktop/VoltaFramework/include/freetype-2.13.3/build/CMakeFiles/freetype.dir
+C:/Users/barte/Desktop/VoltaFramework/include/freetype-2.13.3/build/CMakeFiles/package.dir
+C:/Users/barte/Desktop/VoltaFramework/include/freetype-2.13.3/build/CMakeFiles/package_source.dir
+C:/Users/barte/Desktop/VoltaFramework/include/freetype-2.13.3/build/CMakeFiles/edit_cache.dir
+C:/Users/barte/Desktop/VoltaFramework/include/freetype-2.13.3/build/CMakeFiles/rebuild_cache.dir
+C:/Users/barte/Desktop/VoltaFramework/include/freetype-2.13.3/build/CMakeFiles/list_install_components.dir
+C:/Users/barte/Desktop/VoltaFramework/include/freetype-2.13.3/build/CMakeFiles/install.dir
+C:/Users/barte/Desktop/VoltaFramework/include/freetype-2.13.3/build/CMakeFiles/install/local.dir
+C:/Users/barte/Desktop/VoltaFramework/include/freetype-2.13.3/build/CMakeFiles/install/strip.dir
