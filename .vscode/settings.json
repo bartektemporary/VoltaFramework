@@ -83,6 +83,11 @@
         "ltm.h": "c",
         "lvm.h": "c",
         "lstring.h": "c",
-        "functional": "cpp"
+        "functional": "cpp",
+        "array": "cpp",
+        "queue": "cpp",
+        "unordered_set": "cpp",
+        "variant": "cpp",
+        "string_view": "cpp"
     }
 }
