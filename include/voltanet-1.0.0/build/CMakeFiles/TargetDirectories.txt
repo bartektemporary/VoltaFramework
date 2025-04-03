@@ -1,3 +1,0 @@
-C:/Users/barte/Desktop/VoltaFramework/include/voltanet-1.0.0/build/CMakeFiles/VoltaNet.dir
-C:/Users/barte/Desktop/VoltaFramework/include/voltanet-1.0.0/build/CMakeFiles/edit_cache.dir
-C:/Users/barte/Desktop/VoltaFramework/include/voltanet-1.0.0/build/CMakeFiles/rebuild_cache.dir

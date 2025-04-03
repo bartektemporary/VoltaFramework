@@ -51,12 +51,6 @@ set(FREETYPE_INCLUDE_DIR "${FREETYPE_ROOT}/include")
 set(FREETYPE_LIBRARY "${FREETYPE_ROOT}/build/libfreetype.a")
 include_directories(${FREETYPE_INCLUDE_DIR})
 
-# Add VoltaNet
-set(VOLTANET_ROOT "C:/Users/barte/Desktop/VoltaFramework/include/voltanet-1.0.0")
-set(VOLTANET_INCLUDE_DIR "${VOLTANET_ROOT}")
-set(VOLTANET_LIBRARY "${VOLTANET_ROOT}/build/libVoltaNet.a")
-include_directories(${VOLTANET_INCLUDE_DIR})
-
 if(NOT EXISTS "${FREETYPE_LIBRARY}")
     message(FATAL_ERROR "FreeType static library not found at ${FREETYPE_LIBRARY}")
 endif()
@@ -103,7 +97,6 @@ target_link_libraries(VoltaFramework
     ${FREEIMAGE_LIBRARY}
     ${SQLITE3_LIBRARY}
     ${FREETYPE_LIBRARY}
-    ${VOLTANET_LIBRARY}
     opengl32
     ws2_32
 )
