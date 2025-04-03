@@ -300,6 +300,80 @@ public:
     float noise3d(float x, float y, float z) const;
     float tween(float start, float end, float t, const std::string& direction, const std::string& style) const;
 
+    // Event methods
+
+    struct EventCallback {
+        std::variant<int, std::function<void(lua_State*, int)>> callback; // Lua ref or C++ function
+        bool isLua; // Flag to distinguish Lua vs C++ callback
+        EventCallback(int luaRef) : callback(luaRef), isLua(true) {}
+        EventCallback(std::function<void(lua_State*, int)> cppFunc) : callback(cppFunc), isLua(false) {}
+    };
+
+    void newEvent(const std::string& eventName); // Replaces declareEvent
+    void onEvent(const std::string& eventName, int luaRef); // Lua callback registration
+    void onEvent(const std::string& eventName, std::function<void(lua_State*, int)> cppCallback); // C++ callback registration
+    bool hasEvent(const std::string& eventName) const; // Check if event exists
+    void triggerEvent(const std::string& eventName, lua_State* L = nullptr, int nargs = 0); // Trigger event
+    
+    template<typename... Args>
+    void triggerEvent(const std::string& eventName, Args&&... args) {
+        auto it = eventCallbacks.find(eventName);
+        if (it == eventCallbacks.end()) return; // Event not defined or no callbacks
+
+        // Count arguments
+        int nargs = sizeof...(args);
+        
+        // Push arguments onto Lua stack
+        if (nargs > 0) {
+            int pushCount = 0;
+            ([&] {
+                if constexpr (std::is_same_v<std::decay_t<decltype(args)>, int>) {
+                    lua_pushinteger(L, args);
+                } else if constexpr (std::is_same_v<std::decay_t<decltype(args)>, double> || 
+                                  std::is_same_v<std::decay_t<decltype(args)>, float>) {
+                    lua_pushnumber(L, args);
+                } else if constexpr (std::is_same_v<std::decay_t<decltype(args)>, bool>) {
+                    lua_pushboolean(L, args);
+                } else if constexpr (std::is_same_v<std::decay_t<decltype(args)>, std::string>) {
+                    lua_pushstring(L, args.c_str());
+                } else if constexpr (std::is_same_v<std::decay_t<decltype(args)>, const char*>) {
+                    lua_pushstring(L, args);
+                } else {
+                    std::cerr << "Unsupported argument type for event '" << eventName << "'\n";
+                }
+                pushCount++;
+            }(), ...);
+        }
+
+        for (const auto& cb : it->second) {
+            if (cb.isLua) {
+                int ref = std::get<int>(cb.callback);
+                lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
+                if (lua_isfunction(L, -1)) {
+                    int argIndex = -nargs - 1;
+                    for (int i = 0; i < nargs; i++) {
+                        lua_pushvalue(L, argIndex);
+                    }
+                    if (lua_pcall(L, nargs, 0, 0) != LUA_OK) {
+                        std::cerr << "Event callback error for '" << eventName 
+                                  << "': " << lua_tostring(L, -1) << std::endl;
+                        lua_pop(L, 1);
+                    }
+                } else {
+                    std::cerr << "Invalid Lua callback for event '" << eventName << "'\n";
+                    lua_pop(L, 1);
+                }
+            } else {
+                auto cppFunc = std::get<std::function<void(lua_State*, int)>>(cb.callback);
+                cppFunc(L, nargs);
+            }
+        }
+
+        if (nargs > 0) {
+            lua_pop(L, nargs);
+        }
+    }
+
     // Initialization and cleanup
     void initOpenGL();
     void initOpenGL2D();
@@ -309,9 +383,6 @@ public:
     void cleanupOpenGL3D();
 
     void windowToGLCoords(float winX, float winY, float* glX, float* glY);
-
-    void registerCustomEventCallback(const std::string& eventName, int ref);
-    void triggerCustomEvent(const std::string& eventName, lua_State* L, int nargs);
 
     void renderParticles(float dt);
     std::vector<ParticleEmitter> particleEmitters;
@@ -385,7 +456,7 @@ private:
     static void windowPosCallback(GLFWwindow* window, int xpos, int ypos);
     static void windowMaximizeCallback(GLFWwindow* window, int maximized);
 
-    std::unordered_map<std::string, std::vector<int>> customEventCallbackRefs;
+    std::unordered_map<std::string, std::vector<EventCallback>> eventCallbacks;
 
     std::unordered_map<int, bool> gamepadStates;
     std::vector<int> gamepadConnectedCallbackRefs;
@@ -585,8 +656,9 @@ int l_particleEmitter_setPosition(lua_State* L);
 int l_particleEmitter_getPosition(lua_State* L);
 int l_particleEmitter_setTexture(lua_State* L);
 
-int l_onCustomEvent(lua_State* L);
-int l_triggerCustomEvent(lua_State* L);
+int l_event_new(lua_State* L);
+int l_event_on(lua_State* L);
+int l_event_trigger(lua_State* L);
 
 int l_math_clamp(lua_State* L);
 int l_math_round(lua_State* L);

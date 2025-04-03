@@ -39,7 +39,8 @@ VoltaFramework::VoltaFramework() :
     textureVBO{0},
     particleVAO{0},
     particleVBO{0},
-    globalVolume(1.0f)
+    globalVolume(1.0f),
+    eventCallbacks()
 {
     L = luaL_newstate();
     if (!L) {
@@ -173,12 +174,14 @@ VoltaFramework::~VoltaFramework() {
     textureCache.clear();
     FreeImage_DeInitialise();
     cleanupOpenGL();
-    for (auto& pair : customEventCallbackRefs) {
-        for (int ref : pair.second) {
-            luaL_unref(L, LUA_REGISTRYINDEX, ref);
+    for (auto& pair : eventCallbacks) {
+        for (auto& cb : pair.second) {
+            if (cb.isLua) {
+                luaL_unref(L, LUA_REGISTRYINDEX, std::get<int>(cb.callback));
+            }
         }
     }
-    customEventCallbackRefs.clear();
+    eventCallbacks.clear();
     audioCache.clear();
     ma_engine_uninit(&engine);
     for (auto& pair : databaseCache) {

@@ -457,12 +457,17 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "new");
     lua_setfield(L, -2, "particleEmitter");
 
+    lua_newtable(L);
+    lua_pushcfunction(L, l_event_new);
+    lua_setfield(L, -2, "new");
+    lua_pushcfunction(L, l_event_on);
+    lua_setfield(L, -2, "on");
+    lua_pushcfunction(L, l_event_trigger);
+    lua_setfield(L, -2, "trigger");
+    lua_setfield(L, -2, "event");
+
     lua_pushcfunction(L, l_getRunningTime);
     lua_setfield(L, -2, "getRunningTime");
-    lua_pushcfunction(L, l_onCustomEvent);
-    lua_setfield(L, -2, "onEvent");
-    lua_pushcfunction(L, l_triggerCustomEvent);
-    lua_setfield(L, -2, "triggerEvent");
     lua_pushcfunction(L, l_setCamera2D);
     lua_setfield(L, -2, "setCamera2D");
 
