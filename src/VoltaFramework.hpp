@@ -88,12 +88,13 @@ enum class EmitterShape {
 class ParticleEmitter {
     public:
         ParticleEmitter(Vector2 position, float particleLife, float speed, float spread, Vector2 direction,
-                        EmitterShape shape, float width, float height, GLuint texture = 0);
+                        EmitterShape shape, float width, float height, GLuint texture = 0, bool useGPU = true);
+        ~ParticleEmitter(); // Add destructor to clean up VBO
     
         void emit(int count);
         void update(float dt);
         void render(VoltaFramework* framework);
-    
+        
         void setPosition(Vector2 pos) { position = pos; }
         Vector2 getPosition() const { return position; }
         void setParticleLife(float life) { particleLife = life > 0 ? life : 0; }
@@ -111,7 +112,7 @@ class ParticleEmitter {
         float getHeight() const { return height; }
         void setParticleTexture(GLuint tex) { particleTexture = tex; }
         GLuint getParticleTexture() const { return particleTexture; }
-    
+        
     private:
         Vector2 position;
         float particleLife;
@@ -123,7 +124,9 @@ class ParticleEmitter {
         float height;
         GLuint particleTexture;
         std::vector<Particle> particles;
-    
+        bool useGPU;
+        GLuint vbo;
+        
         static std::mt19937 gen; // Static random generator
     };
 

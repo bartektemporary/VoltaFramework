@@ -20,7 +20,10 @@ function volta.init()
         100.0,                  -- Speed
         90.0,                   -- Spread (degrees)
         volta.vector2.new(1, 0),-- Direction (up)
-        "cone"                  -- Shape
+        "cone",                  -- Shape
+        100,
+        100,
+        "tree.png"
     )
 
     -- Set initial background color
@@ -91,6 +94,10 @@ function volta.update(dt)
     local cyanSize = volta.vector2.new(80, 80)
     volta.graphics.setColor(0, 1, 1) -- Cyan
     volta.graphics.rectangle(false, cyanPos, cyanSize, 0) -- Outline rectangle
+
+    volta.graphics.setFilter("nearest")
+    volta.graphics.setColor(1, 1, 1)
+    volta.graphics.drawImage("tree.png", cyanSize, cyanPos)
 
     local magentaPos = volta.vector2.new(300, -100)
     volta.graphics.setColor(1, 0, 1) -- Magenta
