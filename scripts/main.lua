@@ -1,123 +1,115 @@
--- Global variables
-local player = {
-    pos = volta.vector2.new(0, 0), -- Using Vector2 for position
-    size = volta.vector2.new(50, 50) -- Using Vector2 for size
-}
-local camera = nil
-local speed = 200 -- Movement speed in world units per second
-local emitter
+-- Define initial cube properties
+local cube_position = volta.vector3.new(0, 0, 0)  -- Center of the 3D space
+local cube_size = volta.vector3.new(2, 2, 2)      -- 2x2x2 cube
+local cube_rotation = volta.vector3.new(0, 0, 0)  -- Initial rotation
+local rotation_speed = 45                         -- Degrees per second
 
--- Initialize the game
-function volta.init()
-    -- Create a camera at the origin with default zoom and rotation
-    camera = volta.camera2d.new(volta.vector2.new(0, 0), 1, 0)
-    volta.setCamera2D(camera)
-    volta.window.setState("borderlessMaximized")
-    
-    emitter = volta.particleEmitter.new(
-        volta.vector2.new(0, 0), -- Position
-        22.0,                    -- Particle life
-        100.0,                  -- Speed
-        90.0,                   -- Spread (degrees)
-        volta.vector2.new(1, 0),-- Direction (up)
-        "cone",                  -- Shape
-        100,
-        100,
-        "tree.png"
-    )
+-- Set initial color (white)
+volta.graphics.setColor(1, 1, 1)
 
-    -- Set initial background color
-    volta.graphics.setColor(0.2, 0.2, 0.2) -- Dark gray background
-end
+-- Set up a 3D camera
+local camera = volta.camera3d.new(
+    0, 1, 5,    -- Initial position (x, y, z) - slightly above and back from the cube
+    0, 0, 0     -- Initial rotation (x, y, z) in degrees
+)
+camera:setFOV(75)      -- Field of view (degrees)
+camera:setNearPlane(0.1) -- Near clipping plane
+camera:setFarPlane(100)  -- Far clipping plane
+volta.setCamera3D(camera)
 
--- Update function called every frame
+-- Movement speed
+local move_speed = 5    -- Units per second
+local rotate_speed = 90 -- Degrees per second
+
+-- Update function to be called each frame
 function volta.update(dt)
-    -- Handle player movement
-    local move = volta.vector2.new(0, 0)
+    -- Rotate the cube
+    local rotation_increment = volta.vector3.new(
+        rotation_speed * dt,
+        rotation_speed * dt,
+        rotation_speed * dt
+    )
+    cube_rotation = cube_rotation:add(rotation_increment)
+    
+    -- Keep rotations within 0-360 degrees
+    local function mod360(v)
+        return volta.vector3.new(
+            v.x % 360,
+            v.y % 360,
+            v.z % 360
+        )
+    end
+    cube_rotation = mod360(cube_rotation)
+
+    -- Camera movement
+    local cam_pos = camera:getPosition()
+    local cam_rot = camera:getRotation()
+    local move_dir = volta.vector3.new(0, 0, 0)
+
+    -- WASD movement (forward, backward, left, right)
     if volta.input.isKeyDown("W") then
-        move = volta.vector2.new(move.x, move.y - 1)
+        -- Move forward along camera's direction (z-axis in local space)
+        move_dir.z = move_dir.z - move_speed * dt
     end
     if volta.input.isKeyDown("S") then
-        move = volta.vector2.new(move.x, move.y + 1)
+        -- Move backward
+        move_dir.z = move_dir.z + move_speed * dt
     end
     if volta.input.isKeyDown("A") then
-        move = volta.vector2.new(move.x - 1, move.y)
+        -- Strafe left
+        move_dir.x = move_dir.x - move_speed * dt
     end
     if volta.input.isKeyDown("D") then
-        move = volta.vector2.new(move.x + 1, move.y)
+        -- Strafe right
+        move_dir.x = move_dir.x + move_speed * dt
+    end
+    if volta.input.isKeyDown("SPACE") then
+        -- Move up
+        move_dir.y = move_dir.y + move_speed * dt
+    end
+    if volta.input.isKeyDown("LEFT_CONTROL") then
+        -- Move down
+        move_dir.y = move_dir.y - move_speed * dt
     end
 
-    -- Normalize movement vector if moving diagonally
-    local mag = move:magnitude()
-    if mag > 0 then
-        local normalizedMove = move:normalize()
-        local movement = normalizedMove:multiply(speed * dt) -- Multiply Vector2 by scalar
-        player.pos = player.pos:add(movement) -- Add Vector2 to Vector2
+    -- Apply rotation to movement direction based on camera yaw (y-axis rotation)
+    local yaw_rad = cam_rot.y * math.pi / 180
+    local forward_x = -math.sin(yaw_rad) * move_dir.z + math.cos(yaw_rad) * move_dir.x
+    local forward_z = -math.cos(yaw_rad) * move_dir.z - math.sin(yaw_rad) * move_dir.x
+    move_dir.x = forward_x
+    move_dir.z = forward_z
+
+    -- Update camera position
+    if move_dir:magnitude() > 0 then
+        camera:move(move_dir)
     end
 
-    -- Make the camera follow the player
-    camera:setPosition(player.pos)
+    -- Camera rotation (basic yaw and pitch with Q/E for roll)
+    local rot_change = volta.vector3.new(0, 0, 0)
+    if volta.input.isKeyDown("LEFT") then
+        rot_change.y = rot_change.y + rotate_speed * dt -- Yaw left
+    end
+    if volta.input.isKeyDown("RIGHT") then
+        rot_change.y = rot_change.y - rotate_speed * dt -- Yaw right
+    end
+    if volta.input.isKeyDown("UP") then
+        rot_change.x = rot_change.x - rotate_speed * dt -- Pitch up
+    end
+    if volta.input.isKeyDown("DOWN") then
+        rot_change.x = rot_change.x + rotate_speed * dt -- Pitch down
+    end
+    if volta.input.isKeyDown("Q") then
+        rot_change.z = rot_change.z + rotate_speed * dt -- Roll left
+    end
+    if volta.input.isKeyDown("E") then
+        rot_change.z = rot_change.z - rotate_speed * dt -- Roll right
+    end
 
-    -- Update and render particles
-    emitter:setPosition(volta.vector2.new(100, 100)) -- Beyond (960, 540)
-    emitter:emit(5) -- Emit 5 particles per frame
-    emitter:render()
+    -- Apply rotation changes
+    if rot_change:magnitude() > 0 then
+        camera:rotateBy(rot_change)
+    end
 
-    -- Draw screen-space UI elements
-    volta.graphics.setPositionMode("screen")
-    local uiPos1 = volta.vector2.new(10, 10)
-    local uiSize1 = volta.vector2.new(100, 20)
-    volta.graphics.setColor(1, 1, 1) -- White
-    volta.graphics.rectangle(true, uiPos1, uiSize1, 0) -- Top-left screen-space rectangle
-    local uiPos2 = volta.vector2.new(50, 50)
-    volta.graphics.setColor(0, 0, 1) -- Blue
-    volta.graphics.circle(true, uiPos2, 15) -- Screen-space circle
-
-    -- Draw world-space objects
-    volta.graphics.setPositionMode("world")
-    
-    -- Player rectangle (red)
-    volta.graphics.setColor(1, 0, 0)
-    volta.graphics.rectangle(true, player.pos, player.size, 0)
-
-    -- Scattered shapes in world space using Vector2
-    local greenPos = volta.vector2.new(100, 100)
-    local greenSize = volta.vector2.new(60, 60)
-    volta.graphics.setColor(0, 1, 0) -- Green
-    volta.graphics.rectangle(true, greenPos, greenSize, 45) -- Rotated square
-
-    local yellowPos = volta.vector2.new(-50, -50)
-    volta.graphics.setColor(1, 1, 0) -- Yellow
-    volta.graphics.circle(true, yellowPos, 30) -- Circle to the left
-
-    local cyanPos = volta.vector2.new(-200, 200)
-    local cyanSize = volta.vector2.new(80, 80)
-    volta.graphics.setColor(0, 1, 1) -- Cyan
-    volta.graphics.rectangle(false, cyanPos, cyanSize, 0) -- Outline rectangle
-
-    volta.graphics.setFilter("nearest")
-    volta.graphics.setColor(1, 1, 1)
-    volta.graphics.drawImage("tree.png", cyanSize, cyanPos)
-
-    local magentaPos = volta.vector2.new(300, -100)
-    volta.graphics.setColor(1, 0, 1) -- Magenta
-    volta.graphics.circle(false, magentaPos, 40) -- Outline circle
-
-    -- Draw some lines in world space using Vector2
-    local lineStart1 = volta.vector2.new(-100, -100)
-    local lineEnd1 = volta.vector2.new(100, 100)
-    local lineStart2 = volta.vector2.new(0, -150)
-    local lineEnd2 = volta.vector2.new(0, 150)
-    volta.graphics.setColor(0.5, 0.5, 0.5) -- Gray
-    volta.graphics.setPositionMode("world")
-    volta.graphics.drawLine(lineStart1, lineEnd1, 1) -- Diagonal line
-    volta.graphics.drawLine(lineStart2, lineEnd2, 1) -- Vertical line
-
-    -- Yellow image (tree.png)
-    volta.graphics.setColor(1, 1, 0)
-    volta.graphics.drawImage("tree.png", volta.vector2.new(-50, -50), volta.vector2.new(100, 100), 0)
-        
-    -- Blue text with Minecraft.ttf
-    volta.graphics.setColor(0, 0, 1)
-    volta.graphics.drawText("Minecraft Test", volta.vector2.new(100, 100), 1)
+    -- Draw the cube with the new rotation
+    volta.graphics.drawCube(cube_position, cube_size, cube_rotation)
 end

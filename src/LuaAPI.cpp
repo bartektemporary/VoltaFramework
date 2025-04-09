@@ -29,6 +29,38 @@ void VoltaFramework::registerLuaAPI() {
 
     lua_pop(L, 1); // Pop the Camera2D metatable
 
+    // Add Camera3D metatable and methods (new)
+    luaL_newmetatable(L, "Camera3D");
+    lua_newtable(L); // Create table for methods
+    lua_pushcfunction(L, l_camera3d_getPosition);
+    lua_setfield(L, -2, "getPosition");
+    lua_pushcfunction(L, l_camera3d_setPosition);
+    lua_setfield(L, -2, "setPosition");
+    lua_pushcfunction(L, l_camera3d_getRotation);
+    lua_setfield(L, -2, "getRotation");
+    lua_pushcfunction(L, l_camera3d_setRotation);
+    lua_setfield(L, -2, "setRotation");
+    lua_pushcfunction(L, l_camera3d_getFOV);
+    lua_setfield(L, -2, "getFOV");
+    lua_pushcfunction(L, l_camera3d_setFOV);
+    lua_setfield(L, -2, "setFOV");
+    lua_pushcfunction(L, l_camera3d_getNearPlane);
+    lua_setfield(L, -2, "getNearPlane");
+    lua_pushcfunction(L, l_camera3d_setNearPlane);
+    lua_setfield(L, -2, "setNearPlane");
+    lua_pushcfunction(L, l_camera3d_getFarPlane);
+    lua_setfield(L, -2, "getFarPlane");
+    lua_pushcfunction(L, l_camera3d_setFarPlane);
+    lua_setfield(L, -2, "setFarPlane");
+    lua_pushcfunction(L, l_camera3d_move);
+    lua_setfield(L, -2, "move");
+    lua_pushcfunction(L, l_camera3d_rotateBy);
+    lua_setfield(L, -2, "rotateBy");
+    lua_pushcfunction(L, l_camera3d_tostring);
+    lua_setfield(L, -2, "__tostring");
+    lua_setfield(L, -2, "__index"); // Set as __index for Camera3D
+    lua_pop(L, 1); // Pop the Camera3D metatable
+
     // Vector2 setup (unchanged)
     luaL_newmetatable(L, "Vector2");
     lua_pushcfunction(L, l_vector2_add);
@@ -453,6 +485,11 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "camera2d");
 
     lua_newtable(L);
+    lua_pushcfunction(L, l_camera3d_new);
+    lua_setfield(L, -2, "new");
+    lua_setfield(L, -2, "camera3d");
+
+    lua_newtable(L);
     lua_pushcfunction(L, l_particleEmitter_new);
     lua_setfield(L, -2, "new");
     lua_setfield(L, -2, "particleEmitter");
@@ -470,6 +507,8 @@ void VoltaFramework::registerLuaAPI() {
     lua_setfield(L, -2, "getRunningTime");
     lua_pushcfunction(L, l_setCamera2D);
     lua_setfield(L, -2, "setCamera2D");
+    lua_pushcfunction(L, l_setCamera3D); // Added
+    lua_setfield(L, -2, "setCamera3D");
 
     lua_setglobal(L, "volta");
 

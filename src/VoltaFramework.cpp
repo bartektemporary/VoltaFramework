@@ -3,7 +3,7 @@
 #include <cstring>
 #include "Maps.hpp"
 
-void VoltaFramework::renderParticles(float dt) {
+void VoltaFramework::updateParticles(float dt) {
     for (auto& emitter : particleEmitters) {
         emitter.update(dt);
     }
@@ -198,6 +198,10 @@ VoltaFramework::~VoltaFramework() {
     if (window) {
         glfwDestroyWindow(window);
     }
+
+    currentCamera = nullptr;
+    currentCamera3D = nullptr;
+
     glfwTerminate();
 }
 
@@ -236,20 +240,14 @@ void VoltaFramework::run() {
     bool hasLua = fs::exists("scripts/main.lua");
     bool hasCpp = fs::exists("src/main.cpp");
 
-    // Load Lua script if present
     if (hasLua) {
         loadLuaScript("scripts/main.lua");
     }
 
-    // Only attempt to load C++ game dynamically if no game is set
-    // and dynamic loading is intended (for now, we skip this since we're static)
     if (hasCpp && !cppGame) {
-        // For static builds, cppGame should already be set by main().
-        // We'll leave loadCppGame() for dynamic loading in the future.
         std::cout << "C++ game detected, assuming set by main()\n";
     }
 
-    // Initialize Lua if present
     if (hasLua) {
         lua_getglobal(L, "volta");
         if (lua_istable(L, -1)) {
@@ -268,7 +266,6 @@ void VoltaFramework::run() {
         lua_pop(L, 1);
     }
 
-    // Initialize C++ game if present
     if (cppGame) {
         cppGame->init(this);
     }
@@ -298,16 +295,17 @@ void VoltaFramework::loadLuaScript(const std::string& filename) {
 
 void VoltaFramework::update(float dt) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glDisable(GL_DEPTH_TEST);
 
-    if (currentCamera) {
+    if (currentCamera3D) {
+        setCamera3D(currentCamera3D);
+        cachedViewBounds = Rect(-FLT_MAX, FLT_MAX, -FLT_MAX, FLT_MAX);
+    } else if (currentCamera) {
         setCamera2D(currentCamera);
         Vector2 cameraPos = currentCamera->getPosition();
         float zoom = currentCamera->getZoom();
         float halfWidth = (width / 2.0f) / zoom;
         float halfHeight = (height / 2.0f) / zoom;
 
-        // Basic bounds without rotation
         cachedViewBounds = Rect(
             cameraPos.x - halfWidth,
             cameraPos.x + halfWidth,
@@ -315,7 +313,6 @@ void VoltaFramework::update(float dt) {
             cameraPos.y + halfHeight
         );
 
-        // If rotation is significant, expand bounds to ensure visibility
         float rotation = currentCamera->getRotation();
         if (rotation != 0.0f) {
             float rad = rotation * M_PI / 180.0f;
@@ -331,21 +328,21 @@ void VoltaFramework::update(float dt) {
             );
         }
     } else {
-        cachedViewBounds = Rect(-FLT_MAX, FLT_MAX, -FLT_MAX, FLT_MAX); // No culling
+        setCamera2D(nullptr);
+        cachedViewBounds = Rect(-FLT_MAX, FLT_MAX, -FLT_MAX, FLT_MAX);
     }
 
     // Poll gamepad button presses
     for (auto& state : gamepadStates) {
         int jid = state.first;
-        if (!state.second) continue; // Skip disconnected gamepads
+        if (!state.second) continue;
         GLFWgamepadstate gpState;
         if (glfwGetGamepadState(jid, &gpState)) {
             for (auto& btnPair : gamepadButtonPressedCallbackRefs) {
                 int button = btnPair.first;
-                static std::unordered_map<int, bool> lastButtonStates; // Track previous state
+                static std::unordered_map<int, bool> lastButtonStates;
                 bool isPressed = gpState.buttons[button] == GLFW_PRESS;
                 if (isPressed && !lastButtonStates[button]) {
-                    // Lua callbacks
                     for (int ref : btnPair.second) {
                         lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
                         if (lua_isfunction(L, -1)) {
@@ -357,7 +354,6 @@ void VoltaFramework::update(float dt) {
                         }
                         lua_settop(L, 0);
                     }
-                    // C++ callbacks
                     auto cppIt = cppGamepadButtonPressedCallbacks.find(button);
                     if (cppIt != cppGamepadButtonPressedCallbacks.end()) {
                         for (auto& callback : cppIt->second) {
@@ -365,7 +361,7 @@ void VoltaFramework::update(float dt) {
                         }
                     }
                 }
-                lastButtonStates[button] = isPressed; // Update last state
+                lastButtonStates[button] = isPressed;
             }
         }
     }
@@ -395,14 +391,12 @@ void VoltaFramework::update(float dt) {
         cppGame->update(this, dt);
     }
 
-    renderParticles(dt);
+    updateParticles(dt);
 }
 
 bool VoltaFramework::loadCppGame() {
     if (fs::exists("src/main.cpp")) {
-        // For static linking, assume main.cpp defines a game class or use a default
-        // Here, we'll use a default game for simplicity unless overridden
-        cppGame = new DefaultGame();  // Replace with your game class if defined
+        cppGame = new DefaultGame();
         return true;
     }
     return false;

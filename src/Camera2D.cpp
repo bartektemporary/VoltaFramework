@@ -192,7 +192,21 @@ int l_setCamera2D(lua_State* L) {
 void VoltaFramework::setCamera2D(Camera2D* camera) {
     currentCamera = camera;
     if (camera) {
-        Vector2 pos = camera->getPosition();
+        glUseProgram(shape2DShaderProgram);
+        Matrix4 viewMatrix = camera->getViewMatrix();
+        glUniformMatrix4fv(glGetUniformLocation(shape2DShaderProgram, "view"), 1, GL_FALSE, viewMatrix.m);
+        // Update projection matrix for 2D (orthographic)
+        Matrix4 ortho;
+        orthographic(ortho, 0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -1.0f, 1.0f);
+        projection2D = ortho * viewMatrix;
+        glUniformMatrix4fv(glGetUniformLocation(shape2DShaderProgram, "projection"), 1, GL_FALSE, projection2D.m);
+    } else {
+        glUseProgram(shape2DShaderProgram);
+        Matrix4 ortho;
+        orthographic(ortho, 0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -1.0f, 1.0f);
+        projection2D = ortho;
+        glUniformMatrix4fv(glGetUniformLocation(shape2DShaderProgram, "projection"), 1, GL_FALSE, projection2D.m);
+        glUniformMatrix4fv(glGetUniformLocation(shape2DShaderProgram, "view"), 1, GL_FALSE, Matrix4().m); // Identity
     }
 }
 

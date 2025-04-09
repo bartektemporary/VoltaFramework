@@ -19,6 +19,7 @@ namespace fs = std::filesystem;
 #include "Vector2.hpp"
 #include "Vector3.hpp"
 #include "Camera2D.hpp"
+#include "Camera3D.hpp"
 #include "Audio.hpp"
 
 #include <GL/glew.h>
@@ -195,7 +196,9 @@ public:
     bool isRectInView(const Rect& objectBounds) const;
 
     void setCamera2D(Camera2D* camera);  // New method
+    void setCamera3D(Camera3D* camera); // Add this
     Camera2D* getCamera2D() const { return currentCamera; }  // New method
+    Camera3D* getCamera3D() const { return currentCamera3D; }
 
     // 2D rendering resources
     GLuint shape2DShaderProgram;  // For 2D shapes (rectangles, circles, lines)
@@ -387,7 +390,7 @@ public:
 
     void windowToGLCoords(float winX, float winY, float* glX, float* glY);
 
-    void renderParticles(float dt);
+    void updateParticles(float dt);
     std::vector<ParticleEmitter> particleEmitters;
     GLuint particleVAO, particleVBO;
 
@@ -454,6 +457,7 @@ private:
 
     PositionMode positionMode = PositionMode::Screen;
     Camera2D* currentCamera = nullptr;
+    Camera3D* currentCamera3D = nullptr;
 
     static void windowSizeCallback(GLFWwindow* window, int newWidth, int newHeight);
     static void windowPosCallback(GLFWwindow* window, int xpos, int ypos);
@@ -600,6 +604,22 @@ int l_camera2d_move(lua_State* L);
 int l_camera2d_zoomBy(lua_State* L);
 int l_camera2d_rotateBy(lua_State* L);
 int l_camera2d_tostring(lua_State* L);
+
+int l_camera3d_new(lua_State* L);
+int l_camera3d_getPosition(lua_State* L);
+int l_camera3d_setPosition(lua_State* L);
+int l_camera3d_getRotation(lua_State* L);
+int l_camera3d_setRotation(lua_State* L);
+int l_camera3d_getFOV(lua_State* L);
+int l_camera3d_setFOV(lua_State* L);
+int l_camera3d_getNearPlane(lua_State* L);
+int l_camera3d_setNearPlane(lua_State* L);
+int l_camera3d_getFarPlane(lua_State* L);
+int l_camera3d_setFarPlane(lua_State* L);
+int l_camera3d_move(lua_State* L);
+int l_camera3d_rotateBy(lua_State* L);
+int l_camera3d_tostring(lua_State* L);
+int l_setCamera3D(lua_State* L);
 
 int l_color_create(lua_State* L);
 int l_color_fromRGB(lua_State* L);
